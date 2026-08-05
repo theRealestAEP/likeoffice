@@ -73,7 +73,11 @@ export async function createDocumentWindow(
     recovered: recovery != null,
   });
 
-  win.once("ready-to-show", () => win.show());
+  // Tests set LIKEOFFICE_HIDE_WINDOWS: Playwright drives windows over CDP,
+  // which needs no OS-visible window, so suites run without popping windows.
+  win.once("ready-to-show", () => {
+    if (!process.env.LIKEOFFICE_HIDE_WINDOWS) win.show();
+  });
   win.on("closed", () => {
     const st = docs.get(id);
     if (st) void removeAutosave(st);
