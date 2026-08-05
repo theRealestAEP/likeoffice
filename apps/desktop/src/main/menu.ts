@@ -10,10 +10,29 @@ function sendToFocused(action: string): (menuItem: unknown, win?: unknown) => vo
 
 export function buildMenu(): Menu {
   const isMac = process.platform === "darwin";
+  const settingsItem: MenuItemConstructorOptions = {
+    label: "Settings…",
+    accelerator: "CmdOrCtrl+,",
+    click: sendToFocused("settings"),
+  };
 
   const template: MenuItemConstructorOptions[] = [
     ...(isMac
-      ? [{ role: "appMenu" } satisfies MenuItemConstructorOptions]
+      ? [
+          {
+            label: "LikeOffice",
+            submenu: [
+              { role: "about" },
+              { type: "separator" },
+              settingsItem,
+              { type: "separator" },
+              { role: "hide" },
+              { role: "hideOthers" },
+              { type: "separator" },
+              { role: "quit" },
+            ],
+          } satisfies MenuItemConstructorOptions,
+        ]
       : []),
     {
       label: "File",
@@ -39,6 +58,7 @@ export function buildMenu(): Menu {
         { label: "Export as PDF…", click: sendToFocused("export-pdf") },
         { label: "Print…", accelerator: "CmdOrCtrl+P", click: sendToFocused("print") },
         { type: "separator" },
+        ...(isMac ? [] : [settingsItem, { type: "separator" } as MenuItemConstructorOptions]),
         { role: "close" },
       ],
     },
@@ -60,6 +80,12 @@ export function buildMenu(): Menu {
     {
       label: "View",
       submenu: [
+        {
+          label: "AI Assistant",
+          accelerator: "Shift+CmdOrCtrl+A",
+          click: sendToFocused("toggle-ai"),
+        },
+        { type: "separator" },
         ...(app.isPackaged
           ? []
           : [

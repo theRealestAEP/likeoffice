@@ -2,6 +2,8 @@ import { app, BrowserWindow, dialog, ipcMain, Menu } from "electron";
 import { mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { buildMenu } from "./menu";
+import "./settings";
+import "./model";
 
 interface DocState {
   path: string | null;

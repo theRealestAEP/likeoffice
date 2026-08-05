@@ -12,7 +12,17 @@ export interface SaveResult {
   name: string;
 }
 
+export interface SettingsView {
+  hasKey: boolean;
+  model: string;
+}
+
 const api = {
+  getSettings: (): Promise<SettingsView> => ipcRenderer.invoke("settings:get"),
+  setSettings: (apiKey: string | null, model: string): Promise<SettingsView> =>
+    ipcRenderer.invoke("settings:set", apiKey, model),
+  sendModelMessage: (request: unknown): Promise<unknown> =>
+    ipcRenderer.invoke("model:message", request),
   getInitialDocument: (): Promise<InitialDocument> =>
     ipcRenderer.invoke("document:init"),
   saveDocument: (bytes: Uint8Array, saveAs: boolean): Promise<SaveResult | null> =>

@@ -23,7 +23,9 @@ M0 complete; M1 in progress. The full plan lives in
 [`docs/PLAN.md`](docs/PLAN.md).
 
 Working today: the Electron app opens, edits, saves, prints, and exports
-PDFs, with autosave + crash recovery and a Playwright-Electron e2e suite.
+PDFs, with autosave + crash recovery and a Playwright-Electron e2e suite. A
+side panel runs the wordinweb agent tools over the open document; every agent
+edit lands as a tracked change you accept or reject from the review controls.
 The W0 edit round-trip gate (wordinweb-parity, branch `edit-roundtrip`)
 passes 10/10 scenarios against desktop Word. The engine branch
 (`wordinweb-likeoffice`, branch `likeoffice`) carries the operation

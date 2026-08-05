@@ -12,8 +12,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "@fontsource/caladea": "^5.1.0",
     "@fontsource/carlito": "^5.1.0",
+    "@wordinweb/agent": "file:../../../wordinweb-likeoffice/packages/agent",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "wordinweb": "file:../../../wordinweb-likeoffice/packages/react"
