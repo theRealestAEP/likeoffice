@@ -146,26 +146,33 @@ gates keep their full force over a shrinking hand-written set.
 
 ## Migrated operations
 
-Three, chosen to be three different shapes rather than three easy ones:
+Four, chosen to be different shapes rather than easy ones:
 
 | Operation | Address | Category | Why it was chosen |
 |---|---|---|---|
 | `setListType` | block (paragraph) | paragraph | Block-addressed, multi-target at the call site, and emitted from *both* the core editor (Enter on an empty list item) and the React host (`toggleList`). |
 | `insertTable` | run | insert | Carries ids. Its id budget was the one formula duplicated between the React host and the agent compiler. |
 | `resizeTableRow` | cell paragraph | table | The third addressing mode, and the only one of the three driven from a drag interaction inside `DocxEditor` rather than from the API surface. |
+| `toggleCheckbox` | run | text | The first migration of an operation that ALREADY had a hand-written intent, done to fix the divergence its editor path caused. Its state lives in the parsed model rather than in the addressed XML, so it is what gave `OperationTarget` its `run` field. |
 
 Between them they exercise all three address kinds, both id-carrying and
 not, both validated and not, and all three producers (core editor, React
 host, agent compiler).
+
+`OperationTarget` carries the parsed `run` for a run address, null for the
+other two. Only the model records that a glyph is a checkbox — parsing hangs
+the `w14:checkbox` element on the run's content — so an operation reading
+state the addressed element does not expose needs the run, not just its XML.
 
 ## Deliberately not unified yet
 
 - **The local optimistic mutation.** In a collaborative room every command
   routes through `applyIntent`, so the registry's `apply` is what runs. Outside
   one, the call site mutates directly — and *how it finds its target is view
-  state*, which the three migrated operations disagree about completely:
+  state*, which the migrated operations disagree about completely:
   `insertTable` uses the caret, `setListType` uses every paragraph the
-  selection touches, `resizeTableRow` uses the row grip being dragged. Modelling
+  selection touches, `resizeTableRow` uses the row grip being dragged, and
+  `toggleCheckbox` uses the glyph binding under the pointer. Modelling
   that would mean putting selection semantics in core. The registry owns the
   headless path; the call site keeps the local one.
 - **Wire inverses.** `collab/src/invert.ts` still owns the four invertible
@@ -176,7 +183,7 @@ host, agent compiler).
   them, not consolidate them.
 - **The skill-doc catalog table.** It is prose for an external agent to read,
   not generated output. The test keeps it honest.
-- **The 66 unmigrated operations.** The registry is additive by design and
+- **The 65 unmigrated operations.** The registry is additive by design and
   coexists with them. A bulk migration would be one unreviewable diff across
   four packages; the point of the pattern is that the next operation is cheap,
   not that the previous ones get rewritten.
@@ -184,8 +191,8 @@ host, agent compiler).
 ## Observable difference
 
 One, and it is not a wire format: `INTENT_KINDS` now enumerates the
-hand-written kinds first and the registered kinds last, so the three migrated
-operations moved to the end of the list. Every individual agent JSON schema,
+hand-written kinds first and the registered kinds last, so each migrated
+operation moves to the end of the list. Every individual agent JSON schema,
 every capability row, and the set of kinds are byte-identical — verified by
 dumping both against the pre-change build. The order affects only the
 presentation order of `agentCapabilities()` and the order of the `anyOf`
