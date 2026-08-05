@@ -4,6 +4,7 @@ export interface InitialDocument {
   path: string | null;
   name: string;
   bytes: Uint8Array;
+  recovered: boolean;
 }
 
 export interface SaveResult {
@@ -18,6 +19,9 @@ const api = {
     ipcRenderer.invoke("document:save", bytes, saveAs),
   setDirty: (dirty: boolean): void => {
     ipcRenderer.send("document:set-dirty", dirty);
+  },
+  autosave: (bytes: Uint8Array): void => {
+    ipcRenderer.send("document:autosave", bytes);
   },
   onMenu: (cb: (action: string) => void): (() => void) => {
     const listener = (_e: IpcRendererEvent, action: string) => cb(action);

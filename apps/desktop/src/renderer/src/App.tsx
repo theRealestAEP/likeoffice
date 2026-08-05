@@ -13,7 +13,18 @@ export function App() {
   useEffect(() => {
     void window.likeoffice.getInitialDocument().then((d) => {
       setDoc({ name: d.name, bytes: new Uint8Array(d.bytes) });
+      if (d.recovered) setDirty(true);
     });
+  }, []);
+
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const a = apiRef.current;
+      if (a && dirtyRef.current) window.likeoffice.autosave(a.save());
+    }, 30000);
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {

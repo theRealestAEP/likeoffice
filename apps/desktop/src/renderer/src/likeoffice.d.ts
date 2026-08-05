@@ -2,6 +2,7 @@ interface InitialDocument {
   path: string | null;
   name: string;
   bytes: Uint8Array;
+  recovered: boolean;
 }
 
 interface SaveResult {
@@ -13,6 +14,7 @@ interface LikeOfficeBridge {
   getInitialDocument(): Promise<InitialDocument>;
   saveDocument(bytes: Uint8Array, saveAs: boolean): Promise<SaveResult | null>;
   setDirty(dirty: boolean): void;
+  autosave(bytes: Uint8Array): void;
   onMenu(cb: (action: string) => void): () => void;
 }
 
