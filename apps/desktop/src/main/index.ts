@@ -188,6 +188,43 @@ ipcMain.handle(
   },
 );
 
+ipcMain.handle("document:export-pdf", async (e, html: string) => {
+  const st = docs.get(e.sender.id);
+  const win = windowFor(e.sender.id);
+  if (!st || !win) return null;
+
+  const defaultName = st.path
+    ? path.basename(st.path).replace(/\.docx$/, ".pdf")
+    : "Untitled.pdf";
+  const result = await dialog.showSaveDialog(win, {
+    defaultPath: defaultName,
+    filters: [{ name: "PDF", extensions: ["pdf"] }],
+  });
+  if (result.canceled || !result.filePath) return null;
+  const target = result.filePath.endsWith(".pdf")
+    ? result.filePath
+    : `${result.filePath}.pdf`;
+
+  const htmlFile = path.join(app.getPath("temp"), `likeoffice-export-${e.sender.id}.html`);
+  await writeFile(htmlFile, html);
+  const printWin = new BrowserWindow({ show: false });
+  try {
+    await printWin.loadFile(htmlFile);
+    await printWin.webContents.executeJavaScript("document.fonts.ready.then(() => true)");
+    const pdf = await printWin.webContents.printToPDF({
+      preferCSSPageSize: true,
+      printBackground: true,
+    });
+    const tmp = `${target}.tmp-${process.pid}`;
+    await writeFile(tmp, pdf);
+    await rename(tmp, target);
+    return { path: target };
+  } finally {
+    printWin.destroy();
+    await rm(htmlFile, { force: true });
+  }
+});
+
 ipcMain.on("document:set-dirty", (e, dirty: boolean) => {
   const st = docs.get(e.sender.id);
   const win = windowFor(e.sender.id);

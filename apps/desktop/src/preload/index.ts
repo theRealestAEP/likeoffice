@@ -23,6 +23,8 @@ const api = {
   autosave: (bytes: Uint8Array): void => {
     ipcRenderer.send("document:autosave", bytes);
   },
+  exportPdf: (html: string): Promise<{ path: string } | null> =>
+    ipcRenderer.invoke("document:export-pdf", html),
   onMenu: (cb: (action: string) => void): (() => void) => {
     const listener = (_e: IpcRendererEvent, action: string) => cb(action);
     ipcRenderer.on("menu", listener);

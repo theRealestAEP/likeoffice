@@ -36,6 +36,7 @@ export function buildMenu(): Menu {
           click: sendToFocused("save-as"),
         },
         { type: "separator" },
+        { label: "Export as PDF…", click: sendToFocused("export-pdf") },
         { label: "Print…", accelerator: "CmdOrCtrl+P", click: sendToFocused("print") },
         { type: "separator" },
         { role: "close" },

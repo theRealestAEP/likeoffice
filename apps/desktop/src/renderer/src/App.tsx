@@ -58,6 +58,11 @@ export function App() {
         case "print":
           a?.print();
           break;
+        case "export-pdf": {
+          const html = a?.exportPrintHtml();
+          if (html) void window.likeoffice.exportPdf(html);
+          break;
+        }
         case "undo":
           a?.undo();
           break;

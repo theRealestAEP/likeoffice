@@ -15,6 +15,7 @@ interface LikeOfficeBridge {
   saveDocument(bytes: Uint8Array, saveAs: boolean): Promise<SaveResult | null>;
   setDirty(dirty: boolean): void;
   autosave(bytes: Uint8Array): void;
+  exportPdf(html: string): Promise<{ path: string } | null>;
   onMenu(cb: (action: string) => void): () => void;
 }
 
