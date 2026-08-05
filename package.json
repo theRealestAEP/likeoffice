@@ -1,0 +1,19 @@
+{
+  "name": "likeoffice",
+  "private": true,
+  "version": "0.0.1",
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @likeoffice/desktop",
+    "build": "npm run build -w @likeoffice/desktop",
+    "typecheck": "npm run typecheck -w @likeoffice/desktop",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1"
+  }
+}
