@@ -66,12 +66,18 @@ function fakeReply(messages: Anthropic.MessageParam[]): ModelReply {
 
 /** The real API's request-shape rules, enforced on the fake path too so the
  * e2e catches a malformed request before a live key ever sees it. This exists
- * because a root-anyOf tool schema passed the fake and 400'd in production. */
+ * because a root-anyOf tool schema passed the fake and 400'd in production —
+ * twice: first for the missing type, then for the top-level combinator. */
 function validateRequestShape(request: ModelRequest): string | null {
   for (let i = 0; i < request.tools.length; i++) {
-    const schema = request.tools[i].input_schema as { type?: string };
+    const schema = request.tools[i].input_schema as Record<string, unknown>;
     if (schema?.type !== "object") {
       return `tools.${i}.custom.input_schema.type: Field required`;
+    }
+    for (const key of ["anyOf", "oneOf", "allOf"]) {
+      if (key in schema) {
+        return `tools.${i}.custom.input_schema: input_schema does not support oneOf, allOf, or anyOf at the top level`;
+      }
     }
   }
   return null;

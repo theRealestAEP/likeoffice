@@ -82,15 +82,10 @@ export function AiPanel({
     history.current.push({ role: "user", content: text });
 
     const tools = agentDoc.tools();
-    // The Messages API requires input_schema.type === "object"; the engine's
-    // inspect/edit tools are root-level anyOf unions without one.
     const definitions = tools.map((t) => ({
       name: t.name,
       description: t.description,
-      input_schema:
-        (t.inputSchema as { type?: string }).type === "object"
-          ? t.inputSchema
-          : { type: "object", ...(t.inputSchema as object) },
+      input_schema: t.inputSchema,
     }));
 
     const wasSuggesting = api.isSuggesting();
