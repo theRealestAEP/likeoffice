@@ -10,7 +10,9 @@ test("the AI panel asks for a key when none is configured", async () => {
   const userData = await mkdtemp(path.join(tmpdir(), "likeoffice-userdata-"));
   const app = await electron.launch({
     args: [APP_DIR],
-    env: { ...process.env, LIKEOFFICE_USER_DATA: userData },
+    // ANTHROPIC="" is the app's explicit no-key override; it keeps a key in
+    // the developer's .env from leaking into this test.
+    env: { ...process.env, LIKEOFFICE_USER_DATA: userData, ANTHROPIC: "" },
   });
   const win = await app.firstWindow();
   await expect(win.locator(".dxw-page").first()).toBeAttached({ timeout: 30000 });

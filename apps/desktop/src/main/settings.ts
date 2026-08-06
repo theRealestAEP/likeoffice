@@ -16,8 +16,10 @@ function settingsFile(): string {
 /** A key from the environment or a .env file near the app, so `ANTHROPIC=…`
  * or `ANTHROPIC_API_KEY=…` works without opening Settings. Settings wins. */
 async function envApiKey(): Promise<string> {
+  // An empty value is an explicit "no key": it stops the .env lookup so the
+  // e2e no-key test stays hermetic when a developer keeps a key in .env.
   const fromEnv = process.env.ANTHROPIC_API_KEY ?? process.env.ANTHROPIC;
-  if (fromEnv) return fromEnv;
+  if (fromEnv !== undefined) return fromEnv;
   const roots = [app.getAppPath(), path.dirname(app.getAppPath()), path.dirname(path.dirname(app.getAppPath()))];
   for (const root of roots) {
     try {

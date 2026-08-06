@@ -114,24 +114,32 @@ function Editor({ initial }: { initial: InitialDocument }) {
   }, [save]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div className="app-shell">
+      <div className="app-header">
         {/* Dirty tracking is heuristic until the engine grows a change event:
             any editing keystroke or toolbar interaction marks the document dirty. */}
-        <div style={{ flex: 1, minWidth: 0 }} onMouseDownCapture={markDirty}>
+        <div className="app-toolbar-slot" onMouseDownCapture={markDirty}>
           {api && <DocxToolbar api={api} mode="advanced" />}
         </div>
-        <button
-          onClick={() => setPanelOpen((open) => !open)}
-          style={{ marginRight: 8 }}
-          data-testid="ai-toggle"
-        >
-          AI
-        </button>
+        <div className="app-header-cap">
+          <button
+            className="ai-toggle"
+            onClick={() => setPanelOpen((open) => !open)}
+            aria-pressed={panelOpen}
+            title="Toggle the AI assistant"
+            data-testid="ai-toggle"
+          >
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M8 1.5c.6 2.9 1.6 3.9 4.5 4.5v.9c-2.9.6-3.9 1.6-4.5 4.5h-.9c-.6-2.9-1.6-3.9-4.5-4.5V6c2.9-.6 3.9-1.6 4.5-4.5h.9Z" />
+              <path d="M12.5 10c.35 1.6.9 2.15 2.5 2.5v.6c-1.6.35-2.15.9-2.5 2.5h-.6c-.35-1.6-.9-2.15-2.5-2.5v-.6c1.6-.35 2.15-.9 2.5-2.5h.6Z" />
+            </svg>
+            AI
+          </button>
+        </div>
       </div>
-      <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+      <div className="app-body">
         <div
-          style={{ flex: 1, minWidth: 0 }}
+          className="app-editor"
           onKeyDownCapture={(e) => {
             if (e.metaKey || e.ctrlKey) return;
             if (e.key.length === 1 || EDIT_KEYS.has(e.key)) markDirty();

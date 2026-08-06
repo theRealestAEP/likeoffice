@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AgentDocument } from "@wordinweb/agent";
 import type { DocxViewApi } from "wordinweb";
 
@@ -63,6 +63,15 @@ export function AiPanel({
   const [busy, setBusy] = useState(false);
   const [suggested, setSuggested] = useState<number | null>(null);
   const history = useRef<ModelMessage[]>([]);
+
+  // Keep the transcript pinned to the newest entry, but only while the user
+  // has not scrolled up to read something older.
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const stickRef = useRef(true);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el && stickRef.current) el.scrollTop = el.scrollHeight;
+  }, [entries, busy, suggested]);
 
   const add = (entry: Entry) => setEntries((list) => [...list, entry]);
 
@@ -160,62 +169,101 @@ export function AiPanel({
     void run(text);
   };
 
+  const resolveAll = (accept: boolean) => {
+    if (accept) api.acceptAllRevisions();
+    else api.rejectAllRevisions();
+    // The action row clears once nothing is left to review; the marks
+    // disappearing from the document are the feedback.
+    const remaining = api.revisionCount();
+    setSuggested(remaining > 0 ? remaining : null);
+    onEdited();
+  };
+
   return (
-    <div
-      style={{
-        width: 340,
-        borderLeft: "1px solid #ddd",
-        display: "flex",
-        flexDirection: "column",
-        font: "13px system-ui, sans-serif",
-        background: "#fafafa",
-      }}
-    >
-      <div style={{ flex: 1, overflowY: "auto", padding: 12 }} data-testid="ai-transcript">
+    <div className="ai-panel">
+      <div
+        className="ai-transcript"
+        ref={scrollRef}
+        onScroll={() => {
+          const el = scrollRef.current;
+          if (el) stickRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+        }}
+        data-testid="ai-transcript"
+      >
         {!hasKey && (
-          <p style={{ color: "#666" }}>
-            Set your Anthropic API key in <button onClick={onOpenSettings}>Settings</button> to use
-            the assistant.
-          </p>
+          <div className="ai-notice">
+            Set your Anthropic API key in{" "}
+            <button className="btn-link" onClick={onOpenSettings}>
+              Settings
+            </button>{" "}
+            to use the assistant.
+          </div>
         )}
-        {entries.map((entry, i) => (
-          <p
-            key={i}
-            style={{
-              margin: "0 0 10px",
-              whiteSpace: "pre-wrap",
-              color:
-                entry.role === "error" ? "#b00" : entry.role === "tool" ? "#888" : "#222",
-              fontWeight: entry.role === "user" ? 600 : 400,
-              fontSize: entry.role === "tool" ? 11 : 13,
-            }}
-          >
-            {entry.role === "tool" ? `· ${entry.text}` : entry.text}
-          </p>
-        ))}
-        {busy && <p style={{ color: "#888" }}>Working…</p>}
+        {entries.map((entry, i) =>
+          entry.role === "tool" ? (
+            <div key={i} className="ai-entry ai-entry-tool" title={entry.text}>
+              {entry.text}
+            </div>
+          ) : (
+            <p key={i} className={`ai-entry ai-entry-${entry.role}`}>
+              {entry.text}
+            </p>
+          ),
+        )}
+        {busy && (
+          <div className="ai-busy" role="status" aria-label="Working">
+            <span />
+            <span />
+            <span />
+          </div>
+        )}
         {suggested !== null && (
-          <p style={{ color: "#666" }} data-testid="ai-suggested">
-            {suggested} suggested change{suggested === 1 ? "" : "s"}
-          </p>
+          <div className="ai-actions" data-testid="ai-suggested">
+            <span className="ai-actions-count">
+              {suggested} suggested change{suggested === 1 ? "" : "s"}
+            </span>
+            {suggested > 0 && (
+              <>
+                <button className="btn-link muted" onClick={() => resolveAll(false)}>
+                  Reject all
+                </button>
+                <button className="btn-link" onClick={() => resolveAll(true)}>
+                  Accept all
+                </button>
+              </>
+            )}
+          </div>
         )}
       </div>
-      <div style={{ borderTop: "1px solid #ddd", padding: 8 }}>
-        <textarea
-          value={input}
-          disabled={!hasKey}
-          placeholder="Ask for an edit…"
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              submit();
-            }
-          }}
-          rows={3}
-          style={{ width: "100%", boxSizing: "border-box", resize: "none", font: "inherit" }}
-          data-testid="ai-input"
-        />
+      <div className="ai-composer">
+        <div className={`ai-composer-box${hasKey ? "" : " disabled"}`}>
+          <textarea
+            className="ai-composer-input"
+            value={input}
+            disabled={!hasKey}
+            placeholder="Ask for an edit…"
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                submit();
+              }
+            }}
+            rows={3}
+            data-testid="ai-input"
+          />
+          <button
+            className="ai-send"
+            onClick={submit}
+            disabled={!hasKey || busy || input.trim() === ""}
+            aria-label="Send"
+            title="Send"
+          >
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M8 12.5v-9M4 7l4-3.5L12 7" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );
