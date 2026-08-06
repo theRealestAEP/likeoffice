@@ -64,8 +64,25 @@ function fakeReply(messages: Anthropic.MessageParam[]): ModelReply {
   };
 }
 
+/** The real API's request-shape rules, enforced on the fake path too so the
+ * e2e catches a malformed request before a live key ever sees it. This exists
+ * because a root-anyOf tool schema passed the fake and 400'd in production. */
+function validateRequestShape(request: ModelRequest): string | null {
+  for (let i = 0; i < request.tools.length; i++) {
+    const schema = request.tools[i].input_schema as { type?: string };
+    if (schema?.type !== "object") {
+      return `tools.${i}.custom.input_schema.type: Field required`;
+    }
+  }
+  return null;
+}
+
 ipcMain.handle("model:message", async (_e, request: ModelRequest): Promise<ModelReply> => {
-  if (process.env.LIKEOFFICE_FAKE_MODEL) return fakeReply(request.messages);
+  if (process.env.LIKEOFFICE_FAKE_MODEL) {
+    const shapeError = validateRequestShape(request);
+    if (shapeError) return { error: `400 (fake): ${shapeError}` };
+    return fakeReply(request.messages);
+  }
 
   const { apiKey, model } = await readSettings();
   if (!apiKey) return { error: "No API key configured. Open Settings to add one." };
