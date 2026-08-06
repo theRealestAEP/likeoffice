@@ -106,10 +106,12 @@ Known agent-surface gaps:
 
 The viewer is mature; the editor is newer. Missing or partial today:
 
-- Charts: `internal/LIMITATIONS.md` says `c:chartSpace` has no render path,
-  while the README documents `insertChart`/`updateSelectedChart` as native
-  editable ChartML. **Verify which is current before scoping** (the
-  LIMITATIONS doc is stale in at least one other place — see clipboard).
+- Charts: resolved 2026-08-06 — LIMITATIONS.md was wrong; a render path
+  existed but read too little ChartML. The likeoffice branch now renders
+  seven kinds (column/bar/line/pie/doughnut/area/scatter) with theme colors,
+  axes, legends, and grouping; 3-D/radar/surface/stock/bubble draw labeled
+  placeholders. Word-reference chart fixtures are still absent from the
+  corpus (being authored).
 - Clipboard: HTML copy/paste has landed in code (`edit/clipboard.ts`) even
   though LIMITATIONS still says plain-text-only. There is no native OOXML
   clipboard flavor; internal round-trip rides a `data-dxw-fragment` JSON
