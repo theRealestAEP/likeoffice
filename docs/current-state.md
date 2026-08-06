@@ -122,8 +122,9 @@ The viewer is mature; the editor is newer. Missing or partial today:
   images mutate directly with no `rPrChange`/`pPrChange`/`tblPrChange`.
 - Fields: only page-number fields can be inserted; TOC/DATE/REF render from
   cached results but cannot be inserted or updated.
-- Image cropping, per-edge cell borders, table style application, numeric
-  column widths, WordArt-from-scratch watermarks.
+- Image cropping, WordArt-from-scratch watermarks. (Per-edge cell borders,
+  table style application, and numeric column widths landed on the likeoffice
+  branch, 2026-08-05.)
 - Toolbar depth: 5 of ~15 highlight colors, blue-only page borders, preset-
   only margins/sizes/columns/spacing, fixed 35-family font list.
 - Collab "honest no-ops": 3D rotation, ink arrange, VML carriers, watermark
