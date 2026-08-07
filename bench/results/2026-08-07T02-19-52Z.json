@@ -1,0 +1,287 @@
+{
+  "startedAt": "2026-08-07T02:19:52.870Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "declaration-intro",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 16887,
+      "rounds": 4,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 7981,
+          "inputTokens": 43952,
+          "outputTokens": 536,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4694,
+          "inputTokens": 44524,
+          "outputTokens": 384,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2258,
+          "inputTokens": 45675,
+          "outputTokens": 155,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1924,
+          "inputTokens": 45875,
+          "outputTokens": 33,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_compose": 1,
+        "word_document_patch": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_compose",
+          "message": "Composition is available on a new AgentDocument.create() document"
+        }
+      ],
+      "tokens": {
+        "input": 180026,
+        "output": 1108
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "memo",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 16612,
+      "rounds": 4,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 8125,
+          "inputTokens": 43955,
+          "outputTokens": 503,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4052,
+          "inputTokens": 44505,
+          "outputTokens": 349,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2844,
+          "inputTokens": 46387,
+          "outputTokens": 242,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1553,
+          "inputTokens": 46685,
+          "outputTokens": 35,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_compose": 1,
+        "word_document_patch": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_compose",
+          "message": "Composition is available on a new AgentDocument.create() document"
+        }
+      ],
+      "tokens": {
+        "input": 181532,
+        "output": 1129
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "table-report",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 29822,
+      "rounds": 8,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 5860,
+          "inputTokens": 43947,
+          "outputTokens": 339,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2812,
+          "inputTokens": 44335,
+          "outputTokens": 117,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1588,
+          "inputTokens": 44544,
+          "outputTokens": 109,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2727,
+          "inputTokens": 44691,
+          "outputTokens": 71,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 5026,
+          "inputTokens": 46087,
+          "outputTokens": 386,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 5098,
+          "inputTokens": 48438,
+          "outputTokens": 459,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4062,
+          "inputTokens": 48917,
+          "outputTokens": 395,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2593,
+          "inputTokens": 49385,
+          "outputTokens": 65,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_compose": 1,
+        "word_document_inspect": 1,
+        "word_document_edit": 3,
+        "word_document_project": 1,
+        "word_document_patch": 1
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_compose",
+          "message": "Composition is available on a new AgentDocument.create() document"
+        },
+        {
+          "name": "word_document_edit",
+          "message": "tableOp: bad shading"
+        }
+      ],
+      "tokens": {
+        "input": 370344,
+        "output": 1941
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "rewrite",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 9753,
+      "rounds": 4,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3676,
+          "inputTokens": 44128,
+          "outputTokens": 219,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1939,
+          "inputTokens": 44391,
+          "outputTokens": 141,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2554,
+          "inputTokens": 44987,
+          "outputTokens": 219,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1570,
+          "inputTokens": 45781,
+          "outputTokens": 39,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 3
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_patch",
+          "message": "A suggested hunk can add text or remove text, not both. Send the removal and the addition as separate patches."
+        }
+      ],
+      "tokens": {
+        "input": 179287,
+        "output": 618
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "bulk-text",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 20410,
+      "rounds": 4,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 7355,
+          "inputTokens": 44138,
+          "outputTokens": 614,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 6251,
+          "inputTokens": 44804,
+          "outputTokens": 564,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4308,
+          "inputTokens": 46026,
+          "outputTokens": 365,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2485,
+          "inputTokens": 47185,
+          "outputTokens": 35,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 3
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_patch",
+          "message": "A suggested hunk can add text or remove text, not both. Send the removal and the addition as separate patches."
+        }
+      ],
+      "tokens": {
+        "input": 182153,
+        "output": 1578
+      },
+      "savedValid": true,
+      "failures": []
+    }
+  ]
+}
