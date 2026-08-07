@@ -99,9 +99,11 @@ function Editor({ initial }: { initial: InitialDocument }) {
         }
         case "undo":
           a?.undo();
+          setDirty(true);
           break;
         case "redo":
           a?.redo();
+          setDirty(true);
           break;
         case "settings":
           setSettingsOpen(true);
@@ -141,7 +143,12 @@ function Editor({ initial }: { initial: InitialDocument }) {
         <div
           className="app-editor"
           onKeyDownCapture={(e) => {
-            if (e.metaKey || e.ctrlKey) return;
+            if (e.metaKey || e.ctrlKey) {
+              // Cmd+Z / Cmd+Shift+Z reaching the editor directly (not via the
+              // app menu accelerator) also change the document.
+              if (e.key.toLowerCase() === "z") markDirty();
+              return;
+            }
             if (e.key.length === 1 || EDIT_KEYS.has(e.key)) markDirty();
           }}
           onPasteCapture={markDirty}

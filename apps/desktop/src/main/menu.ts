@@ -84,6 +84,11 @@ export function buildMenu(): Menu {
         { role: "cut" },
         { role: "copy" },
         { role: "paste" },
+        {
+          label: "Paste and Match Style",
+          role: "pasteAndMatchStyle",
+          accelerator: "Shift+CmdOrCtrl+V",
+        },
       ],
     },
     {
