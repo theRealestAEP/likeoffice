@@ -1,0 +1,171 @@
+{
+  "startedAt": "2026-08-07T01:57:41.682Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "declaration-intro",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 91549,
+      "rounds": 20,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 2077,
+          "inputTokens": 43724,
+          "outputTokens": 65,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 7982,
+          "inputTokens": 44008,
+          "outputTokens": 616,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2647,
+          "inputTokens": 44666,
+          "outputTokens": 114,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4391,
+          "inputTokens": 44872,
+          "outputTokens": 449,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1717,
+          "inputTokens": 45358,
+          "outputTokens": 78,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 7178,
+          "inputTokens": 45850,
+          "outputTokens": 216,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 6397,
+          "inputTokens": 46567,
+          "outputTokens": 512,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 7335,
+          "inputTokens": 47129,
+          "outputTokens": 534,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 7681,
+          "inputTokens": 47691,
+          "outputTokens": 475,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1831,
+          "inputTokens": 48204,
+          "outputTokens": 78,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2786,
+          "inputTokens": 48374,
+          "outputTokens": 166,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1629,
+          "inputTokens": 48577,
+          "outputTokens": 78,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1938,
+          "inputTokens": 48756,
+          "outputTokens": 120,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 7222,
+          "inputTokens": 48904,
+          "outputTokens": 451,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1775,
+          "inputTokens": 49392,
+          "outputTokens": 120,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1419,
+          "inputTokens": 49540,
+          "outputTokens": 78,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 16325,
+          "inputTokens": 49834,
+          "outputTokens": 1296,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 3397,
+          "inputTokens": 51176,
+          "outputTokens": 78,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 3615,
+          "inputTokens": 51754,
+          "outputTokens": 165,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2181,
+          "inputTokens": 51964,
+          "outputTokens": 73,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 7,
+        "word_document_compose": 1,
+        "word_document_edit": 9,
+        "word_document_project": 1,
+        "word_document_patch": 1
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_compose",
+          "message": "Composition is available on a new AgentDocument.create() document"
+        },
+        {
+          "name": "word_document_patch",
+          "message": "A suggested hunk can add text or remove text, not both. Send the removal and the addition as separate patches."
+        },
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state"
+        },
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state"
+        },
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state"
+        }
+      ],
+      "tokens": {
+        "input": 956340,
+        "output": 5762
+      },
+      "savedValid": true,
+      "failures": []
+    }
+  ]
+}

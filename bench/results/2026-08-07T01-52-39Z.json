@@ -1,0 +1,531 @@
+{
+  "startedAt": "2026-08-07T01:52:39.145Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "declaration-intro",
+      "model": "claude-opus-5",
+      "pass": false,
+      "wallMs": 16605,
+      "rounds": 0,
+      "stopReason": "tool_use",
+      "apiCalls": [
+        {
+          "ms": 3497,
+          "inputTokens": 43724,
+          "outputTokens": 65,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 6515,
+          "inputTokens": 44008,
+          "outputTokens": 445,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2901,
+          "inputTokens": 44495,
+          "outputTokens": 132,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 3656,
+          "inputTokens": 44719,
+          "outputTokens": 350,
+          "stopReason": "tool_use"
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 2,
+        "word_document_compose": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_compose",
+          "message": "Composition is available on a new AgentDocument.create() document"
+        }
+      ],
+      "tokens": {
+        "input": 176946,
+        "output": 992
+      },
+      "savedValid": true,
+      "failures": [
+        "fetch failed",
+        "expected >=3 non-empty paragraphs, got 1",
+        "no bold or heading-styled paragraph with text found"
+      ]
+    },
+    {
+      "task": "memo",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 122252,
+      "rounds": 25,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 2573,
+          "inputTokens": 43727,
+          "outputTokens": 63,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 7351,
+          "inputTokens": 44009,
+          "outputTokens": 518,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 3364,
+          "inputTokens": 44586,
+          "outputTokens": 139,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4515,
+          "inputTokens": 44906,
+          "outputTokens": 358,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 7609,
+          "inputTokens": 45292,
+          "outputTokens": 482,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 5168,
+          "inputTokens": 45811,
+          "outputTokens": 71,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4861,
+          "inputTokens": 46069,
+          "outputTokens": 360,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2785,
+          "inputTokens": 46457,
+          "outputTokens": 172,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2469,
+          "inputTokens": 46657,
+          "outputTokens": 112,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 9499,
+          "inputTokens": 46968,
+          "outputTokens": 1123,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2424,
+          "inputTokens": 48120,
+          "outputTokens": 124,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4138,
+          "inputTokens": 48463,
+          "outputTokens": 264,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4375,
+          "inputTokens": 48756,
+          "outputTokens": 288,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1588,
+          "inputTokens": 49081,
+          "outputTokens": 71,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4024,
+          "inputTokens": 49347,
+          "outputTokens": 272,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 6627,
+          "inputTokens": 49647,
+          "outputTokens": 338,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 6026,
+          "inputTokens": 50013,
+          "outputTokens": 262,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 12085,
+          "inputTokens": 52811,
+          "outputTokens": 440,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 3698,
+          "inputTokens": 53292,
+          "outputTokens": 215,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 8075,
+          "inputTokens": 53797,
+          "outputTokens": 747,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 7183,
+          "inputTokens": 54573,
+          "outputTokens": 698,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2540,
+          "inputTokens": 55312,
+          "outputTokens": 71,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4182,
+          "inputTokens": 56654,
+          "outputTokens": 354,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1888,
+          "inputTokens": 57074,
+          "outputTokens": 71,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 3161,
+          "inputTokens": 58410,
+          "outputTokens": 75,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 2,
+        "word_document_compose": 1,
+        "word_document_project": 6,
+        "word_document_patch": 2,
+        "word_document_edit": 11,
+        "word_document_capabilities": 2
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_compose",
+          "message": "Composition is available on a new AgentDocument.create() document"
+        },
+        {
+          "name": "word_document_patch",
+          "message": "splitParagraph could not apply to the referenced document state"
+        },
+        {
+          "name": "word_document_patch",
+          "message": "splitParagraph could not apply to the referenced document state"
+        },
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state"
+        },
+        {
+          "name": "word_document_edit",
+          "message": "pasteBlocks could not apply to the referenced document state"
+        },
+        {
+          "name": "word_document_edit",
+          "message": "pasteBlocks could not apply to the referenced document state"
+        },
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state"
+        },
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state"
+        },
+        {
+          "name": "word_document_edit",
+          "message": "pasteBlocks could not apply to the referenced document state"
+        }
+      ],
+      "tokens": {
+        "input": 1239832,
+        "output": 7688
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "table-report",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 49299,
+      "rounds": 11,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 1979,
+          "inputTokens": 43719,
+          "outputTokens": 67,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 11819,
+          "inputTokens": 44005,
+          "outputTokens": 905,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2061,
+          "inputTokens": 44962,
+          "outputTokens": 101,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2083,
+          "inputTokens": 45155,
+          "outputTokens": 109,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1813,
+          "inputTokens": 45302,
+          "outputTokens": 78,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 10799,
+          "inputTokens": 46109,
+          "outputTokens": 1018,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4499,
+          "inputTokens": 47153,
+          "outputTokens": 424,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1677,
+          "inputTokens": 47634,
+          "outputTokens": 78,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4942,
+          "inputTokens": 48460,
+          "outputTokens": 490,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 5135,
+          "inputTokens": 48970,
+          "outputTokens": 524,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2469,
+          "inputTokens": 49574,
+          "outputTokens": 97,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 4,
+        "word_document_compose": 1,
+        "word_document_edit": 5
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_compose",
+          "message": "Composition is available on a new AgentDocument.create() document"
+        },
+        {
+          "name": "word_document_edit",
+          "message": "formatRun could not apply to the referenced document state"
+        },
+        {
+          "name": "word_document_edit",
+          "message": "tableOp: bad shading"
+        }
+      ],
+      "tokens": {
+        "input": 511043,
+        "output": 3891
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "rewrite",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 22136,
+      "rounds": 7,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 1800,
+          "inputTokens": 43724,
+          "outputTokens": 62,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 5470,
+          "inputTokens": 44316,
+          "outputTokens": 474,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 6185,
+          "inputTokens": 44834,
+          "outputTokens": 399,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1356,
+          "inputTokens": 45270,
+          "outputTokens": 50,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 3016,
+          "inputTokens": 45951,
+          "outputTokens": 184,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1245,
+          "inputTokens": 46173,
+          "outputTokens": 50,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 3059,
+          "inputTokens": 46742,
+          "outputTokens": 80,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_project": 3,
+        "word_document_patch": 1,
+        "word_document_edit": 2
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_patch",
+          "message": "A suggested hunk can add text or remove text, not both. Send the removal and the addition as separate patches."
+        }
+      ],
+      "tokens": {
+        "input": 317010,
+        "output": 1299
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "bulk-text",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 34390,
+      "rounds": 10,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 2704,
+          "inputTokens": 43734,
+          "outputTokens": 162,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 3225,
+          "inputTokens": 44419,
+          "outputTokens": 142,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4019,
+          "inputTokens": 45091,
+          "outputTokens": 380,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 5858,
+          "inputTokens": 45523,
+          "outputTokens": 398,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1736,
+          "inputTokens": 45959,
+          "outputTokens": 71,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 6164,
+          "inputTokens": 46556,
+          "outputTokens": 420,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1769,
+          "inputTokens": 47023,
+          "outputTokens": 71,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4638,
+          "inputTokens": 47663,
+          "outputTokens": 185,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1655,
+          "inputTokens": 47889,
+          "outputTokens": 71,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2617,
+          "inputTokens": 48711,
+          "outputTokens": 59,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 2,
+        "word_document_project": 4,
+        "word_document_patch": 1,
+        "word_document_edit": 3
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_patch",
+          "message": "A suggested hunk can add text or remove text, not both. Send the removal and the addition as separate patches."
+        }
+      ],
+      "tokens": {
+        "input": 462568,
+        "output": 1959
+      },
+      "savedValid": true,
+      "failures": []
+    }
+  ]
+}
