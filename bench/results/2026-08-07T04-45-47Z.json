@@ -1,0 +1,51 @@
+{
+  "startedAt": "2026-08-07T04:45:47.271Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "table-report",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 10858,
+      "rounds": 4,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3307,
+          "inputTokens": 23288,
+          "outputTokens": 130,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2500,
+          "inputTokens": 23443,
+          "outputTokens": 135,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2951,
+          "inputTokens": 23670,
+          "outputTokens": 180,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2076,
+          "inputTokens": 23906,
+          "outputTokens": 57,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 2,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 94307,
+        "output": 502
+      },
+      "savedValid": true,
+      "failures": []
+    }
+  ]
+}

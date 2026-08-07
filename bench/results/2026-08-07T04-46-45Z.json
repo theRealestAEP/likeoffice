@@ -1,0 +1,187 @@
+{
+  "startedAt": "2026-08-07T04:46:45.441Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "declaration-intro",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 10866,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 7142,
+          "inputTokens": 23323,
+          "outputTokens": 477,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2221,
+          "inputTokens": 24569,
+          "outputTokens": 115,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1468,
+          "inputTokens": 24725,
+          "outputTokens": 25,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 72617,
+        "output": 617
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "memo",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 12730,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 5821,
+          "inputTokens": 23326,
+          "outputTokens": 333,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4725,
+          "inputTokens": 25209,
+          "outputTokens": 242,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2152,
+          "inputTokens": 25521,
+          "outputTokens": 34,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 74056,
+        "output": 609
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "table-report",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 7192,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 2742,
+          "inputTokens": 23318,
+          "outputTokens": 100,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2537,
+          "inputTokens": 23611,
+          "outputTokens": 177,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1900,
+          "inputTokens": 23844,
+          "outputTokens": 37,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 70773,
+        "output": 314
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "rewrite",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 7214,
+      "rounds": 2,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3282,
+          "inputTokens": 23499,
+          "outputTokens": 219,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 3925,
+          "inputTokens": 24343,
+          "outputTokens": 37,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 47842,
+        "output": 256
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "bulk-text",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 9283,
+      "rounds": 2,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3685,
+          "inputTokens": 23509,
+          "outputTokens": 357,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 5592,
+          "inputTokens": 24732,
+          "outputTokens": 32,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 48241,
+        "output": 389
+      },
+      "savedValid": true,
+      "failures": []
+    }
+  ]
+}

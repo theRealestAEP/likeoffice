@@ -14,3 +14,10 @@
 {"ts":"2026-08-07T04:09:48.901Z","task":"table-report","model":"claude-opus-5","ms":41221,"rounds":7,"inputTokens":319405,"outputTokens":3155,"pass":true}
 {"ts":"2026-08-07T04:09:48.901Z","task":"rewrite","model":"claude-opus-5","ms":5687,"rounds":2,"inputTokens":88996,"outputTokens":251,"pass":true}
 {"ts":"2026-08-07T04:09:48.901Z","task":"bulk-text","model":"claude-opus-5","ms":5810,"rounds":2,"inputTokens":89381,"outputTokens":392,"pass":true}
+{"ts":"2026-08-07T04:45:47.271Z","task":"table-report","model":"claude-opus-5","ms":10858,"rounds":4,"inputTokens":94307,"outputTokens":502,"pass":true}
+{"ts":"2026-08-07T04:46:25.507Z","task":"table-report","model":"claude-opus-5","ms":9164,"rounds":3,"inputTokens":70780,"outputTokens":321,"pass":true}
+{"ts":"2026-08-07T04:46:45.441Z","task":"declaration-intro","model":"claude-opus-5","ms":10866,"rounds":3,"inputTokens":72617,"outputTokens":617,"pass":true}
+{"ts":"2026-08-07T04:46:45.441Z","task":"memo","model":"claude-opus-5","ms":12730,"rounds":3,"inputTokens":74056,"outputTokens":609,"pass":true}
+{"ts":"2026-08-07T04:46:45.441Z","task":"table-report","model":"claude-opus-5","ms":7192,"rounds":3,"inputTokens":70773,"outputTokens":314,"pass":true}
+{"ts":"2026-08-07T04:46:45.441Z","task":"rewrite","model":"claude-opus-5","ms":7214,"rounds":2,"inputTokens":47842,"outputTokens":256,"pass":true}
+{"ts":"2026-08-07T04:46:45.441Z","task":"bulk-text","model":"claude-opus-5","ms":9283,"rounds":2,"inputTokens":48241,"outputTokens":389,"pass":true}

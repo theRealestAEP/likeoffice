@@ -37,7 +37,10 @@ revision from the tag, story "body", mode "text", and edits of
 
 Use word_document_inspect and word_document_edit only for what the text
 projection cannot express: formatting, styles, tables, images, objects, or
-document structure.
+document structure. To create a table: ONE word_document_inspect
+{ kind: "read" } call for the anchor runRef, then ONE insertTable operation
+carrying rows, cols, cells (all cell texts, header row first), and
+headerRow: true — never inspect twice or fill cells with separate edits.
 
 If the message notes the projection is truncated, text beyond its window is
 reachable with word_document_project and the cursor the note provides.
