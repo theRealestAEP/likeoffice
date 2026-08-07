@@ -42,11 +42,13 @@
 }
 
 /* Right-hand cap of the header strip; paints the same surface and rule as
- * the ribbon so the two read as one bar. */
+ * the ribbon so the two read as one bar. Top-aligned (with the ribbon's own
+ * 4px row padding) so the AI button stays on the first row when the expanded
+ * ribbon wraps onto more rows. */
 .app-header-cap {
   display: flex;
-  align-items: center;
-  padding: 0 10px 0 4px;
+  align-items: flex-start;
+  padding: 4px 10px 0 4px;
   background: var(--app-bg);
   border-bottom: 1px solid var(--app-border);
   font: var(--app-font);
