@@ -1,0 +1,233 @@
+{
+  "startedAt": "2026-08-07T04:09:48.901Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "declaration-intro",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 14375,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 7982,
+          "inputTokens": 43893,
+          "outputTokens": 502,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4775,
+          "inputTokens": 45165,
+          "outputTokens": 149,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1595,
+          "inputTokens": 45365,
+          "outputTokens": 35,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 134423,
+        "output": 686
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "memo",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 17338,
+      "rounds": 4,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 8283,
+          "inputTokens": 43896,
+          "outputTokens": 461,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 3906,
+          "inputTokens": 44404,
+          "outputTokens": 289,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 3421,
+          "inputTokens": 45941,
+          "outputTokens": 228,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1696,
+          "inputTokens": 46239,
+          "outputTokens": 34,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_compose": 1,
+        "word_document_patch": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_compose",
+          "message": "Composition is available on a new AgentDocument.create() document"
+        }
+      ],
+      "tokens": {
+        "input": 180480,
+        "output": 1012
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "table-report",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 41221,
+      "rounds": 7,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 10179,
+          "inputTokens": 43888,
+          "outputTokens": 730,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2306,
+          "inputTokens": 44673,
+          "outputTokens": 111,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 6723,
+          "inputTokens": 44876,
+          "outputTokens": 109,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1609,
+          "inputTokens": 45023,
+          "outputTokens": 78,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 9548,
+          "inputTokens": 45830,
+          "outputTokens": 1025,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 8835,
+          "inputTokens": 46977,
+          "outputTokens": 1040,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1965,
+          "inputTokens": 48138,
+          "outputTokens": 62,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_compose": 1,
+        "word_document_inspect": 2,
+        "word_document_edit": 3
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_compose",
+          "message": "Composition is available on a new AgentDocument.create() document"
+        },
+        {
+          "name": "word_document_edit",
+          "message": "tableOp: bad shading"
+        }
+      ],
+      "tokens": {
+        "input": 319405,
+        "output": 3155
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "rewrite",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 5687,
+      "rounds": 2,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 4066,
+          "inputTokens": 44069,
+          "outputTokens": 226,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1615,
+          "inputTokens": 44927,
+          "outputTokens": 25,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 88996,
+        "output": 251
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "bulk-text",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 5810,
+      "rounds": 2,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 4072,
+          "inputTokens": 44079,
+          "outputTokens": 357,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1732,
+          "inputTokens": 45302,
+          "outputTokens": 35,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 89381,
+        "output": 392
+      },
+      "savedValid": true,
+      "failures": []
+    }
+  ]
+}
