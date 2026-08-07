@@ -1,0 +1,54 @@
+# Packaging config for LikeOffice.
+#
+# The app ships the electron-vite output (out/) plus resources/. The renderer
+# bundle is self-contained: Vite inlines the file:-linked engine packages
+# (wordinweb, @wordinweb/agent), so they live in devDependencies and are
+# never collected into the asar. Only the runtime dependencies of the main
+# process (@anthropic-ai/sdk, electron-updater) get packed as node_modules.
+appId: com.likeoffice.app
+productName: LikeOffice
+copyright: Copyright © 2026 LikeOffice contributors
+
+directories:
+  buildResources: build
+  output: release
+
+files:
+  - out/**
+  - resources/**
+
+npmRebuild: false
+
+fileAssociations:
+  - ext: docx
+    name: Word Document
+    description: Word Document
+    mimeType: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    role: Editor
+
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+  # Unsigned by default. Set CSC_LINK / CSC_KEY_PASSWORD to sign; see RELEASING.md.
+  notarize: false
+
+win:
+  target:
+    - nsis
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Office
+  maintainer: LikeOffice contributors
+  synopsis: High-fidelity .docx word processor
+
+publish:
+  provider: github
+  owner: theRealestAEP
+  repo: likeoffice

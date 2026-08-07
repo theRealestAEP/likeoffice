@@ -1,5 +1,6 @@
 import { app, Menu, type MenuItemConstructorOptions } from "electron";
 import { createDocumentWindow, openDocumentDialog } from "./index";
+import { checkForUpdates } from "./updater";
 
 function sendToFocused(action: string): (menuItem: unknown, win?: unknown) => void {
   return (_item, win) => {
@@ -15,6 +16,13 @@ export function buildMenu(): Menu {
     accelerator: "CmdOrCtrl+,",
     click: sendToFocused("settings"),
   };
+  // Updates come from GitHub Releases; only the packaged app can install them.
+  const updateItems: MenuItemConstructorOptions[] = app.isPackaged
+    ? [
+        { label: "Check for Updates…", click: () => void checkForUpdates() },
+        { type: "separator" },
+      ]
+    : [];
 
   const template: MenuItemConstructorOptions[] = [
     ...(isMac
@@ -24,6 +32,7 @@ export function buildMenu(): Menu {
             submenu: [
               { role: "about" },
               { type: "separator" },
+              ...updateItems,
               settingsItem,
               { type: "separator" },
               { role: "hide" },
@@ -58,7 +67,7 @@ export function buildMenu(): Menu {
         { label: "Export as PDF…", click: sendToFocused("export-pdf") },
         { label: "Print…", accelerator: "CmdOrCtrl+P", click: sendToFocused("print") },
         { type: "separator" },
-        ...(isMac ? [] : [settingsItem, { type: "separator" } as MenuItemConstructorOptions]),
+        ...(isMac ? [] : [...updateItems, settingsItem, { type: "separator" } as MenuItemConstructorOptions]),
         { role: "close" },
       ],
     },
