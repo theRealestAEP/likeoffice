@@ -48,9 +48,15 @@ interface ModelToolDefinition {
 }
 
 interface ModelRequest {
+  requestId: string;
   system: string;
   messages: ModelMessage[];
   tools: ModelToolDefinition[];
+}
+
+interface ModelDelta {
+  requestId: string;
+  text: string;
 }
 
 type ModelReply =
@@ -67,6 +73,7 @@ interface LikeOfficeBridge {
   getSettings(): Promise<SettingsView>;
   setSettings(apiKey: string | null, model: string): Promise<SettingsView>;
   sendModelMessage(request: ModelRequest): Promise<ModelReply>;
+  onModelDelta(cb: (delta: ModelDelta) => void): () => void;
 }
 
 interface Window {

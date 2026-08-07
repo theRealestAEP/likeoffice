@@ -23,6 +23,14 @@ const api = {
     ipcRenderer.invoke("settings:set", apiKey, model),
   sendModelMessage: (request: unknown): Promise<unknown> =>
     ipcRenderer.invoke("model:message", request),
+  onModelDelta: (cb: (delta: { requestId: string; text: string }) => void): (() => void) => {
+    const listener = (_e: IpcRendererEvent, delta: { requestId: string; text: string }) =>
+      cb(delta);
+    ipcRenderer.on("model:delta", listener);
+    return () => {
+      ipcRenderer.removeListener("model:delta", listener);
+    };
+  },
   getInitialDocument: (): Promise<InitialDocument> =>
     ipcRenderer.invoke("document:init"),
   saveDocument: (bytes: Uint8Array, saveAs: boolean): Promise<SaveResult | null> =>

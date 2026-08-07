@@ -6,15 +6,29 @@ const MAX_ROUNDS = 30;
 
 const SYSTEM_PROMPT = `You edit the Word document the user has open in LikeOffice.
 
-Inspect before you edit: read the relevant part of the document so your edits
-address what is actually there. For bulk text work use word_document_project to
-read a window of the document and word_document_patch to rewrite lines in it;
-use word_document_edit for targeted structural or formatting changes.
+Each user message opens with a <document> tag: the document body projected as
+numbered lines, with the revision it was read at. That is the current
+document — do not project or inspect it again.
+
+For text work — wording, adding, removing, or rewriting text — reply with ONE
+word_document_patch call immediately, against those line numbers. Pass the
+revision from the tag, story "body", mode "text", and edits of
+{ startLine, endLine, newText } that rewrite whole lines. One constraint: a
+tracked rewrite cannot remove and add text on the same line in one call, so
+send the removal patch first, then the insertion against the fresh projection
+the removal returns.
+
+Use word_document_inspect and word_document_edit only for what the text
+projection cannot express: formatting, styles, tables, images, objects, or
+document structure.
+
+If the message notes the projection is truncated, text beyond its window is
+reachable with word_document_project and the cursor the note provides.
 
 Every edit you make is recorded as a tracked change for the user to accept or
 reject, so make the change rather than describing what they should type.
 
-Keep replies short — a sentence or two on what you changed.`;
+Keep replies to a sentence.`;
 
 const EDITING_TOOLS = new Set([
   "word_document_edit",
@@ -25,6 +39,47 @@ const EDITING_TOOLS = new Set([
 interface Entry {
   role: "user" | "assistant" | "tool" | "error";
   text: string;
+}
+
+/** The window a projection covers, plus what patches need to address it. */
+interface ProjectionWindow {
+  revision: string;
+  text: string;
+  truncated: boolean;
+  next?: { value: string };
+}
+
+const PROJECTION_MAX_CHARACTERS = 50_000;
+
+/** Read the document body once, up front, and fold it into the user's message
+ * as numbered lines. A text-only ask can then patch in the first round with
+ * no inspection round-trip. The projection stays cached on the AgentDocument,
+ * so the patch's line numbers resolve against exactly this window. */
+async function projectionMessage(
+  tools: ReturnType<AgentDocument["tools"]>,
+  ask: string,
+): Promise<string> {
+  const project = tools.find((t) => t.name === "word_document_project");
+  if (!project) return ask;
+  try {
+    const projection = (await project.execute({
+      story: "body",
+      mode: "text",
+      maxCharacters: PROJECTION_MAX_CHARACTERS,
+    })) as ProjectionWindow;
+    const numbered = projection.text
+      .split("\n")
+      .map((line, index) => `${index + 1}: ${line}`)
+      .join("\n");
+    const note =
+      projection.truncated && projection.next
+        ? `\n(The projection is truncated. Project further windows with word_document_project and cursor "${projection.next.value}".)`
+        : "";
+    return `<document story="body" mode="text" revision="${projection.revision}">\n${numbered}\n</document>${note}\n\n${ask}`;
+  } catch {
+    // Without a projection the model falls back to inspecting via tools.
+    return ask;
+  }
 }
 
 /** Ask the engine to record this call's edits as tracked changes. The agent
@@ -62,6 +117,9 @@ export function AiPanel({
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [suggested, setSuggested] = useState<number | null>(null);
+  // Model text as it streams in, shown live and replaced by the final reply.
+  // Null whenever no delta has arrived for the in-flight request.
+  const [streamText, setStreamText] = useState<string | null>(null);
   const history = useRef<ModelMessage[]>([]);
 
   // Keep the transcript pinned to the newest entry, but only while the user
@@ -71,7 +129,7 @@ export function AiPanel({
   useEffect(() => {
     const el = scrollRef.current;
     if (el && stickRef.current) el.scrollTop = el.scrollHeight;
-  }, [entries, busy, suggested]);
+  }, [entries, busy, suggested, streamText]);
 
   const add = (entry: Entry) => setEntries((list) => [...list, entry]);
 
@@ -79,7 +137,6 @@ export function AiPanel({
     setBusy(true);
     setSuggested(null);
     add({ role: "user", text });
-    history.current.push({ role: "user", content: text });
 
     const tools = agentDoc.tools();
     const definitions = tools.map((t) => ({
@@ -88,17 +145,31 @@ export function AiPanel({
       input_schema: t.inputSchema,
     }));
 
+    history.current.push({ role: "user", content: await projectionMessage(tools, text) });
+
     const wasSuggesting = api.isSuggesting();
     api.setSuggesting(true, "AI");
     let edited = false;
 
+    const activeRequest = { current: "" };
+    const unsubscribe = window.likeoffice.onModelDelta(({ requestId, text: delta }) => {
+      if (requestId === activeRequest.current) {
+        setStreamText((current) => (current ?? "") + delta);
+      }
+    });
+
     try {
       for (let round = 0; round < MAX_ROUNDS; round++) {
+        activeRequest.current = crypto.randomUUID();
+        setStreamText(null);
         const reply = await window.likeoffice.sendModelMessage({
+          requestId: activeRequest.current,
           system: SYSTEM_PROMPT,
           messages: history.current,
           tools: definitions,
         });
+        activeRequest.current = "";
+        setStreamText(null);
         if (reply.error !== undefined) {
           add({ role: "error", text: reply.error });
           return;
@@ -148,6 +219,8 @@ export function AiPanel({
     } catch (error) {
       add({ role: "error", text: error instanceof Error ? error.message : String(error) });
     } finally {
+      unsubscribe();
+      setStreamText(null);
       api.setSuggesting(wasSuggesting);
       if (edited) {
         onEdited();
@@ -205,7 +278,12 @@ export function AiPanel({
             </p>
           ),
         )}
-        {busy && (
+        {streamText !== null && (
+          <p className="ai-entry ai-entry-assistant ai-entry-streaming" role="status">
+            {streamText}
+          </p>
+        )}
+        {busy && streamText === null && (
           <div className="ai-busy" role="status" aria-label="Working">
             <span />
             <span />

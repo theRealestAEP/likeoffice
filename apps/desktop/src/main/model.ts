@@ -3,6 +3,8 @@ import { ipcMain } from "electron";
 import { readSettings } from "./settings";
 
 export interface ModelRequest {
+  /** Correlates streamed deltas with the invoke that produced them. */
+  requestId?: string;
   system: string;
   messages: Anthropic.MessageParam[];
   tools: Anthropic.Tool[];
@@ -83,7 +85,7 @@ function validateRequestShape(request: ModelRequest): string | null {
   return null;
 }
 
-ipcMain.handle("model:message", async (_e, request: ModelRequest): Promise<ModelReply> => {
+ipcMain.handle("model:message", async (event, request: ModelRequest): Promise<ModelReply> => {
   if (process.env.LIKEOFFICE_FAKE_MODEL) {
     const shapeError = validateRequestShape(request);
     if (shapeError) return { error: `400 (fake): ${shapeError}` };
@@ -93,14 +95,29 @@ ipcMain.handle("model:message", async (_e, request: ModelRequest): Promise<Model
   const { apiKey, model } = await readSettings();
   if (!apiKey) return { error: "No API key configured. Open Settings to add one." };
 
+  // Cache breakpoints on the system prompt and the last tool definition: both
+  // are byte-stable across rounds, so round 2 of a tool loop reads the whole
+  // prefix back at cache prices instead of re-processing the tool schemas.
+  const tools = request.tools.map((tool, index) =>
+    index === request.tools.length - 1
+      ? { ...tool, cache_control: { type: "ephemeral" as const } }
+      : tool,
+  );
+
   try {
-    const response = await new Anthropic({ apiKey }).messages.create({
+    const stream = new Anthropic({ apiKey }).messages.stream({
       model,
       max_tokens: 16000,
-      system: request.system,
+      system: [{ type: "text", text: request.system, cache_control: { type: "ephemeral" } }],
       messages: request.messages,
-      tools: request.tools,
+      tools,
     });
+    stream.on("text", (text) => {
+      if (!event.sender.isDestroyed()) {
+        event.sender.send("model:delta", { requestId: request.requestId, text });
+      }
+    });
+    const response = await stream.finalMessage();
     return { content: response.content, stopReason: response.stop_reason };
   } catch (error) {
     return { error: error instanceof Error ? error.message : String(error) };
