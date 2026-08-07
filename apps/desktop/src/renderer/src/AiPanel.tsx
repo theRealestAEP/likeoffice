@@ -13,10 +13,7 @@ document — do not project or inspect it again.
 For text work — wording, adding, removing, or rewriting text — reply with ONE
 word_document_patch call immediately, against those line numbers. Pass the
 revision from the tag, story "body", mode "text", and edits of
-{ startLine, endLine, newText } that rewrite whole lines. One constraint: a
-tracked rewrite cannot remove and add text on the same line in one call, so
-send the removal patch first, then the insertion against the fresh projection
-the removal returns.
+{ startLine, endLine, newText } that rewrite whole lines.
 
 Use word_document_inspect and word_document_edit only for what the text
 projection cannot express: formatting, styles, tables, images, objects, or
