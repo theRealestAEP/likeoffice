@@ -21,3 +21,4 @@
 {"ts":"2026-08-07T04:46:45.441Z","task":"table-report","model":"claude-opus-5","ms":7192,"rounds":3,"inputTokens":70773,"outputTokens":314,"pass":true}
 {"ts":"2026-08-07T04:46:45.441Z","task":"rewrite","model":"claude-opus-5","ms":7214,"rounds":2,"inputTokens":47842,"outputTokens":256,"pass":true}
 {"ts":"2026-08-07T04:46:45.441Z","task":"bulk-text","model":"claude-opus-5","ms":9283,"rounds":2,"inputTokens":48241,"outputTokens":389,"pass":true}
+{"ts":"2026-08-07T17:24:02.927Z","task":"object-insert","model":"claude-opus-5","ms":12562,"rounds":3,"inputTokens":72266,"outputTokens":789,"pass":true}

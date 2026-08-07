@@ -1,0 +1,45 @@
+{
+  "startedAt": "2026-08-07T17:24:02.927Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 12562,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 2656,
+          "inputTokens": 23639,
+          "outputTokens": 133,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 8324,
+          "inputTokens": 23965,
+          "outputTokens": 619,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1567,
+          "inputTokens": 24662,
+          "outputTokens": 37,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 72266,
+        "output": 789
+      },
+      "savedValid": true,
+      "failures": []
+    }
+  ]
+}

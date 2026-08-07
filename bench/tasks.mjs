@@ -267,4 +267,61 @@ export const tasks = [
       return failures;
     },
   },
+  {
+    // Object insertion: chart + text box + display equation. Target: <=4 rounds.
+    name: "object-insert",
+    fixture: "blank",
+    prompt:
+      "Add a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation.",
+    assert({ final }) {
+      const failures = [];
+
+      // (1) Chart part with the right data. The chart lives in its own package
+      // part (word/charts/chartN.xml), reachable through the reloaded
+      // document's pkg; its writer caches every category/value as
+      // <c:pt><c:v>...</c:v></c:pt>, so string checks on the part are exact.
+      const chartParts = final.doc.pkg
+        .names()
+        .filter((n) => /^word\/charts\/chart\d*\.xml$/.test(n));
+      if (chartParts.length !== 1) {
+        failures.push(`expected exactly 1 chart part, got ${chartParts.length}`);
+      } else {
+        const xml = final.doc.pkg.text(chartParts[0]) ?? "";
+        const cat = xml.match(/<c:cat>([\s\S]*?)<\/c:cat>/);
+        const catCount = cat ? (cat[1].match(/<c:pt\b/g) ?? []).length : 0;
+        if (catCount !== 4) {
+          failures.push(`chart: expected 4 category literals, got ${catCount}`);
+        }
+        const val = xml.match(/<c:val>([\s\S]*?)<\/c:val>/);
+        const values = val
+          ? [...val[1].matchAll(/<c:v>([^<]*)<\/c:v>/g)].map((m) => Number(m[1]))
+          : [];
+        if (values.join(",") !== "10,12,9,15") {
+          failures.push(
+            `chart: expected series values 10,12,9,15, got [${values.join(",")}]`,
+          );
+        }
+        const title = xml.match(/<c:title>[\s\S]*?<\/c:title>/);
+        if (!title || !title[0].includes("Revenue")) {
+          failures.push('chart: no title containing "Revenue"');
+        }
+      }
+
+      // (2) A text box whose text mentions Draft. Text boxes serialize as
+      // txbxContent (wps and VML fallback alike) inside document.xml.
+      const boxes = collect(final.doc.docRoot, "txbxContent");
+      if (boxes.length === 0) {
+        failures.push("no text box (txbxContent) in the saved document");
+      } else if (!boxes.some((box) => /draft/i.test(textOf(box)))) {
+        failures.push('no text box whose text contains "Draft"');
+      }
+
+      // (3) A display equation.
+      if (collect(final.doc.docRoot, "oMath").length === 0) {
+        failures.push("no m:oMath region in the saved document");
+      }
+
+      return failures;
+    },
+  },
 ];
