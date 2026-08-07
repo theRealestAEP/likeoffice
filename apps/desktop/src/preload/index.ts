@@ -13,14 +13,51 @@ export interface SaveResult {
 }
 
 export interface SettingsView {
+  provider: string;
   hasKey: boolean;
   model: string;
 }
 
 const api = {
   getSettings: (): Promise<SettingsView> => ipcRenderer.invoke("settings:get"),
-  setSettings: (apiKey: string | null, model: string): Promise<SettingsView> =>
-    ipcRenderer.invoke("settings:set", apiKey, model),
+  setSettings: (apiKey: string | null, model: string, provider: string): Promise<SettingsView> =>
+    ipcRenderer.invoke("settings:set", apiKey, model, provider),
+  getProviderStatus: (): Promise<unknown> => ipcRenderer.invoke("providers:status"),
+  runAgent: (request: unknown): Promise<unknown> => ipcRenderer.invoke("agent:run", request),
+  cancelAgent: (): void => {
+    ipcRenderer.send("agent:cancel");
+  },
+  sendAgentToolResult: (result: {
+    callId: string;
+    content: string;
+    isError: boolean;
+  }): void => {
+    ipcRenderer.send("agent:tool-result", result);
+  },
+  onAgentEvent: (
+    cb: (event: { sessionId: string; type: string; text?: string }) => void,
+  ): (() => void) => {
+    const listener = (
+      _e: IpcRendererEvent,
+      event: { sessionId: string; type: string; text?: string },
+    ) => cb(event);
+    ipcRenderer.on("agent:event", listener);
+    return () => {
+      ipcRenderer.removeListener("agent:event", listener);
+    };
+  },
+  onAgentToolCall: (
+    cb: (call: { sessionId: string; callId: string; name: string; input: unknown }) => void,
+  ): (() => void) => {
+    const listener = (
+      _e: IpcRendererEvent,
+      call: { sessionId: string; callId: string; name: string; input: unknown },
+    ) => cb(call);
+    ipcRenderer.on("agent:tool-call", listener);
+    return () => {
+      ipcRenderer.removeListener("agent:tool-call", listener);
+    };
+  },
   sendModelMessage: (request: unknown): Promise<unknown> =>
     ipcRenderer.invoke("model:message", request),
   onModelDelta: (cb: (delta: { requestId: string; text: string }) => void): (() => void) => {

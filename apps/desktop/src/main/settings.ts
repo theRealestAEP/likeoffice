@@ -2,12 +2,17 @@ import { app, ipcMain } from "electron";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+export type Provider = "anthropic-api" | "claude-subscription" | "codex-subscription";
+
 export interface Settings {
+  provider: Provider;
   apiKey: string;
   model: string;
 }
 
 export const DEFAULT_MODEL = "claude-opus-5";
+
+const PROVIDERS: Provider[] = ["anthropic-api", "claude-subscription", "codex-subscription"];
 
 function settingsFile(): string {
   return path.join(app.getPath("userData"), "settings.json");
@@ -40,11 +45,12 @@ export async function readSettings(): Promise<Settings> {
   try {
     const raw = JSON.parse(await readFile(settingsFile(), "utf8"));
     settings = {
+      provider: PROVIDERS.includes(raw.provider) ? raw.provider : "anthropic-api",
       apiKey: typeof raw.apiKey === "string" ? raw.apiKey : "",
       model: typeof raw.model === "string" ? raw.model : DEFAULT_MODEL,
     };
   } catch {
-    settings = { apiKey: "", model: DEFAULT_MODEL };
+    settings = { provider: "anthropic-api", apiKey: "", model: DEFAULT_MODEL };
   }
   if (!settings.apiKey) settings.apiKey = await envApiKey();
   return settings;
@@ -54,12 +60,19 @@ export async function readSettings(): Promise<Settings> {
 // is set, and sends null when the user leaves the field untouched.
 ipcMain.handle("settings:get", async () => {
   const settings = await readSettings();
-  return { hasKey: settings.apiKey !== "", model: settings.model };
+  return { provider: settings.provider, hasKey: settings.apiKey !== "", model: settings.model };
 });
 
-ipcMain.handle("settings:set", async (_e, apiKey: string | null, model: string) => {
-  const current = await readSettings();
-  const next: Settings = { apiKey: apiKey ?? current.apiKey, model };
-  await writeFile(settingsFile(), JSON.stringify(next, null, 2));
-  return { hasKey: next.apiKey !== "", model: next.model };
-});
+ipcMain.handle(
+  "settings:set",
+  async (_e, apiKey: string | null, model: string, provider: Provider) => {
+    const current = await readSettings();
+    const next: Settings = {
+      provider: PROVIDERS.includes(provider) ? provider : current.provider,
+      apiKey: apiKey ?? current.apiKey,
+      model,
+    };
+    await writeFile(settingsFile(), JSON.stringify(next, null, 2));
+    return { provider: next.provider, hasKey: next.apiKey !== "", model: next.model };
+  },
+);

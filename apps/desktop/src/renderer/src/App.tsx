@@ -44,7 +44,11 @@ function Editor({ initial }: { initial: InitialDocument }) {
   const [dirty, setDirty] = useState(initial.recovered);
   const [panelOpen, setPanelOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settings, setSettings] = useState<SettingsView>({ hasKey: false, model: "" });
+  const [settings, setSettings] = useState<SettingsView>({
+    provider: "anthropic-api",
+    hasKey: false,
+    model: "",
+  });
   const apiRef = useRef<DocxViewApi | null>(null);
   apiRef.current = api;
 
@@ -161,7 +165,7 @@ function Editor({ initial }: { initial: InitialDocument }) {
           <AiPanel
             agentDoc={agentDoc}
             api={api}
-            hasKey={settings.hasKey}
+            settings={settings}
             onOpenSettings={() => setSettingsOpen(true)}
             onEdited={markDirty}
           />

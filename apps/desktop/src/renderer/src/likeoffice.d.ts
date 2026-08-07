@@ -10,9 +10,43 @@ interface SaveResult {
   name: string;
 }
 
+type Provider = "anthropic-api" | "claude-subscription" | "codex-subscription";
+
 interface SettingsView {
+  provider: Provider;
   hasKey: boolean;
   model: string;
+}
+
+interface CliStatus {
+  installed: boolean;
+  version?: string;
+  loggedIn?: boolean;
+}
+
+interface ProviderStatus {
+  claude: CliStatus;
+  codex: CliStatus;
+}
+
+interface AgentRunRequest {
+  sessionId: string;
+  system: string;
+  prompt: string;
+  tools: ModelToolDefinition[];
+}
+
+interface AgentEvent {
+  sessionId: string;
+  type: "delta" | "assistant";
+  text?: string;
+}
+
+interface AgentToolCall {
+  sessionId: string;
+  callId: string;
+  name: string;
+  input: unknown;
 }
 
 interface ModelToolUse {
@@ -71,9 +105,15 @@ interface LikeOfficeBridge {
   exportPdf(html: string): Promise<{ path: string } | null>;
   onMenu(cb: (action: string) => void): () => void;
   getSettings(): Promise<SettingsView>;
-  setSettings(apiKey: string | null, model: string): Promise<SettingsView>;
+  setSettings(apiKey: string | null, model: string, provider: Provider): Promise<SettingsView>;
+  getProviderStatus(): Promise<ProviderStatus>;
   sendModelMessage(request: ModelRequest): Promise<ModelReply>;
   onModelDelta(cb: (delta: ModelDelta) => void): () => void;
+  runAgent(request: AgentRunRequest): Promise<{ error?: string }>;
+  cancelAgent(): void;
+  sendAgentToolResult(result: { callId: string; content: string; isError: boolean }): void;
+  onAgentEvent(cb: (event: AgentEvent) => void): () => void;
+  onAgentToolCall(cb: (call: AgentToolCall) => void): () => void;
 }
 
 interface Window {

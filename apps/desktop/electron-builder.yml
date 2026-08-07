@@ -4,7 +4,8 @@
 # bundle is self-contained: Vite inlines the file:-linked engine packages
 # (wordinweb, @wordinweb/agent), so they live in devDependencies and are
 # never collected into the asar. Only the runtime dependencies of the main
-# process (@anthropic-ai/sdk, electron-updater) get packed as node_modules.
+# process (@anthropic-ai/sdk, @anthropic-ai/claude-agent-sdk,
+# @modelcontextprotocol/sdk, electron-updater) get packed as node_modules.
 appId: com.likeoffice.app
 productName: LikeOffice
 copyright: Copyright © 2026 LikeOffice contributors

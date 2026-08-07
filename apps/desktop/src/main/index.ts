@@ -4,6 +4,8 @@ import path from "node:path";
 import { buildMenu } from "./menu";
 import "./settings";
 import "./model";
+import "./providers";
+import "./agent";
 
 interface DocState {
   path: string | null;

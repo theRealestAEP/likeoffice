@@ -103,13 +103,13 @@ function withSuggestions(name: string, input: unknown): unknown {
 export function AiPanel({
   agentDoc,
   api,
-  hasKey,
+  settings,
   onOpenSettings,
   onEdited,
 }: {
   agentDoc: AgentDocument;
   api: DocxViewApi;
-  hasKey: boolean;
+  settings: SettingsView;
   onOpenSettings: () => void;
   onEdited: () => void;
 }) {
@@ -121,6 +121,17 @@ export function AiPanel({
   // Null whenever no delta has arrived for the in-flight request.
   const [streamText, setStreamText] = useState<string | null>(null);
   const history = useRef<ModelMessage[]>([]);
+  // Plain-text exchange log for the subscription providers, whose agent runs
+  // are one per user message and otherwise stateless.
+  const agentLog = useRef<{ role: "user" | "assistant"; text: string }[]>([]);
+
+  const subscription = settings.provider !== "anthropic-api";
+  const ready = subscription || settings.hasKey;
+
+  // Closing the panel cancels any in-flight subscription agent run.
+  useEffect(() => {
+    return () => window.likeoffice.cancelAgent();
+  }, []);
 
   // Keep the transcript pinned to the newest entry, but only while the user
   // has not scrolled up to read something older.
@@ -139,6 +150,107 @@ export function AiPanel({
     add({ role: "user", text });
 
     const tools = agentDoc.tools();
+    const wasSuggesting = api.isSuggesting();
+    api.setSuggesting(true, "AI");
+    const edited = { current: false };
+
+    try {
+      if (subscription) await runAgentTurn(tools, text, edited);
+      else await runApiLoop(tools, text, edited);
+    } catch (error) {
+      add({ role: "error", text: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setStreamText(null);
+      api.setSuggesting(wasSuggesting);
+      if (edited.current) {
+        onEdited();
+        setSuggested(api.revisionCount());
+      }
+      setBusy(false);
+    }
+  };
+
+  /** Execute one document tool call on behalf of whichever provider asked. */
+  const executeTool = async (
+    tools: ReturnType<AgentDocument["tools"]>,
+    name: string,
+    input: unknown,
+    edited: { current: boolean },
+  ): Promise<{ content: string; isError: boolean }> => {
+    add({ role: "tool", text: name });
+    const tool = tools.find((t) => t.name === name);
+    if (!tool) return { content: `Unknown tool ${name}`, isError: true };
+    try {
+      const output = await tool.execute(withSuggestions(name, input));
+      if (EDITING_TOOLS.has(name)) edited.current = true;
+      return { content: JSON.stringify(output), isError: false };
+    } catch (error) {
+      return {
+        content: error instanceof Error ? error.message : String(error),
+        isError: true,
+      };
+    }
+  };
+
+  /** Subscription providers: one agent run per user message, driven in the
+   * main process. Tool calls come back over IPC and execute here, against
+   * the live document, with the suggest flag injected as usual. */
+  const runAgentTurn = async (
+    tools: ReturnType<AgentDocument["tools"]>,
+    text: string,
+    edited: { current: boolean },
+  ) => {
+    const definitions = tools.map((t) => ({
+      name: t.name,
+      description: t.description,
+      input_schema: t.inputSchema,
+    }));
+    const context = agentLog.current
+      .map((e) => `${e.role === "user" ? "User" : "Assistant"}: ${e.text}`)
+      .join("\n");
+    const ask = context === "" ? text : `Earlier conversation:\n${context}\n\nUser: ${text}`;
+    const prompt = await projectionMessage(tools, ask);
+    agentLog.current.push({ role: "user", text });
+
+    const sessionId = crypto.randomUUID();
+    const offEvent = window.likeoffice.onAgentEvent((event) => {
+      if (event.sessionId !== sessionId) return;
+      if (event.type === "delta" && event.text) {
+        setStreamText((current) => (current ?? "") + event.text);
+      } else if (event.type === "assistant" && event.text) {
+        setStreamText(null);
+        add({ role: "assistant", text: event.text });
+        agentLog.current.push({ role: "assistant", text: event.text });
+      }
+    });
+    const offCall = window.likeoffice.onAgentToolCall((call) => {
+      if (call.sessionId !== sessionId) return;
+      void executeTool(tools, call.name, call.input, edited).then((result) =>
+        window.likeoffice.sendAgentToolResult({ callId: call.callId, ...result }),
+      );
+    });
+
+    try {
+      const reply = await window.likeoffice.runAgent({
+        sessionId,
+        system: SYSTEM_PROMPT,
+        prompt,
+        tools: definitions,
+      });
+      if (reply.error) add({ role: "error", text: reply.error });
+    } finally {
+      offEvent();
+      offCall();
+    }
+  };
+
+  /** Anthropic API key (and the fake model): the tool loop runs here in the
+   * renderer, one messages.create round per tool round. */
+  const runApiLoop = async (
+    tools: ReturnType<AgentDocument["tools"]>,
+    text: string,
+    edited: { current: boolean },
+  ) => {
     const definitions = tools.map((t) => ({
       name: t.name,
       description: t.description,
@@ -146,10 +258,6 @@ export function AiPanel({
     }));
 
     history.current.push({ role: "user", content: await projectionMessage(tools, text) });
-
-    const wasSuggesting = api.isSuggesting();
-    api.setSuggesting(true, "AI");
-    let edited = false;
 
     const activeRequest = { current: "" };
     const unsubscribe = window.likeoffice.onModelDelta(({ requestId, text: delta }) => {
@@ -185,48 +293,19 @@ export function AiPanel({
 
         const results: ModelToolResult[] = [];
         for (const call of calls) {
-          add({ role: "tool", text: call.name });
-          const tool = tools.find((t) => t.name === call.name);
-          if (!tool) {
-            results.push({
-              type: "tool_result",
-              tool_use_id: call.id,
-              content: `Unknown tool ${call.name}`,
-              is_error: true,
-            });
-            continue;
-          }
-          try {
-            const output = await tool.execute(withSuggestions(call.name, call.input));
-            if (EDITING_TOOLS.has(call.name)) edited = true;
-            results.push({
-              type: "tool_result",
-              tool_use_id: call.id,
-              content: JSON.stringify(output),
-            });
-          } catch (error) {
-            results.push({
-              type: "tool_result",
-              tool_use_id: call.id,
-              content: error instanceof Error ? error.message : String(error),
-              is_error: true,
-            });
-          }
+          const result = await executeTool(tools, call.name, call.input, edited);
+          results.push({
+            type: "tool_result",
+            tool_use_id: call.id,
+            content: result.content,
+            ...(result.isError ? { is_error: true } : {}),
+          });
         }
         history.current.push({ role: "user", content: results });
       }
       add({ role: "error", text: `Stopped after ${MAX_ROUNDS} tool rounds.` });
-    } catch (error) {
-      add({ role: "error", text: error instanceof Error ? error.message : String(error) });
     } finally {
       unsubscribe();
-      setStreamText(null);
-      api.setSuggesting(wasSuggesting);
-      if (edited) {
-        onEdited();
-        setSuggested(api.revisionCount());
-      }
-      setBusy(false);
     }
   };
 
@@ -258,7 +337,7 @@ export function AiPanel({
         }}
         data-testid="ai-transcript"
       >
-        {!hasKey && (
+        {!ready && (
           <div className="ai-notice">
             Set your Anthropic API key in{" "}
             <button className="btn-link" onClick={onOpenSettings}>
@@ -309,11 +388,11 @@ export function AiPanel({
         )}
       </div>
       <div className="ai-composer">
-        <div className={`ai-composer-box${hasKey ? "" : " disabled"}`}>
+        <div className={`ai-composer-box${ready ? "" : " disabled"}`}>
           <textarea
             className="ai-composer-input"
             value={input}
-            disabled={!hasKey}
+            disabled={!ready}
             placeholder="Ask for an edit…"
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -328,7 +407,7 @@ export function AiPanel({
           <button
             className="ai-send"
             onClick={submit}
-            disabled={!hasKey || busy || input.trim() === ""}
+            disabled={!ready || busy || input.trim() === ""}
             aria-label="Send"
             title="Send"
           >
