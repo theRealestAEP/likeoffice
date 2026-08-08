@@ -3,6 +3,7 @@ import { mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promise
 import path from "node:path";
 import { buildMenu } from "./menu";
 import "./settings";
+import "./spellcheck";
 import "./model";
 import "./providers";
 import "./agent";

@@ -16,7 +16,10 @@ interface SettingsView {
   provider: Provider;
   hasKey: boolean;
   model: string;
+  spellLanguage: string;
 }
+
+type SpellMenuAction = { type: "replace"; text: string } | { type: "add-word" };
 
 interface CliStatus {
   installed: boolean;
@@ -105,7 +108,22 @@ interface LikeOfficeBridge {
   exportPdf(html: string): Promise<{ path: string } | null>;
   onMenu(cb: (action: string) => void): () => void;
   getSettings(): Promise<SettingsView>;
-  setSettings(apiKey: string | null, model: string, provider: Provider): Promise<SettingsView>;
+  setSettings(
+    apiKey: string | null,
+    model: string,
+    provider: Provider,
+    spellLanguage: string,
+  ): Promise<SettingsView>;
+  spellCheck(words: string[]): Promise<string[]>;
+  spellSuggest(word: string): Promise<string[]>;
+  spellAddWord(word: string): Promise<void>;
+  spellMenu(
+    word: string,
+    suggestions: string[],
+    x: number,
+    y: number,
+  ): Promise<SpellMenuAction | null>;
+  onSpellChanged(cb: () => void): () => void;
   getProviderStatus(): Promise<ProviderStatus>;
   sendModelMessage(request: ModelRequest): Promise<ModelReply>;
   onModelDelta(cb: (delta: ModelDelta) => void): () => void;

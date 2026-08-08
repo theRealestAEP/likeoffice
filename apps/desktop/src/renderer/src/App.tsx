@@ -9,6 +9,8 @@ import {
 import { AgentDocument, LocalDocumentSession, localDocumentViewBinding } from "@wordinweb/agent";
 import { AiPanel } from "./AiPanel";
 import { SettingsDialog } from "./SettingsDialog";
+import { attachSpellcheck } from "./spellcheck";
+import { WordCount } from "./WordCount";
 
 const EDIT_KEYS = new Set(["Enter", "Backspace", "Delete", "Tab"]);
 
@@ -48,9 +50,14 @@ function Editor({ initial }: { initial: InitialDocument }) {
     provider: "anthropic-api",
     hasKey: false,
     model: "",
+    spellLanguage: "system",
   });
   const apiRef = useRef<DocxViewApi | null>(null);
   apiRef.current = api;
+  const editorRef = useRef<HTMLDivElement | null>(null);
+  // The DocxView root: spellcheck and the word count observe this subtree,
+  // NOT .app-editor itself, so their own UI updates cannot re-trigger them.
+  const [docRoot, setDocRoot] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     void window.likeoffice.getSettings().then(setSettings);
@@ -72,6 +79,26 @@ function Editor({ initial }: { initial: InitialDocument }) {
   }, [dirty, name]);
 
   const markDirty = useCallback(() => setDirty(true), []);
+
+  useEffect(() => {
+    if (!api || !editorRef.current) return;
+    setDocRoot(editorRef.current.firstElementChild as HTMLElement | null);
+  }, [api]);
+
+  // e2e seam: tests reach the view api (feature probes, count injection).
+  useEffect(() => {
+    (window as unknown as { __likeofficeApi?: DocxViewApi | null }).__likeofficeApi = api;
+  }, [api]);
+
+  useEffect(() => {
+    if (!api || !docRoot) return;
+    const spell = attachSpellcheck(docRoot, api, markDirty);
+    const unsub = window.likeoffice.onSpellChanged(() => spell.refresh());
+    return () => {
+      unsub();
+      spell.dispose();
+    };
+  }, [api, docRoot, markDirty]);
 
   const save = useCallback(async (saveAs: boolean) => {
     const a = apiRef.current;
@@ -146,6 +173,7 @@ function Editor({ initial }: { initial: InitialDocument }) {
       <div className="app-body">
         <div
           className="app-editor"
+          ref={editorRef}
           onKeyDownCapture={(e) => {
             if (e.metaKey || e.ctrlKey) {
               // Cmd+Z / Cmd+Shift+Z reaching the editor directly (not via the
@@ -160,6 +188,7 @@ function Editor({ initial }: { initial: InitialDocument }) {
           onDropCapture={markDirty}
         >
           <DocxView {...view} editable onReady={setApi} style={{ height: "100%" }} />
+          {api && <WordCount api={api} observeEl={docRoot} />}
         </div>
         {panelOpen && api && (
           <AiPanel

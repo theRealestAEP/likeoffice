@@ -16,12 +16,36 @@ export interface SettingsView {
   provider: string;
   hasKey: boolean;
   model: string;
+  spellLanguage: string;
 }
+
+export type SpellMenuAction = { type: "replace"; text: string } | { type: "add-word" };
 
 const api = {
   getSettings: (): Promise<SettingsView> => ipcRenderer.invoke("settings:get"),
-  setSettings: (apiKey: string | null, model: string, provider: string): Promise<SettingsView> =>
-    ipcRenderer.invoke("settings:set", apiKey, model, provider),
+  setSettings: (
+    apiKey: string | null,
+    model: string,
+    provider: string,
+    spellLanguage: string,
+  ): Promise<SettingsView> =>
+    ipcRenderer.invoke("settings:set", apiKey, model, provider, spellLanguage),
+  spellCheck: (words: string[]): Promise<string[]> => ipcRenderer.invoke("spell:check", words),
+  spellSuggest: (word: string): Promise<string[]> => ipcRenderer.invoke("spell:suggest", word),
+  spellAddWord: (word: string): Promise<void> => ipcRenderer.invoke("spell:add-word", word),
+  spellMenu: (
+    word: string,
+    suggestions: string[],
+    x: number,
+    y: number,
+  ): Promise<SpellMenuAction | null> => ipcRenderer.invoke("spell:menu", word, suggestions, x, y),
+  onSpellChanged: (cb: () => void): (() => void) => {
+    const listener = () => cb();
+    ipcRenderer.on("spell:changed", listener);
+    return () => {
+      ipcRenderer.removeListener("spell:changed", listener);
+    };
+  },
   getProviderStatus: (): Promise<unknown> => ipcRenderer.invoke("providers:status"),
   runAgent: (request: unknown): Promise<unknown> => ipcRenderer.invoke("agent:run", request),
   cancelAgent: (): void => {

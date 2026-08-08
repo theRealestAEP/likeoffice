@@ -1,18 +1,27 @@
 import { app, ipcMain } from "electron";
+import { EventEmitter } from "node:events";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export type Provider = "anthropic-api" | "claude-subscription" | "codex-subscription";
 
+/** "system" follows the OS locale; "off" disables spellcheck. */
+export type SpellLanguage = "system" | "en-US" | "off";
+
 export interface Settings {
   provider: Provider;
   apiKey: string;
   model: string;
+  spellLanguage: SpellLanguage;
 }
 
 export const DEFAULT_MODEL = "claude-opus-5";
 
 const PROVIDERS: Provider[] = ["anthropic-api", "claude-subscription", "codex-subscription"];
+const SPELL_LANGUAGES: SpellLanguage[] = ["system", "en-US", "off"];
+
+/** Emits "changed" with the new Settings after every settings:set. */
+export const settingsEvents = new EventEmitter();
 
 function settingsFile(): string {
   return path.join(app.getPath("userData"), "settings.json");
@@ -48,9 +57,10 @@ export async function readSettings(): Promise<Settings> {
       provider: PROVIDERS.includes(raw.provider) ? raw.provider : "anthropic-api",
       apiKey: typeof raw.apiKey === "string" ? raw.apiKey : "",
       model: typeof raw.model === "string" ? raw.model : DEFAULT_MODEL,
+      spellLanguage: SPELL_LANGUAGES.includes(raw.spellLanguage) ? raw.spellLanguage : "system",
     };
   } catch {
-    settings = { provider: "anthropic-api", apiKey: "", model: DEFAULT_MODEL };
+    settings = { provider: "anthropic-api", apiKey: "", model: DEFAULT_MODEL, spellLanguage: "system" };
   }
   if (!settings.apiKey) settings.apiKey = await envApiKey();
   return settings;
@@ -60,19 +70,31 @@ export async function readSettings(): Promise<Settings> {
 // is set, and sends null when the user leaves the field untouched.
 ipcMain.handle("settings:get", async () => {
   const settings = await readSettings();
-  return { provider: settings.provider, hasKey: settings.apiKey !== "", model: settings.model };
+  return {
+    provider: settings.provider,
+    hasKey: settings.apiKey !== "",
+    model: settings.model,
+    spellLanguage: settings.spellLanguage,
+  };
 });
 
 ipcMain.handle(
   "settings:set",
-  async (_e, apiKey: string | null, model: string, provider: Provider) => {
+  async (_e, apiKey: string | null, model: string, provider: Provider, spellLanguage: SpellLanguage) => {
     const current = await readSettings();
     const next: Settings = {
       provider: PROVIDERS.includes(provider) ? provider : current.provider,
       apiKey: apiKey ?? current.apiKey,
       model,
+      spellLanguage: SPELL_LANGUAGES.includes(spellLanguage) ? spellLanguage : current.spellLanguage,
     };
     await writeFile(settingsFile(), JSON.stringify(next, null, 2));
-    return { provider: next.provider, hasKey: next.apiKey !== "", model: next.model };
+    settingsEvents.emit("changed", next);
+    return {
+      provider: next.provider,
+      hasKey: next.apiKey !== "",
+      model: next.model,
+      spellLanguage: next.spellLanguage,
+    };
   },
 );

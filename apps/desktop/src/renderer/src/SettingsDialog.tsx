@@ -53,6 +53,7 @@ export function SettingsDialog({
       key.trim() === "" ? null : key.trim(),
       settings.model,
       settings.provider,
+      settings.spellLanguage,
     );
     onSaved(saved);
     onClose();
@@ -136,6 +137,21 @@ export function SettingsDialog({
         {settings.provider === "codex-subscription" && (
           <div className="field-hint">Codex uses the model configured in the Codex CLI.</div>
         )}
+
+        <label className="field-label">Spellcheck language</label>
+        <select
+          className="field-input"
+          value={settings.spellLanguage}
+          onChange={(e) => setSettings({ ...settings, spellLanguage: e.target.value })}
+          data-testid="settings-spell-language"
+        >
+          <option value="system">System language</option>
+          <option value="en-US">English (United States)</option>
+          <option value="off">Off</option>
+        </select>
+        <div className="field-hint">
+          English (US) is the bundled dictionary; other system languages turn spellcheck off.
+        </div>
 
         <div className="dialog-footer">
           <button className="btn btn-ghost" onClick={onClose}>

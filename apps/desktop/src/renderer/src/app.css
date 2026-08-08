@@ -63,6 +63,76 @@
 .app-editor {
   flex: 1;
   min-width: 0;
+  position: relative; /* anchors the word-count pill */
+}
+
+/* ---- Spellcheck squiggles ----
+ * Painted into each page's item surface by spellcheck.ts, so they live in
+ * page coordinates and ride along with scrolling and zoom. */
+
+.lo-squiggle {
+  position: absolute;
+  pointer-events: none;
+  z-index: 3;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='3' viewBox='0 0 6 3'%3E%3Cpath d='M0 2.4 Q1.5 0.4 3 2.4 T6 2.4' fill='none' stroke='%23d93025' stroke-width='1.1'/%3E%3C/svg%3E")
+    repeat-x bottom / 6px 3px;
+}
+
+/* ---- Word count ---- */
+
+.word-count-anchor {
+  position: absolute;
+  right: 18px;
+  bottom: 14px;
+  z-index: 40;
+  font: var(--app-font);
+}
+
+.word-count {
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  background: var(--app-surface);
+  color: var(--app-muted);
+  font: 600 12px system-ui, sans-serif;
+  padding: 5px 12px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: color 120ms, background 120ms;
+}
+
+.word-count:hover {
+  color: var(--app-fg);
+  background: var(--app-hover);
+}
+
+.word-count:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 1px;
+}
+
+.word-count-popover {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  min-width: 190px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  box-shadow: var(--app-shadow);
+  padding: 10px 14px;
+  color: var(--app-fg);
+  font-size: 12.5px;
+}
+
+.word-count-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 3px 0;
+}
+
+.word-count-row span:first-child {
+  color: var(--app-muted);
 }
 
 /* ---- AI toggle: styled as a ribbon tab, pressed while the panel is open ---- */
