@@ -1,11 +1,12 @@
 /**
  * Live word count, bottom-right of the document area.
  *
- * Words come from the engine's DocxViewApi.wordCount() when this engine build
- * has it (feature-detected — the API is landing in a parallel engine
- * workstream). Until then, and for the popover's characters/paragraphs, a
- * small duck-typed walk over api.document counts body text the way Word's
- * status bar does: body story only (no headers, footers, or notes), tokens
+ * All statistics come from the engine's DocxViewApi.wordCount() when this
+ * engine build has it (feature-detected). It returns a TextStatistics object
+ * — words, characters, charactersWithSpaces, paragraphs, pages — never a bare
+ * number. For engine builds without the API, a small duck-typed walk over
+ * api.document counts body text the way Word's status bar does: body story
+ * only (no headers, footers, or notes), field cached results included, tokens
  * split on whitespace, characters with spaces, non-empty paragraphs.
  */
 import { useEffect, useRef, useState } from "react";
@@ -22,7 +23,7 @@ interface Stats {
 interface ModelRun {
   type?: string;
   runs?: ModelRun[];
-  content?: { kind?: string; text?: string }[];
+  content?: { kind?: string; text?: string; cachedResult?: string }[];
 }
 interface ModelBlock {
   type?: string;
@@ -38,6 +39,7 @@ function paragraphText(children: ModelRun[]): string {
     for (const run of runs) {
       for (const c of run.content ?? []) {
         if (c.kind === "text" && typeof c.text === "string") text += c.text;
+        else if (c.kind === "field" && typeof c.cachedResult === "string") text += c.cachedResult;
         else if (c.kind === "tab" || c.kind === "break") text += " ";
       }
     }
@@ -61,17 +63,30 @@ function countBlocks(blocks: ModelBlock[], stats: { words: number; characters: n
   }
 }
 
-function computeStats(api: DocxViewApi): Stats {
+/** DocxViewApi.wordCount()'s return shape (the engine's TextStatistics plus
+ * the page count). It is an object, never a bare number. */
+interface EngineStatistics {
+  words: number;
+  charactersWithSpaces: number;
+  paragraphs: number;
+  pages: number;
+}
+
+export function computeStats(api: DocxViewApi): Stats {
+  // Prefer the engine's own statistics when this build has them (see module note).
+  const wordCount = (api as { wordCount?: () => EngineStatistics }).wordCount;
+  if (typeof wordCount === "function") {
+    const s = wordCount.call(api);
+    return { words: s.words, characters: s.charactersWithSpaces, paragraphs: s.paragraphs, pages: s.pages };
+  }
   const stats = { words: 0, characters: 0, paragraphs: 0 };
   const doc = api.document as unknown as { sections?: { blocks?: ModelBlock[] }[] };
   for (const section of doc.sections ?? []) countBlocks(section.blocks ?? [], stats);
-  // Prefer the engine's own count when this build has one (see module note).
-  const wordCount = (api as { wordCount?: unknown }).wordCount;
-  const words = typeof wordCount === "function" ? Number(wordCount.call(api)) : stats.words;
-  return { ...stats, words, pages: api.pageCount() };
+  return { ...stats, pages: api.pageCount() };
 }
 
-const fmt = (n: number): string => n.toLocaleString("en-US");
+/** UX guard: a stat that is somehow non-finite paints as "—", never "NaN". */
+export const fmt = (n: number): string => (Number.isFinite(n) ? n.toLocaleString("en-US") : "—");
 
 export function WordCount({ api, observeEl }: { api: DocxViewApi; observeEl: HTMLElement | null }) {
   const [stats, setStats] = useState<Stats | null>(null);
