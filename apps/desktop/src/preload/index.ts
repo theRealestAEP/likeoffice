@@ -22,6 +22,12 @@ export interface SettingsView {
 
 export type SpellMenuAction = { type: "replace"; text: string } | { type: "add-word" };
 
+/** One application menu's accelerators, for the engine's shortcuts sheet. */
+export interface MenuShortcutSection {
+  title: string;
+  items: { label: string; keys: string }[];
+}
+
 export interface Profile {
   id: string;
   name: string;
@@ -153,6 +159,7 @@ const api = {
   },
   exportPdf: (html: string): Promise<{ path: string } | null> =>
     ipcRenderer.invoke("document:export-pdf", html),
+  getMenuShortcuts: (): Promise<MenuShortcutSection[]> => ipcRenderer.invoke("menu:shortcuts"),
   onMenu: (cb: (action: string) => void): (() => void) => {
     const listener = (_e: IpcRendererEvent, action: string) => cb(action);
     ipcRenderer.on("menu", listener);

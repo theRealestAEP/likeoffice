@@ -22,6 +22,12 @@ interface SettingsView {
 
 type SpellMenuAction = { type: "replace"; text: string } | { type: "add-word" };
 
+/** One application menu's accelerators, for the engine's shortcuts sheet. */
+interface MenuShortcutSection {
+  title: string;
+  items: { label: string; keys: string }[];
+}
+
 interface Profile {
   id: string;
   name: string;
@@ -131,6 +137,7 @@ interface LikeOfficeBridge {
   setDirty(dirty: boolean): void;
   autosave(bytes: Uint8Array): void;
   exportPdf(html: string): Promise<{ path: string } | null>;
+  getMenuShortcuts(): Promise<MenuShortcutSection[]>;
   onMenu(cb: (action: string) => void): () => void;
   getSettings(): Promise<SettingsView>;
   setSettings(

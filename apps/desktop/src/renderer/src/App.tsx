@@ -5,6 +5,7 @@ import {
   useAgentDocumentSession,
   type AgentDocumentViewBinding,
   type DocxViewApi,
+  type HostShortcutSection,
 } from "wordinweb";
 import { AgentDocument, LocalDocumentSession, localDocumentViewBinding } from "@wordinweb/agent";
 import { AiPanel } from "./AiPanel";
@@ -78,8 +79,14 @@ function Editor({
   // NOT .app-editor itself, so their own UI updates cannot re-trigger them.
   const [docRoot, setDocRoot] = useState<HTMLElement | null>(null);
 
+  // The shortcuts sheet renders the engine's own key table, which cannot
+  // include a key the application menu takes first. The live menu supplies
+  // those, so the sheet describes the whole keyboard (see main/shortcuts.ts).
+  const [menuShortcuts, setMenuShortcuts] = useState<HostShortcutSection[]>([]);
+
   useEffect(() => {
     void window.likeoffice.getSettings().then(setSettings);
+    void window.likeoffice.getMenuShortcuts().then(setMenuShortcuts);
   }, []);
 
   const dirtyRef = useRef(dirty);
@@ -190,7 +197,7 @@ function Editor({
         {/* Dirty tracking is heuristic until the engine grows a change event:
             any editing keystroke or toolbar interaction marks the document dirty. */}
         <div className="app-toolbar-slot" onMouseDownCapture={markDirty}>
-          {api && <DocxToolbar api={api} mode="advanced" />}
+          {api && <DocxToolbar api={api} mode="advanced" hostShortcuts={menuShortcuts} />}
         </div>
         <div className="app-header-cap">
           <button

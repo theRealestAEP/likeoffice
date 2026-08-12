@@ -36,8 +36,11 @@ test("the settings dialog offers providers and degrades gracefully", async () =>
   await expect(win.getByTestId("provider-status")).toContainText("Codex is not installed");
   await expect(win.getByTestId("provider-status")).toContainText("npm install -g @openai/codex");
 
-  // The provider choice persists through save.
+  // The provider choice persists through save. Saving is asynchronous and the
+  // dialog closes only once the write resolves, so re-opening before that
+  // lands leaves the pending close to shut the dialog the assertion needs.
   await win.getByRole("button", { name: "Save" }).click();
+  await expect(provider).toBeHidden();
   await app.evaluate(({ BrowserWindow }) => {
     BrowserWindow.getAllWindows()[0].webContents.send("menu", "settings");
   });

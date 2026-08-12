@@ -12,12 +12,22 @@
  * here no longer reaches the engine's own keyboard handling. Every item that
  * binds a key the engine also handles routes to the same behaviour.
  */
-import { app, Menu, type MenuItemConstructorOptions } from "electron";
+import { app, ipcMain, Menu, type MenuItemConstructorOptions } from "electron";
 import path from "node:path";
 import { createDocumentWindow, focusedDocState, openDocument, openDocumentDialog } from "./index";
 import { clearRecent, recentPaths } from "./recent";
 import { readSettings, saveSettings, settingsEvents, type Settings, type SpellLanguage } from "./settings";
+import { menuShortcutSections } from "./shortcuts";
 import { checkForUpdates } from "./updater";
+
+/**
+ * The keyboard the engine's shortcuts sheet cannot see. The menu takes these
+ * keys before the renderer does, so the sheet only tells the whole truth when
+ * the live menu hands them over. See shortcuts.ts.
+ */
+ipcMain.handle("menu:shortcuts", () =>
+  menuShortcutSections(Menu.getApplicationMenu(), process.platform === "darwin"),
+);
 
 /** The spellcheck language, cached so the menu can build synchronously. */
 let spellLanguage: SpellLanguage = "system";
