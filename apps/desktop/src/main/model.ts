@@ -14,10 +14,23 @@ export type ModelReply =
   | { content: Anthropic.ContentBlock[]; stopReason: string | null }
   | { error: string };
 
+/** The text of the turn's first user message, which carries the ask. */
+function firstAsk(messages: Anthropic.MessageParam[]): string {
+  const content = messages.find((m) => m.role === "user")?.content;
+  if (typeof content === "string") return content;
+  return (Array.isArray(content) ? content : [])
+    .map((block) => (block as { text?: unknown }).text)
+    .filter((text): text is string => typeof text === "string")
+    .join(" ");
+}
+
 /** Scripted stand-in for the API, used by the e2e suite. It inspects the
- * document, inserts a sentence, then ends the turn. */
+ * document, edits it, then ends the turn. The edit is an insertion, or a
+ * formatRun when the ask says "bold" — the two halves of the panel's promise
+ * that every edit arrives as a tracked change. */
 function fakeReply(messages: Anthropic.MessageParam[]): ModelReply {
   const round = messages.filter((m) => m.role === "assistant").length;
+  const bold = /bold/i.test(firstAsk(messages));
   if (round === 0) {
     return {
       content: [
@@ -52,7 +65,9 @@ function fakeReply(messages: Anthropic.MessageParam[]): ModelReply {
           input: {
             revision,
             operations: [
-              { kind: "insertText", at: { blockRef, runRef, offset: 0 }, text: "AI wrote this. " },
+              bold
+                ? { kind: "formatRun", blockRef, runRef, patch: { bold: true } }
+                : { kind: "insertText", at: { blockRef, runRef, offset: 0 }, text: "AI wrote this. " },
             ],
           },
         } as Anthropic.ContentBlock,
@@ -61,7 +76,7 @@ function fakeReply(messages: Anthropic.MessageParam[]): ModelReply {
     };
   }
   return {
-    content: [{ type: "text", text: "Inserted the sentence.", citations: null }],
+    content: [{ type: "text", text: bold ? "Made it bold." : "Inserted the sentence.", citations: null }],
     stopReason: "end_turn",
   };
 }

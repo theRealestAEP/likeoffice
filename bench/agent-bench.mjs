@@ -28,7 +28,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { AgentDocument, LocalDocumentSession, agentCapabilities, hoistRepeatedSubschemas } from "@wordinweb/agent";
+import { AGENT_EDIT_CAPABILITIES, AgentDocument, LocalDocumentSession, agentCapabilities, hoistRepeatedSubschemas } from "@wordinweb/agent";
 import {
   acceptAllBytes,
   buildFillerBytes,
@@ -132,6 +132,29 @@ async function projectionMessage(tools, ask) {
   }
 }
 
+/** Mirrors AiPanel.tsx: the kinds the engine records as tracked changes are
+ * the ones its capability map gives an optional `suggest` field. */
+const SUGGESTABLE_KINDS = new Set(
+  Object.entries(AGENT_EDIT_CAPABILITIES)
+    .filter(([, capability]) => capability.optional?.includes("suggest"))
+    .map(([kind]) => kind),
+);
+
+// Mirrors AiPanel.tsx: these two declare the flag and the engine's edit
+// compiler refuses it, so sending it would break the operation rather than
+// track it.
+SUGGESTABLE_KINDS.delete("setParagraphBorders");
+SUGGESTABLE_KINDS.delete("setTabStops");
+
+/** Mirrors AiPanel.tsx: tableOp's three PROPERTY operations arrive as objects
+ * and record a *PrChange; its structural ones are plain strings the engine
+ * applies outright. */
+function suggestable(operation) {
+  if (!SUGGESTABLE_KINDS.has(operation?.kind)) return false;
+  if (operation.kind === "tableOp") return typeof operation.op === "object" && operation.op !== null;
+  return true;
+}
+
 /** Mirrors AiPanel.tsx withSuggestions: ask the engine to record this call's
  * edits as tracked changes. */
 function withSuggestions(name, input) {
@@ -141,11 +164,7 @@ function withSuggestions(name, input) {
   const operations = Array.isArray(value.operations) ? value.operations : [];
   return {
     ...value,
-    operations: operations.map((op) =>
-      op?.kind === "insertText" || op?.kind === "splitParagraph"
-        ? { ...op, suggest: true }
-        : op,
-    ),
+    operations: operations.map((op) => (suggestable(op) ? { ...op, suggest: true } : op)),
   };
 }
 

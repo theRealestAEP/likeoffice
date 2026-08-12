@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { AgentDocument } from "@wordinweb/agent";
+import { AGENT_EDIT_CAPABILITIES, type AgentDocument } from "@wordinweb/agent";
 import type { DocxViewApi } from "wordinweb";
 import { AiProfileHeader, composeSystemPrompt, useProfiles } from "./AiProfiles";
 
@@ -128,6 +128,36 @@ async function projectionMessage(
   }
 }
 
+/** The operations the engine records as tracked changes, read from its own
+ * capability map: a kind that has a tracked OOXML form lists `suggest` among
+ * its optional fields. Deriving the set means an operation the engine learns
+ * to track arrives here tracked, with no list to keep in step. */
+const SUGGESTABLE_KINDS = new Set(
+  Object.entries(AGENT_EDIT_CAPABILITIES)
+    .filter(([, capability]) => capability.optional?.includes("suggest"))
+    .map(([kind]) => kind),
+);
+
+// Two kinds declare the flag that the engine's edit compiler then refuses:
+// they are missing from its own SUGGESTABLE_KINDS, so the author and date
+// never get stamped and the transaction fails with "bad author". Sending the
+// flag would break the operation rather than track it, so these two still
+// apply outright. Drop these deletes once the engine closes the gap — its
+// suggest-coverage branch derives that set from this same map.
+SUGGESTABLE_KINDS.delete("setParagraphBorders");
+SUGGESTABLE_KINDS.delete("setTabStops");
+
+/** Whether this operation lands as a tracked change when it carries the flag.
+ * tableOp is the one split kind: its three PROPERTY operations arrive as
+ * objects and record a *PrChange, while the structural ones — row and column
+ * inserts and deletes, merges, splits — are plain strings the engine applies
+ * outright, as insertTable and the object inserts do. */
+function suggestable(operation: { kind?: string; op?: unknown }): boolean {
+  if (!SUGGESTABLE_KINDS.has(operation.kind ?? "")) return false;
+  if (operation.kind === "tableOp") return typeof operation.op === "object" && operation.op !== null;
+  return true;
+}
+
 /** Ask the engine to record this call's edits as tracked changes. The agent
  * tools take `suggest` per operation, so the flag goes in on the way past. */
 function withSuggestions(name: string, input: unknown): unknown {
@@ -138,10 +168,8 @@ function withSuggestions(name: string, input: unknown): unknown {
   return {
     ...value,
     operations: operations.map((op) => {
-      const operation = op as { kind?: string };
-      return operation.kind === "insertText" || operation.kind === "splitParagraph"
-        ? { ...operation, suggest: true }
-        : operation;
+      const operation = op as { kind?: string; op?: unknown };
+      return suggestable(operation) ? { ...operation, suggest: true } : operation;
     }),
   };
 }

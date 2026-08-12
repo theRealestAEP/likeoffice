@@ -749,12 +749,35 @@ only proves the session survives a tool list in which 45 `$defs` and 138
 the run holding the text. Both pass. So `$defs` survives the bridge and the
 model fills a referenced shape through it.
 
-One thing that surfaced there and is **not** a schema problem: the panel
-applies an AI formatting change untracked. `withSuggestions` in `AiPanel.tsx`
-injects `suggest` for `insertText` and `splitParagraph` only, so a `formatRun`
-lands straight in the document. The engine supports the tracked form — a probe
-with `suggest: true` writes `w:rPrChange` — so this is the panel's rule and
-worth its own look.
+One thing that surfaced there and was **not** a schema problem: the panel
+applied an AI formatting change untracked. `withSuggestions` in `AiPanel.tsx`
+injected `suggest` for `insertText` and `splitParagraph` only, so a `formatRun`
+landed straight in the document while the panel's own prompt promised a tracked
+change and its header offered Accept all and Reject all over nothing.
+
+**Fixed.** `withSuggestions` — here and in `AiPanel.tsx` — now reads the
+suggestable kinds from `AGENT_EDIT_CAPABILITIES`, the engine's own declaration
+of which operations take the flag, so the list cannot drift again. That covers
+20 kinds: the text and paragraph ones (`insertText`, `insertSeparator`,
+`deleteSeparator`, `splitParagraph`, `mergeParagraph`, `formatRun`,
+`formatRange`, `formatParagraph`, `setListType`, `adjustIndent`, `setSpacing`)
+and the table PROPERTY ones (`tableOp` with an object `op`, `setTableBorders`,
+`setTableStyle`, `setTableLook`, `setTableWidth`, `setTableColumnWidth`,
+`setTableLayout`, `setTableCellMargins`, `setTableHeaderRows`). Structural work
+is unchanged: `insertTable`, the row and column ops, and the object inserts
+have no tracked OOXML form, so they still apply outright.
+
+Two more kinds, `setParagraphBorders` and `setTabStops`, declare the flag and
+are then refused by the engine's edit compiler, which never learned to stamp
+their author and date — sending it fails the transaction with "bad author".
+They are deleted from the derived set by name, with the reason beside them, and
+still apply untracked. The engine's `suggest-coverage` branch derives its own
+`SUGGESTABLE_KINDS` from this same capability map and makes all 22 round-trip;
+the two deletes come out when it lands.
+
+`e2e/review-tab.spec.ts` covers the round trip on the fake model — bold arrives
+as `w:rPrChange`, Reject restores the plain run, Accept keeps the bold — and
+`e2e/live-api-format.spec.ts` proves the flag survives a real tool call.
 
 ### Prompt caching pays for most of this already
 

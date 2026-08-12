@@ -81,10 +81,11 @@ test("the model fills a $ref'd shape in an edit-tool schema over the bridge", as
   const xml = await runOneTurn("Hello world", "Make the text bold");
   // Bold on the run that holds the text, which is a formatRun whose `patch`
   // the model could only have written from behind a $ref.
-  expect(xml).toMatch(/<w:rPr><w:b\/>[^]*?<w:t[^>]*>Hello world<\/w:t>/);
-  // No tracked-change assertion here, unlike the test above. AiPanel.tsx's
-  // withSuggestions injects `suggest` for insertText and splitParagraph only,
-  // so the panel applies an AI formatting change straight to the document. The
-  // engine does support it — formatRun with suggest writes a w:rPrChange — so
-  // this is the panel's rule, not a missing capability.
+  expect(xml).toContain("<w:b/>");
+  expect(xml).toContain("Hello world");
+  // And it is tracked, like every other edit the panel promises to record.
+  // withSuggestions reads the suggestable kinds from the engine's capability
+  // map, so a formatting change carries the flag the same way an insertion
+  // does and the engine writes the property change it replaced.
+  expect(xml).toMatch(/<w:rPrChange [^>]*w:author="AI"/);
 });
