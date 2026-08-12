@@ -1,0 +1,130 @@
+{
+  "startedAt": "2026-08-12T04:49:26.387Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 64445,
+      "rounds": 14,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3195,
+          "inputTokens": 31847,
+          "outputTokens": 105,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 6717,
+          "inputTokens": 32145,
+          "outputTokens": 472,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1831,
+          "inputTokens": 32667,
+          "outputTokens": 73,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 7487,
+          "inputTokens": 33064,
+          "outputTokens": 418,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 6401,
+          "inputTokens": 33601,
+          "outputTokens": 445,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2817,
+          "inputTokens": 34165,
+          "outputTokens": 120,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 8483,
+          "inputTokens": 34511,
+          "outputTokens": 525,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 4932,
+          "inputTokens": 35068,
+          "outputTokens": 145,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 5011,
+          "inputTokens": 35248,
+          "outputTokens": 226,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1560,
+          "inputTokens": 35515,
+          "outputTokens": 73,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 5053,
+          "inputTokens": 36242,
+          "outputTokens": 337,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1519,
+          "inputTokens": 36633,
+          "outputTokens": 73,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 2680,
+          "inputTokens": 37703,
+          "outputTokens": 163,
+          "stopReason": "tool_use"
+        },
+        {
+          "ms": 1652,
+          "inputTokens": 37909,
+          "outputTokens": 42,
+          "stopReason": "end_turn"
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 4,
+        "word_document_edit": 6,
+        "word_document_project": 1,
+        "word_document_patch": 2
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. Re-inspect and send the remaining operations in a new transaction. To create paragraphs, one insertText whose text contains \"\\n\" between paragraphs also works, in one operation."
+        },
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. Re-inspect and send the remaining operations in a new transaction. To create paragraphs, one insertText whose text contains \"\\n\" between paragraphs also works, in one operation."
+        },
+        {
+          "name": "word_document_patch",
+          "message": "Projection line 1 column 1 is not inside editable text"
+        },
+        {
+          "name": "word_document_patch",
+          "message": "Edit 1 covers lines 2-2, outside the projected 1-1"
+        }
+      ],
+      "tokens": {
+        "input": 486318,
+        "output": 3217
+      },
+      "savedValid": true,
+      "failures": []
+    }
+  ]
+}

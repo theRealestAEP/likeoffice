@@ -15,7 +15,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { AgentDocument, LocalDocumentSession } from "@wordinweb/agent";
-import { acceptAllBytes, buildFillerBytes, makeView, tasks } from "./tasks.mjs";
+import {
+  acceptAllBytes,
+  buildFillerBytes,
+  buildFooterPageBytes,
+  makeView,
+  tasks,
+} from "./tasks.mjs";
 
 const BENCH_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.dirname(BENCH_DIR);
@@ -28,7 +34,10 @@ const SYSTEM_PROMPT = `You edit the Word document the user has open in LikeOffic
 
 Each user message opens with a <document> tag: the document body projected as
 numbered lines, with the revision it was read at. That is the current
-document — do not project or inspect it again.
+document — do not project or inspect it again. Header, footer, and note
+stories with content follow the body as <story> blocks: read them before you
+add header, footer, or page-number content, and patch one by passing its ref
+as the story and its mode.
 
 For text work — wording, adding, removing, or rewriting text — reply with ONE
 word_document_patch call immediately, against those line numbers. Pass the
@@ -51,6 +60,40 @@ reject, so make the change rather than describing what they should type.
 Keep replies to a sentence.`;
 
 const PROJECTION_MAX_CHARACTERS = 50_000;
+const STORY_MAX_CHARACTERS = 2_000;
+
+const PROJECTED_STORY_KINDS = ["header", "footer", "footnote", "endnote"];
+
+function numberLines(text) {
+  return text
+    .split("\n")
+    .map((line, index) => `${index + 1}: ${line}`)
+    .join("\n");
+}
+
+/** Mirrors AiPanel.tsx storyBlocks: every non-body story that holds content,
+ * each as its own tag, projected in md mode so fields read as {{PAGE}}. */
+async function storyBlocks(tools, project) {
+  const inspect = tools.find((t) => t.name === "word_document_inspect");
+  if (!inspect) return "";
+  try {
+    const overview = await inspect.execute({ kind: "overview" });
+    let blocks = "";
+    for (const story of overview.stories) {
+      if (!PROJECTED_STORY_KINDS.includes(story.kind)) continue;
+      const projection = await project.execute({
+        story: story.id,
+        mode: "md",
+        maxCharacters: STORY_MAX_CHARACTERS,
+      });
+      if (projection.text.trim() === "") continue;
+      blocks += `\n<story kind="${story.kind}" ref="${story.id}" mode="md">\n${numberLines(projection.text)}\n</story>`;
+    }
+    return blocks;
+  } catch {
+    return "";
+  }
+}
 
 /** Mirrors AiPanel.tsx projectionMessage: fold the body projection into the
  * first user message so a text-only ask can patch in round one. */
@@ -63,15 +106,13 @@ async function projectionMessage(tools, ask) {
       mode: "text",
       maxCharacters: PROJECTION_MAX_CHARACTERS,
     });
-    const numbered = projection.text
-      .split("\n")
-      .map((line, index) => `${index + 1}: ${line}`)
-      .join("\n");
+    const numbered = numberLines(projection.text);
+    const stories = await storyBlocks(tools, project);
     const note =
       projection.truncated && projection.next
         ? `\n(The projection is truncated. Project further windows with word_document_project and cursor "${projection.next.value}".)`
         : "";
-    return `<document story="body" mode="text" revision="${projection.revision}">\n${numbered}\n</document>${note}\n\n${ask}`;
+    return `<document story="body" mode="text" revision="${projection.revision}">\n${numbered}${stories}\n</document>${note}\n\n${ask}`;
   } catch {
     return ask;
   }
@@ -183,7 +224,11 @@ async function runTask(task, { apiKey, model, blankBytes }) {
   };
 
   const fixtureBytes =
-    task.fixture === "filler" ? await buildFillerBytes(blankBytes) : blankBytes;
+    task.fixture === "filler"
+      ? await buildFillerBytes(blankBytes)
+      : task.fixture === "footer-page"
+        ? await buildFooterPageBytes(blankBytes)
+        : blankBytes;
   const session = new LocalDocumentSession(fixtureBytes);
   const agentDoc = AgentDocument.connect(session, { provenance: { author: "AI" } });
   const tools = agentDoc.tools();

@@ -112,6 +112,51 @@ export async function buildFillerBytes(blankBytes) {
   return doc.save();
 }
 
+/** The filler document with Word's three-column footer line already in place:
+ * company, title, and a live page field, two tabs between them. The document
+ * class the non-body story projection exists for. */
+export async function buildFooterPageBytes(blankBytes) {
+  const session = new LocalDocumentSession(await buildFillerBytes(blankBytes));
+  const doc = AgentDocument.connect(session, { provenance: { author: "fixture" } });
+  const edit = doc.tools().find((t) => t.name === "word_document_edit");
+  const result = await edit.execute({
+    revision: doc.revision,
+    operations: [{ kind: "insertHeaderFooterPreset", hfKind: "footer", preset: "threeColumn" }],
+  });
+  if (result?.error) throw new Error(`fixture authoring failed: ${result.error}`);
+  return doc.save();
+}
+
+function headerFooterParts(doc) {
+  return doc.pkg.names().filter((name) => /^word\/(header|footer)\d*\.xml$/.test(name));
+}
+
+/** PAGE fields anywhere in the package: simple fields carry the instruction in
+ * w:instr, complex fields in w:instrText. NUMPAGES does not match. Both the
+ * engine's own inserts and Word's write the instruction as one string. */
+function countPageFields(doc) {
+  let count = 0;
+  for (const name of ["word/document.xml", ...headerFooterParts(doc)]) {
+    const xml = doc.pkg.text(name) ?? "";
+    const instructions = [
+      ...[...xml.matchAll(/<w:fldSimple[^>]*w:instr="([^"]*)"/g)].map((m) => m[1]),
+      ...[...xml.matchAll(/<w:instrText[^>]*>([^<]*)<\/w:instrText>/g)].map((m) => m[1]),
+    ];
+    count += instructions.filter((instruction) => /\bPAGE\b/.test(instruction)).length;
+  }
+  return count;
+}
+
+/** Tab characters in the header/footer parts — the bare `<w:tab/>` of a run,
+ * not the attributed `<w:tab w:val=…/>` of a tab stop. The page-number gallery
+ * replaces a footer's entire content, so the fixture's two tabs survive only
+ * if the model left the existing footer line alone. */
+function countHeaderFooterTabs(doc) {
+  return headerFooterParts(doc)
+    .map((name) => (doc.pkg.text(name) ?? "").match(/<w:tab\s*\/>/g)?.length ?? 0)
+    .reduce((total, tabs) => total + tabs, 0);
+}
+
 // --- Tasks -----------------------------------------------------------------
 // assert({final, accepted}) returns an array of failure strings (empty = pass).
 // `accepted` is null when the accept-all pass itself failed.
@@ -263,6 +308,24 @@ export const tasks = [
       });
       if (accepted.text.includes("Contoso")) {
         failures.push('"Contoso" still present after replacement');
+      }
+      return failures;
+    },
+  },
+  {
+    // The footer already holds a page number. The projection shows it, so the
+    // model must recognize it rather than add a second one — or wipe the
+    // footer by running the page-number gallery over it blind.
+    name: "footer-page-number",
+    fixture: "footer-page",
+    prompt: "add page numbers",
+    assert({ final }) {
+      const failures = [];
+      const fields = countPageFields(final.doc);
+      if (fields !== 1) failures.push(`expected exactly 1 PAGE field, got ${fields}`);
+      const tabs = countHeaderFooterTabs(final.doc);
+      if (tabs !== 2) {
+        failures.push(`the existing footer line was replaced (${tabs} tab characters, want 2)`);
       }
       return failures;
     },

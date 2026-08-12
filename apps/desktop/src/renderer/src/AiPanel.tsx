@@ -8,7 +8,10 @@ const SYSTEM_PROMPT = `You edit the Word document the user has open in LikeOffic
 
 Each user message opens with a <document> tag: the document body projected as
 numbered lines, with the revision it was read at. That is the current
-document — do not project or inspect it again.
+document — do not project or inspect it again. Header, footer, and note
+stories with content follow the body as <story> blocks: read them before you
+add header, footer, or page-number content, and patch one by passing its ref
+as the story and its mode.
 
 For text work — wording, adding, removing, or rewriting text — reply with ONE
 word_document_patch call immediately, against those line numbers. Pass the
@@ -50,6 +53,50 @@ interface ProjectionWindow {
 }
 
 const PROJECTION_MAX_CHARACTERS = 50_000;
+const STORY_MAX_CHARACTERS = 2_000;
+
+/** The non-body story kinds word_document_project addresses. Overview also
+ * lists textbox stories, which the projector does not take — their content is
+ * reachable through object inspection instead. */
+const PROJECTED_STORY_KINDS = ["header", "footer", "footnote", "endnote"];
+
+type AgentTool = ReturnType<AgentDocument["tools"]>[number];
+
+function numberLines(text: string): string {
+  return text
+    .split("\n")
+    .map((line, index) => `${index + 1}: ${line}`)
+    .join("\n");
+}
+
+/** Every non-body story that holds content, each as its own tag. The overview
+ * names the document's stories, so nothing has to be probed for. These project
+ * in md mode: a footer's page number then reads as {{PAGE}} rather than the
+ * opaque field atom text mode writes, which is the whole point of showing it. */
+async function storyBlocks(tools: AgentTool[], project: AgentTool): Promise<string> {
+  const inspect = tools.find((t) => t.name === "word_document_inspect");
+  if (!inspect) return "";
+  try {
+    const overview = (await inspect.execute({ kind: "overview" })) as {
+      stories: { id: string; kind: string }[];
+    };
+    let blocks = "";
+    for (const story of overview.stories) {
+      if (!PROJECTED_STORY_KINDS.includes(story.kind)) continue;
+      const projection = (await project.execute({
+        story: story.id,
+        mode: "md",
+        maxCharacters: STORY_MAX_CHARACTERS,
+      })) as ProjectionWindow;
+      if (projection.text.trim() === "") continue;
+      blocks += `\n<story kind="${story.kind}" ref="${story.id}" mode="md">\n${numberLines(projection.text)}\n</story>`;
+    }
+    return blocks;
+  } catch {
+    // The body projection is worth sending on its own.
+    return "";
+  }
+}
 
 /** Read the document body once, up front, and fold it into the user's message
  * as numbered lines. A text-only ask can then patch in the first round with
@@ -67,15 +114,13 @@ async function projectionMessage(
       mode: "text",
       maxCharacters: PROJECTION_MAX_CHARACTERS,
     })) as ProjectionWindow;
-    const numbered = projection.text
-      .split("\n")
-      .map((line, index) => `${index + 1}: ${line}`)
-      .join("\n");
+    const numbered = numberLines(projection.text);
+    const stories = await storyBlocks(tools, project);
     const note =
       projection.truncated && projection.next
         ? `\n(The projection is truncated. Project further windows with word_document_project and cursor "${projection.next.value}".)`
         : "";
-    return `<document story="body" mode="text" revision="${projection.revision}">\n${numbered}\n</document>${note}\n\n${ask}`;
+    return `<document story="body" mode="text" revision="${projection.revision}">\n${numbered}${stories}\n</document>${note}\n\n${ask}`;
   } catch {
     // Without a projection the model falls back to inspecting via tools.
     return ask;
