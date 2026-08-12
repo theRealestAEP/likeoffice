@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import Papa from "papaparse";
 import { loadMenuState, rebuildMenu } from "./menu";
 import { addRecent, loadRecent } from "./recent";
 import "./settings";
@@ -37,6 +38,9 @@ if (process.env.LIKEOFFICE_USER_DATA) {
 }
 
 const DOCX_FILTER = { name: "Word Document", extensions: ["docx"] };
+/** Mail-merge data. Excel and Numbers both export .csv; European Excel writes
+ * semicolons into one, and tab-separated exports keep a .txt or .tsv name. */
+const CSV_FILTER = { name: "Data Source", extensions: ["csv", "tsv", "txt"] };
 
 function autosaveDir(): string {
   return path.join(app.getPath("userData"), "autosave");
@@ -340,9 +344,59 @@ ipcMain.handle("document:export-pdf", async (e, html: string) => {
     await rename(tmp, target);
     return { path: target };
   } finally {
-    printWin.destroy();
+    // close(), not destroy(): destroying a window in the same turn as the
+    // quit that follows it segfaults Electron 34 on the way out (V8 builds
+    // the destroy event with no context entered). Measured over 100 launches
+    // each: destroy 26-49% crash rate, close 0. Fixed upstream in 40.9.0, so
+    // this can revert once the electron pin moves — see docs/known-issues.md.
+    printWin.close();
     await rm(htmlFile, { force: true });
   }
+});
+
+/**
+ * Load a mail-merge data source.
+ *
+ * The parse happens HERE, in the host, and the renderer receives plain
+ * strings. The engine never learns a path, so its "no external resources"
+ * posture holds by construction rather than by discipline — the same reason it
+ * refuses INCLUDETEXT and never writes w:mailMerge.
+ *
+ * papaparse does the work. CSV in the wild is not a split on commas: mail-merge
+ * data is full of multi-line postal addresses (RFC 4180 quoting with embedded
+ * newlines), Excel writes a UTF-8 BOM that would otherwise turn the first
+ * column's name into "﻿FirstName" and match nothing, European Excel writes
+ * semicolons, and exports arrive tab-separated. Header names are trimmed
+ * because Excel exports carry trailing spaces.
+ */
+ipcMain.handle("mailmerge:open-data-source", async (e) => {
+  const win = windowFor(e.sender.id);
+  if (!win) return null;
+  const result = await dialog.showOpenDialog(win, {
+    properties: ["openFile"],
+    filters: [CSV_FILTER],
+  });
+  if (result.canceled || result.filePaths.length === 0) return null;
+  const file = result.filePaths[0];
+  // "utf8" strips nothing; papaparse's own BOM handling does, and the decode
+  // has to see the BOM for that to fire.
+  const text = await readFile(file, "utf8");
+  const parsed = Papa.parse<Record<string, string>>(text, {
+    header: true,
+    skipEmptyLines: "greedy",
+    transformHeader: (h) => h.trim(),
+  });
+  const headers = (parsed.meta.fields ?? []).filter((h) => h.length > 0);
+  // A row is one record; a value papaparse did not fill (a short row) becomes
+  // "" rather than undefined, so a column named by the header is always
+  // PRESENT — which is what makes the engine's empty-column rendering (and its
+  // \b / \f suppression) apply instead of the unbound-column placeholder.
+  const records = parsed.data.map((row) => {
+    const record: Record<string, string> = {};
+    for (const h of headers) record[h] = row[h] ?? "";
+    return record;
+  });
+  return { path: file, name: path.basename(file), headers, records };
 });
 
 ipcMain.on("document:set-dirty", (e, dirty: boolean) => {
