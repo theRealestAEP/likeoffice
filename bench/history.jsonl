@@ -41,3 +41,7 @@
 {"ts":"2026-08-12T04:46:38.702Z","task":"object-insert","model":"claude-opus-5","ms":46027,"rounds":11,"inputTokens":376253,"outputTokens":2906,"pass":true}
 {"ts":"2026-08-12T04:49:18.796Z","task":"object-insert","model":"claude-opus-5","ms":7475,"rounds":3,"inputTokens":96454,"outputTokens":388,"pass":true}
 {"ts":"2026-08-12T04:49:26.387Z","task":"object-insert","model":"claude-opus-5","ms":64445,"rounds":14,"inputTokens":486318,"outputTokens":3217,"pass":true}
+{"ts":"2026-08-12T05:06:31.184Z","task":"object-insert","model":"claude-opus-5","ms":9888,"rounds":3,"inputTokens":96612,"outputTokens":543,"pass":true}
+{"ts":"2026-08-12T05:06:31.184Z","task":"object-insert","model":"claude-opus-5","ms":22992,"rounds":5,"inputTokens":164119,"outputTokens":1168,"pass":true}
+{"ts":"2026-08-12T05:06:31.184Z","task":"object-insert","model":"claude-opus-5","ms":66155,"rounds":14,"inputTokens":488563,"outputTokens":3650,"pass":false}
+{"ts":"2026-08-12T05:06:31.184Z","task":"object-insert","model":"claude-opus-5","ms":13495,"rounds":3,"inputTokens":96783,"outputTokens":698,"pass":true}

@@ -1,0 +1,319 @@
+{
+  "startedAt": "2026-08-12T05:06:31.184Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 9888,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 2969,
+          "inputTokens": 31847,
+          "outputTokens": 101,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 5091,
+          "inputTokens": 32141,
+          "outputTokens": 405,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1788,
+          "inputTokens": 32624,
+          "outputTokens": 37,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 96612,
+        "output": 543
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 22992,
+      "rounds": 5,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 2952,
+          "inputTokens": 31847,
+          "outputTokens": 102,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 13305,
+          "inputTokens": 32142,
+          "outputTokens": 675,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1636,
+          "inputTokens": 32873,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 3545,
+          "inputTokens": 33463,
+          "outputTokens": 272,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1533,
+          "inputTokens": 33794,
+          "outputTokens": 46,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 2,
+        "word_document_edit": 2
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 164119,
+        "output": 1168
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": false,
+      "wallMs": 66155,
+      "rounds": 14,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 2461,
+          "inputTokens": 31847,
+          "outputTokens": 119,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 9018,
+          "inputTokens": 32159,
+          "outputTokens": 660,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1511,
+          "inputTokens": 32897,
+          "outputTokens": 71,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_project"
+          ]
+        },
+        {
+          "ms": 13352,
+          "inputTokens": 33281,
+          "outputTokens": 407,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2182,
+          "inputTokens": 33807,
+          "outputTokens": 120,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 4628,
+          "inputTokens": 34046,
+          "outputTokens": 276,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1550,
+          "inputTokens": 34362,
+          "outputTokens": 71,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_project"
+          ]
+        },
+        {
+          "ms": 9458,
+          "inputTokens": 34834,
+          "outputTokens": 629,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 6085,
+          "inputTokens": 35740,
+          "outputTokens": 408,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1720,
+          "inputTokens": 36201,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 6575,
+          "inputTokens": 36629,
+          "outputTokens": 414,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1770,
+          "inputTokens": 37083,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 3557,
+          "inputTokens": 37673,
+          "outputTokens": 283,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2228,
+          "inputTokens": 38004,
+          "outputTokens": 46,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 4,
+        "word_document_edit": 7,
+        "word_document_project": 2
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. Re-inspect and send the remaining operations in a new transaction. To create paragraphs, one insertText whose text contains \"\\n\" between paragraphs also works, in one operation."
+        },
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. Re-inspect and send the remaining operations in a new transaction. To create paragraphs, one insertText whose text contains \"\\n\" between paragraphs also works, in one operation."
+        }
+      ],
+      "tokens": {
+        "input": 488563,
+        "output": 3650
+      },
+      "savedValid": true,
+      "failures": [
+        "expected exactly 1 chart part, got 2"
+      ]
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 13495,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 2270,
+          "inputTokens": 31847,
+          "outputTokens": 117,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 9780,
+          "inputTokens": 32157,
+          "outputTokens": 544,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1435,
+          "inputTokens": 32779,
+          "outputTokens": 37,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 96783,
+        "output": 698
+      },
+      "savedValid": true,
+      "failures": []
+    }
+  ]
+}

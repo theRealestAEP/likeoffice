@@ -7,6 +7,11 @@
 //
 // Usage:
 //   nice -n 19 node bench/agent-bench.mjs [--model=claude-opus-5] [--task=name,name]
+//                                         [--runs=N]
+//
+// A single run of a task is one sample of a noisy process: the same task can
+// take 3 rounds or 14. Use --runs=N (the summary reports the median and the
+// range) before drawing any conclusion from a number.
 //
 // The loop, system prompt, MAX_ROUNDS, suggest-flag injection, and request
 // shape mirror apps/desktop/src/renderer/src/AiPanel.tsx and
@@ -250,18 +255,21 @@ async function runTask(task, { apiKey, model, blankBytes }) {
         messages,
         tools: definitions,
       });
+      messages.push({ role: "assistant", content: reply.content });
+      const calls = reply.content.filter((b) => b.type === "tool_use");
       metrics.apiCalls.push({
         ms: reply.ms,
         inputTokens: reply.inputTokens,
         outputTokens: reply.outputTokens,
         stopReason: reply.stopReason,
+        // What the model asked for this round, in order: a slow run is only
+        // diagnosable if the round-by-round sequence survives in the JSON.
+        tools: calls.map((c) => c.name),
       });
       metrics.tokens.input += reply.inputTokens;
       metrics.tokens.output += reply.outputTokens;
       metrics.stopReason = reply.stopReason;
 
-      messages.push({ role: "assistant", content: reply.content });
-      const calls = reply.content.filter((b) => b.type === "tool_use");
       if (calls.length === 0) {
         round++;
         break;
@@ -336,18 +344,42 @@ async function runTask(task, { apiKey, model, blankBytes }) {
 
 // --- Reporting -------------------------------------------------------------
 
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1
+    ? sorted[mid]
+    : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+}
+
+/** One row per task. Each cell is the median across that task's runs, with the
+ * range in parentheses when the task ran more than once. */
 function summaryTable(results) {
   const headers = ["task", "pass", "ms", "rounds", "api calls", "in tok", "out tok", "tool errs"];
-  const rows = results.map((r) => [
-    r.task,
-    r.pass ? "PASS" : "FAIL",
-    String(r.wallMs),
-    String(r.rounds),
-    String(r.apiCalls.length),
-    String(r.tokens.input),
-    String(r.tokens.output),
-    String(r.toolErrors.length),
-  ]);
+  const byTask = new Map();
+  for (const r of results) {
+    if (!byTask.has(r.task)) byTask.set(r.task, []);
+    byTask.get(r.task).push(r);
+  }
+  const rows = [...byTask].map(([task, runs]) => {
+    const stat = (pick) => {
+      const values = runs.map(pick);
+      const middle = String(median(values));
+      if (runs.length === 1) return middle;
+      return `${middle} (${Math.min(...values)}-${Math.max(...values)})`;
+    };
+    const passed = runs.filter((r) => r.pass).length;
+    return [
+      task,
+      passed === runs.length ? "PASS" : `FAIL ${passed}/${runs.length}`,
+      stat((r) => r.wallMs),
+      stat((r) => r.rounds),
+      stat((r) => r.apiCalls.length),
+      stat((r) => r.tokens.input),
+      stat((r) => r.tokens.output),
+      stat((r) => r.toolErrors.length),
+    ];
+  });
   const widths = headers.map((h, i) => Math.max(h.length, ...rows.map((row) => row[i].length)));
   const line = (cells) => cells.map((c, i) => c.padEnd(widths[i])).join("  ");
   return [line(headers), line(widths.map((w) => "-".repeat(w))), ...rows.map(line)].join("\n");
@@ -362,6 +394,11 @@ const args = Object.fromEntries(
   }),
 );
 const model = typeof args.model === "string" ? args.model : "claude-opus-5";
+const runs = typeof args.runs === "string" ? Number(args.runs) : 1;
+if (!Number.isInteger(runs) || runs < 1) {
+  console.error(`--runs must be a positive integer, got ${args.runs}`);
+  process.exit(2);
+}
 const selected =
   typeof args.task === "string"
     ? tasks.filter((t) => args.task.split(",").includes(t.name))
@@ -377,12 +414,15 @@ const startedAt = new Date();
 const results = [];
 
 for (const task of selected) {
-  process.stdout.write(`running ${task.name} ... `);
-  const result = await runTask(task, { apiKey, model, blankBytes });
-  results.push(result);
-  console.log(
-    `${result.pass ? "PASS" : "FAIL"} (${result.wallMs} ms, ${result.rounds} rounds)`,
-  );
+  for (let run = 1; run <= runs; run++) {
+    const label = runs === 1 ? task.name : `${task.name} (${run}/${runs})`;
+    process.stdout.write(`running ${label} ... `);
+    const result = await runTask(task, { apiKey, model, blankBytes });
+    results.push(result);
+    console.log(
+      `${result.pass ? "PASS" : "FAIL"} (${result.wallMs} ms, ${result.rounds} rounds)`,
+    );
+  }
 }
 
 // Results file + history.
