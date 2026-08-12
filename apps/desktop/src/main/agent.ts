@@ -3,6 +3,7 @@ import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import net from "node:net";
+import { StringDecoder } from "node:string_decoder";
 import os from "node:os";
 import path from "node:path";
 import { query, type SDKMessage } from "@anthropic-ai/claude-agent-sdk";
@@ -183,8 +184,12 @@ function serveBridgeSocket(
 ): Promise<void> {
   const server = net.createServer((conn) => {
     let buffer = "";
+    // A chunk boundary can fall inside a multi-byte character; decoding each
+    // chunk on its own would replace the split character with U+FFFD. The
+    // decoder holds the partial bytes until the rest arrives.
+    const decoder = new StringDecoder("utf8");
     conn.on("data", (chunk) => {
-      buffer += chunk.toString("utf8");
+      buffer += decoder.write(chunk);
       let newline;
       while ((newline = buffer.indexOf("\n")) >= 0) {
         const line = buffer.slice(0, newline);
@@ -321,8 +326,9 @@ async function runCodex(session: Session, request: AgentRunRequest): Promise<{ e
 
     let sawAssistantText = false;
     let stdoutBuffer = "";
+    const stdoutDecoder = new StringDecoder("utf8");
     child.stdout.on("data", (chunk) => {
-      stdoutBuffer += chunk.toString("utf8");
+      stdoutBuffer += stdoutDecoder.write(chunk);
       let newline;
       while ((newline = stdoutBuffer.indexOf("\n")) >= 0) {
         const text = codexAssistantText(stdoutBuffer.slice(0, newline));
@@ -334,8 +340,9 @@ async function runCodex(session: Session, request: AgentRunRequest): Promise<{ e
       }
     });
     let stderr = "";
+    const stderrDecoder = new StringDecoder("utf8");
     child.stderr.on("data", (chunk) => {
-      stderr = (stderr + chunk.toString("utf8")).slice(-2000);
+      stderr = (stderr + stderrDecoder.write(chunk)).slice(-2000);
     });
     child.on("error", (error) => {
       clearTimeout(timeout);
