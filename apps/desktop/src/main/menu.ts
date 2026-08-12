@@ -136,7 +136,7 @@ export function buildMenu(): Menu {
               { role: "hide" },
               { role: "hideOthers" },
               separator,
-              { role: "quit" },
+              { role: "quit", accelerator: "CmdOrCtrl+Q" },
             ],
           } satisfies MenuItemConstructorOptions,
         ]
@@ -170,7 +170,7 @@ export function buildMenu(): Menu {
         send("Export as DOCX Copy…", "export-docx"),
         separator,
         ...(isMac ? [] : [...updateItems, settingsItem, separator]),
-        { role: "close" },
+        { role: "close", accelerator: "CmdOrCtrl+W" },
       ],
     },
     {
