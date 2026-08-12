@@ -11,6 +11,16 @@ interface SaveResult {
   name: string;
 }
 
+/** A parsed mail-merge data source (the host parses the CSV; see main/index.ts). */
+interface MergeDataSource {
+  path: string;
+  name: string;
+  /** Column names from the header row, trimmed, in file order. */
+  headers: string[];
+  /** One entry per data row, every header present (empty where the row is). */
+  records: Record<string, string>[];
+}
+
 type Provider = "anthropic-api" | "claude-subscription" | "codex-subscription";
 
 interface SettingsView {
@@ -188,6 +198,7 @@ interface LikeOfficeBridge {
   sendAgentToolResult(result: { callId: string; content: string; isError: boolean }): void;
   onAgentEvent(cb: (event: AgentEvent) => void): () => void;
   onAgentToolCall(cb: (call: AgentToolCall) => void): () => void;
+  openMergeDataSource(): Promise<MergeDataSource | null>;
 }
 
 interface Window {

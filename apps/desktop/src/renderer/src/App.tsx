@@ -9,6 +9,7 @@ import {
 } from "wordinweb";
 import { AgentDocument, LocalDocumentSession, localDocumentViewBinding } from "@wordinweb/agent";
 import { AiPanel } from "./AiPanel";
+import { MailMerge } from "./MailMerge";
 import { openProfilesManager, runMenuAction } from "./menu-actions";
 import { SettingsDialog } from "./SettingsDialog";
 import { attachSpellcheck } from "./spellcheck";
@@ -65,6 +66,13 @@ function Editor({
   const [panelOpen, setPanelOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [wordCountOpen, setWordCountOpen] = useState(false);
+  // Mail-merge preview state. It lives HERE and nowhere else: the engine
+  // resolves the record as it paints and writes nothing, so none of this
+  // reaches the document, the undo stack or a saved file.
+  const [mailingsOpen, setMailingsOpen] = useState(false);
+  const [mergeSource, setMergeSource] = useState<MergeDataSource | null>(null);
+  const [mergeIndex, setMergeIndex] = useState(0);
+  const [mergePreview, setMergePreview] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [settings, setSettings] = useState<SettingsView>({
     provider: "anthropic-api",
@@ -105,6 +113,14 @@ function Editor({
   }, [dirty, name]);
 
   const markDirty = useCallback(() => setDirty(true), []);
+
+  // One clamp, read by both the counter and the painted record — so "Record 3
+  // of 40" can never name a record other than the one on the page.
+  const mergeRecords = mergeSource?.records ?? [];
+  const mergeAt = Math.min(mergeIndex, Math.max(0, mergeRecords.length - 1));
+  /** The record the engine paints, or undefined for the «Name» placeholders.
+   * Undefined is preview "off" — there is no other switch. */
+  const mergeRecord = mergePreview ? mergeRecords[mergeAt] : undefined;
 
   useEffect(() => {
     if (!api || !editorRef.current) return;
@@ -177,6 +193,9 @@ function Editor({
         case "word-count":
           setWordCountOpen((open) => !open);
           return;
+        case "mail-merge":
+          setMailingsOpen((open) => !open);
+          return;
         case "zoom:in":
           setZoom((z) => ZOOM_STEPS.find((s) => s > z) ?? z);
           return;
@@ -215,6 +234,18 @@ function Editor({
           </button>
         </div>
       </div>
+      {api && (
+        <MailMerge
+          api={api}
+          open={mailingsOpen}
+          source={mergeSource}
+          onSourceChange={setMergeSource}
+          index={mergeAt}
+          onIndexChange={setMergeIndex}
+          preview={mergePreview}
+          onPreviewChange={setMergePreview}
+        />
+      )}
       <div className="app-body">
         <div
           className="app-editor"
@@ -232,7 +263,14 @@ function Editor({
           onCutCapture={markDirty}
           onDropCapture={markDirty}
         >
-          <DocxView {...view} editable zoom={zoom} onReady={setApi} style={{ height: "100%" }} />
+          <DocxView
+            {...view}
+            editable
+            zoom={zoom}
+            onReady={setApi}
+            mergeRecord={mergeRecord}
+            style={{ height: "100%" }}
+          />
           {api && (
             <WordCount
               api={api}

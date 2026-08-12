@@ -13,6 +13,17 @@ export interface SaveResult {
   name: string;
 }
 
+/** A parsed mail-merge data source. Plain strings: the renderer and the engine
+ * never see the file path as anything but a label. */
+export interface MergeDataSource {
+  path: string;
+  name: string;
+  /** Column names from the header row, trimmed, in file order. */
+  headers: string[];
+  /** One entry per data row, every header present (empty where the row is). */
+  records: Record<string, string>[];
+}
+
 export interface SettingsView {
   provider: string;
   hasKey: boolean;
@@ -169,6 +180,8 @@ const api = {
   },
   exportPdf: (html: string): Promise<{ path: string } | null> =>
     ipcRenderer.invoke("document:export-pdf", html),
+  openMergeDataSource: (): Promise<MergeDataSource | null> =>
+    ipcRenderer.invoke("mailmerge:open-data-source"),
   getMenuShortcuts: (): Promise<MenuShortcutSection[]> => ipcRenderer.invoke("menu:shortcuts"),
   onMenu: (cb: (action: string) => void): (() => void) => {
     const listener = (_e: IpcRendererEvent, action: string) => cb(action);

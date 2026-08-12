@@ -291,6 +291,7 @@ export function buildMenu(): Menu {
       label: "Tools",
       submenu: [
         send("Word Count…", "word-count"),
+        send("Mail Merge", "mail-merge"),
         { label: "Spelling", submenu: spellSubmenu() },
         separator,
         send("Track Changes", "track-changes", "Shift+CmdOrCtrl+E"),

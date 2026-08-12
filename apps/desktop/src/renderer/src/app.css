@@ -941,3 +941,102 @@
   background: var(--app-hover);
   color: var(--app-muted);
 }
+
+/* ---- Mailings bar: sits under the ribbon while Tools > Mail Merge is on ---- */
+
+.mailmerge-bar {
+  background: var(--app-bg);
+  border-bottom: 1px solid var(--app-border);
+  padding: 7px 12px 8px;
+  font: var(--app-font);
+  color: var(--app-fg);
+}
+
+.mailmerge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.mailmerge-label {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.mailmerge-btn {
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-fg);
+  font: 12.5px system-ui, sans-serif;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.mailmerge-btn:hover:enabled {
+  background: var(--app-hover);
+}
+
+.mailmerge-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mailmerge-source {
+  color: var(--app-muted);
+  font-size: 12.5px;
+  max-width: 34ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mailmerge-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.mailmerge-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mailmerge-step {
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-fg);
+  font: 11px system-ui, sans-serif;
+  min-width: 26px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.mailmerge-step:hover:enabled {
+  background: var(--app-hover);
+}
+
+.mailmerge-step:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.mailmerge-count {
+  min-width: 15ch;
+  text-align: center;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.mailmerge-note {
+  margin: 6px 0 0;
+  color: var(--app-muted);
+  font-size: 11.5px;
+  line-height: 1.4;
+  max-width: 100ch;
+}
