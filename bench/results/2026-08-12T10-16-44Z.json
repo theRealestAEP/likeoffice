@@ -1,0 +1,270 @@
+{
+  "startedAt": "2026-08-12T10:16:44.520Z",
+  "model": "claude-opus-5",
+  "arm": "full",
+  "cache": false,
+  "results": [
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 26563,
+      "rounds": 7,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3780,
+          "inputTokens": 32079,
+          "outputTokens": 123,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 5885,
+          "inputTokens": 32395,
+          "outputTokens": 350,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2339,
+          "inputTokens": 32807,
+          "outputTokens": 73,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 6279,
+          "inputTokens": 33366,
+          "outputTokens": 403,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2309,
+          "inputTokens": 33810,
+          "outputTokens": 73,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 3441,
+          "inputTokens": 34693,
+          "outputTokens": 169,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2491,
+          "inputTokens": 34916,
+          "outputTokens": 49,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 3,
+        "word_document_edit": 3
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 234066,
+        "output": 1240,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01G7AKgq8euCVPgLymU9JcPQ",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01G7AKgq8euCVPgLymU9JcPQ",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01BVpXGz8mytc7REkBBo6qqS",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"splitParagraph\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:2\",\"offset\":0}}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01BVpXGz8mytc7REkBBo6qqS",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"splitParagraph\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:2\",\"offset\":0},\"suggest\":true}]}",
+              "result": "{\"revision\":\"2\",\"status\":\"submitted\",\"operations\":[\"insertChart\",\"splitParagraph\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01HM6hiAeVZxBbjoxJSPDkA3",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01HM6hiAeVZxBbjoxJSPDkA3",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"2\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:27\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:28\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_011c1QhZkK4k3WvSeFK6R8Nn",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:27\",\"blocksXml\":\"<w:p/><w:p/>\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_011c1QhZkK4k3WvSeFK6R8Nn",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:27\",\"blocksXml\":\"<w:p/><w:p/>\"}]}",
+              "result": "{\"revision\":\"3\",\"status\":\"submitted\",\"operations\":[\"pasteBlocks\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01UDMZtbXUyJNhW7iGA7EYDc",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01UDMZtbXUyJNhW7iGA7EYDc",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"3\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:27\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:28\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:29\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:30\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:31\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:32\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_018uckEdx4jD3etN9RBUBfv7",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"3\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:30\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:32\",\"mathText\":\"x = (-b ± √(b^2-4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_018uckEdx4jD3etN9RBUBfv7",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"3\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:30\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:32\",\"mathText\":\"x = (-b ± √(b^2-4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"5\",\"status\":\"submitted\",\"operations\":[\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, a \"Draft — internal only\" text box, and the quadratic formula as a display equation, each in its own paragraph.",
+          "calls": []
+        }
+      ],
+      "toolPayloadChars": 61343,
+      "arm": "full",
+      "cache": false,
+      "batch": "aa-full-full",
+      "position": 2
+    }
+  ],
+  "batch": "aa-full-full",
+  "position": 2
+}

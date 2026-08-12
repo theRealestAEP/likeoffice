@@ -1,0 +1,389 @@
+{
+  "startedAt": "2026-08-12T10:09:51.250Z",
+  "model": "claude-opus-5",
+  "arm": "full",
+  "cache": false,
+  "results": [
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 68421,
+      "rounds": 10,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 4417,
+          "inputTokens": 32079,
+          "outputTokens": 139,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 9913,
+          "inputTokens": 32411,
+          "outputTokens": 634,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2259,
+          "inputTokens": 33095,
+          "outputTokens": 73,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 11680,
+          "inputTokens": 33492,
+          "outputTokens": 755,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 4292,
+          "inputTokens": 34372,
+          "outputTokens": 242,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 10432,
+          "inputTokens": 34772,
+          "outputTokens": 697,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_patch"
+          ]
+        },
+        {
+          "ms": 14825,
+          "inputTokens": 35559,
+          "outputTokens": 948,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 3843,
+          "inputTokens": 36547,
+          "outputTokens": 145,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_patch"
+          ]
+        },
+        {
+          "ms": 4161,
+          "inputTokens": 37094,
+          "outputTokens": 273,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2540,
+          "inputTokens": 37422,
+          "outputTokens": 49,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 2,
+        "word_document_edit": 5,
+        "word_document_patch": 2
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_edit",
+          "message": "insertShape could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+        },
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. To create paragraphs, one insertText whose text contains \"\\n\" between paragraphs also works, in one operation. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+        },
+        {
+          "name": "word_document_patch",
+          "message": "Projection line 1 cannot be rewritten across a non-text atom NOTHING was applied. The patch is all or nothing, so the document is unchanged and no earlier hunk in this patch landed either. Re-project the story, then send every edit again."
+        }
+      ],
+      "tokens": {
+        "input": 346843,
+        "output": 3955,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_016zxmb4W9EUonT7CJAniE1u",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_016zxmb4W9EUonT7CJAniE1u",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01MW3AnH9gJG58Le6ZRuqjjA",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01MW3AnH9gJG58Le6ZRuqjjA",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}",
+              "result": "{\"revision\":\"1\",\"status\":\"submitted\",\"operations\":[\"insertChart\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01URNsRofW5nyU3RzDUpyTrk",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01URNsRofW5nyU3RzDUpyTrk",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"1\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01BRVkd2765QsnMZo47y9tU3",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:3\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01BRVkd2765QsnMZo47y9tU3",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:3\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"}]}",
+              "error": "insertShape could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01N7wbKtxHd7ZJc8WXVC3diN",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"splitParagraph\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:3\",\"offset\":0}}]}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01N7wbKtxHd7ZJc8WXVC3diN",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"splitParagraph\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:3\",\"offset\":0},\"suggest\":true}]}",
+              "error": "splitParagraph could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. To create paragraphs, one insertText whose text contains \"\\n\" between paragraphs also works, in one operation. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01MSFtgHZbckxJvtLudvs72D",
+              "name": "word_document_patch",
+              "input": "{\"revision\":\"1\",\"story\":\"body\",\"mode\":\"text\",\"edits\":[{\"startLine\":1,\"endLine\":1,\"newText\":\"\\n\\n\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01MSFtgHZbckxJvtLudvs72D",
+              "name": "word_document_patch",
+              "sent": "{\"revision\":\"1\",\"story\":\"body\",\"mode\":\"text\",\"edits\":[{\"startLine\":1,\"endLine\":1,\"newText\":\"\\n\\n\"}],\"suggest\":true}",
+              "error": "Projection line 1 cannot be rewritten across a non-text atom NOTHING was applied. The patch is all or nothing, so the document is unchanged and no earlier hunk in this patch landed either. Re-project the story, then send every edit again."
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01W4YEhXpsgLFkLSSJ3Xuz1u",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"removeDrawing\",\"objectRef\":\"object:3:0\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01W4YEhXpsgLFkLSSJ3Xuz1u",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"removeDrawing\",\"objectRef\":\"object:3:0\"}]}",
+              "result": "{\"revision\":\"2\",\"status\":\"submitted\",\"operations\":[\"removeDrawing\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 8,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01Nvp8ZcC7BBYoh2bubYUUDp",
+              "name": "word_document_patch",
+              "input": "{\"revision\":\"2\",\"story\":\"body\",\"mode\":\"text\",\"edits\":[{\"startLine\":1,\"endLine\":1,\"newText\":\"\\n\\n\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 8,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01Nvp8ZcC7BBYoh2bubYUUDp",
+              "name": "word_document_patch",
+              "sent": "{\"revision\":\"2\",\"story\":\"body\",\"mode\":\"text\",\"edits\":[{\"startLine\":1,\"endLine\":1,\"newText\":\"\\n\\n\"}],\"suggest\":true}",
+              "result": "{\"revision\":\"4\",\"status\":\"submitted\",\"operations\":[\"splitParagraph\",\"splitParagraph\"],\"connection\":\"local\",\"projection\":{\"revision\":\"4\",\"story\":\"body\",\"mode\":\"text\",\"text\":\"\\n\\n\",\"lines\":3,\"window\":{\"cursor\":null,\"startBlock\":0,\"endBlock\":3,\"maxBlocks\":200,\"maxCharacters\":24000},\"anchors\":[{\"line\":1,\"role\":\"paragraph\",\"blockRef\":\"block:1\",\"marker\":0,\"editable\":true,\"segments\":[{\"start\":0,\"end\":0,\"runRef\":\"run:2\",\"wireStart\":0,\"wireEnd\":0,\"editable\":true}]},{\"line\":2,\"role\":\"paragraph\",\"blockRef\":\"block:43\",\"marker\":0,\"editable\":true,\"segments\":[{\"start\":0,\"end\":0,\"runRef\":\"run:44\",\"wireStart\":0,\"wireEnd\":0,\"editable\":true}]},{\"line\":3,\"role\":\"paragraph\",\"blockRef\":\"block:41\",\"marker\":0,\"editable\":true,\"segments\":[{\"start\":0,\"end\":0,\"runRef\":\"run:42\",\"wireStart\":0,\"wireEnd\":0,\"editable\":true}]}],\"truncated\":false}}"
+            }
+          ]
+        },
+        {
+          "round": 9,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01EucLov8C6SmrJBRh51a2JS",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"4\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:44\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:42\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 9,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01EucLov8C6SmrJBRh51a2JS",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"4\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:44\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:42\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"7\",\"status\":\"submitted\",\"operations\":[\"insertChart\",\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 10,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, a \"Draft — internal only\" text box, and the quadratic formula as a display equation, each in its own paragraph.",
+          "calls": []
+        }
+      ],
+      "toolPayloadChars": 61343,
+      "arm": "full",
+      "cache": false,
+      "batch": "oi-full-first",
+      "position": 1
+    }
+  ],
+  "batch": "oi-full-first",
+  "position": 1
+}

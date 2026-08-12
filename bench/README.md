@@ -30,16 +30,19 @@ from 3 to 14 rounds on an unchanged build. See "Run-to-run variance" below.
 
 | value | payload |
 | --- | --- |
-| `defs` (default) | what the engine emits: the operations union with its repeated subschemas hoisted into `$defs` |
+| `defs` (default) | what the engine emits: the operations union with its repeated *content* subschemas hoisted into `$defs` |
 | `full` | every `$ref` expanded again — byte for byte the payload the engine sent before that change |
 | `menu` | the tiered-union experiment: create-side operations inline, adjust-side ones named in one open branch |
 
 **`defs` and `full` are the same payload against an engine build that does not
 hoist**, because there is no `$ref` left to expand — and the hoist lives on the
-engine's unmerged `lean-tool-schemas` branch, not on its default one. Point
+engine's unmerged `lean-schemas-v2` branch, not on its default one. Point
 `bench/node_modules/@wordinweb/agent` at a build that has it before running
 that A/B, and check the "tool payload N chars" line the summary prints: if both
-arms print the same number, the experiment is measuring nothing.
+arms print the same number, the experiment is measuring nothing. The number to
+expect is 61,343 for `full` and 54,191 for `defs`;
+`node bench/tool-payload.mjs` prints both without spending anything, and
+`--tokens` adds a live `count_tokens` per arm.
 
 `--cache` mirrors `model.ts`'s prompt-cache breakpoints (`cache_control` on the
 system prompt and the last tool). It is off by default, because the recorded
@@ -51,7 +54,18 @@ Helpers: `sh bench/ab-tools.sh N` and `sh bench/ab-menu.sh N` run an
 interleaved A/B; `node bench/ab-report.mjs <from-stamp> <to-stamp>` aggregates
 one into a table; `node bench/oi-order.mjs <label:arm-first:from:to> ...`
 splits `object-insert` by which arm ran first inside each pair, which turned
-out to matter (see below).
+out to matter (see below); `node bench/oi-first-edit.mjs <batch> ...` reports
+what that task's first `word_document_edit` carried, which is the mechanism any
+arm difference on it runs through.
+
+`ab-tools.sh` takes `--arms="X Y"` for the two arms and their order inside a
+pair, and `--task=`. `--arms="full full"` is an A/A control. Several streams can
+run at once; each is internally interleaved, so concurrency cannot look like an
+arm effect, but wall-clock numbers inflate and are then comparable only within
+the batch. A results file records the `batch` it belongs to, and its `position`
+inside the pair, so overlapping streams stay separable —
+`ab-report.mjs --batch=<name>` and `oi-order.mjs <label:arm-first:<name>>`
+select by it.
 
 The API key comes from this repo's `.env` (`ANTHROPIC` or
 `ANTHROPIC_API_KEY`). Real API spend occurs on every run. The harness never
@@ -603,6 +617,120 @@ the 9,674 characters saved, so a hoist restricted to shapes that describe
 *what to write* rather than *where to write it* still takes 7,355 characters,
 76% of the win. That is a stated rule rather than a benchmark fit, and it is
 testable with the same 20-pair `object-insert` design used here.
+
+### Shipped: hoist what to write, spell out where to write it
+
+That follow-up was built and measured, and it passes the gate the full hoist
+failed. `lean-schemas-v2` is the engine branch; the numbers are below.
+
+**The split.** `hoistRepeatedSubschemas` now skips any shape it meets under a
+property that holds an *address*: `at`, `blockRef`, `cellRef`, `afterBlockRef`,
+`runRef`, `objectRef`, `offset`, `start`, `end`. One appearance under one of
+those names keeps the shape written out at every site, so a reader never meets
+it in two forms. `offset`, `start` and `end` are on the list so an `at` reads
+end to end with no indirection inside it; they share one shape
+(`{"type":"integer","minimum":0}`), and excluding it costs 30 characters. The
+rule is named in the source, not fitted to this benchmark: the first four names
+are the ones the previous section predicted from the transcripts, and the other
+five are the rest of the same address.
+
+The three most repeated shapes in the whole union are addresses —
+`^block:[0-9]+$` 44 times, `^run:[0-9]+$` 38, `^object:[0-9]+:[0-9]+$` 19 — so
+this gives back the cheapest quarter of the saving and keeps the rest.
+
+| | payload chars | `count_tokens` | `$defs` entries |
+| --- | --- | --- | --- |
+| `full` (no hoist) | 61,343 | 31,508 | 0 |
+| hoist everything | 51,669 | 26,996 | 53 |
+| **hoist content only** | **54,191** | **28,039** | **45** |
+
+−7,152 characters and −3,469 tokens: **74% of the byte win and 77% of the token
+win**, against the 76% the rule predicted before it was written.
+
+**The A/B.** Same design as the one that stopped the full hoist. `full` against
+`defs`, alternating invocation by invocation, both pair orders, plus an A/A
+control in the same structure. Four streams ran at once; each is internally
+interleaved, so that cannot produce an arm effect, but it does inflate wall
+clock — the ms column is comparable within this batch and not against earlier
+ones. 112 runs, **112 passed**, zero API errors.
+
+| task | arm | n | pass | rounds median (range) | input tok/round | total input median | ms median |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `table-report` | full | 6 | 6/6 | 3 (3-3) | 32,315 | 96,891 | 9,319 |
+| `table-report` | defs | 6 | 6/6 | 3 (3-3) | **28,831** | **86,454** | 10,343 |
+| `rewrite` | full | 6 | 6/6 | 2 (2-2) | 32,622 | 65,261 | 7,971 |
+| `rewrite` | defs | 6 | 6/6 | 2 (2-2) | **29,158** | **58,316** | 6,979 |
+| `object-insert` | full | 30 | 30/30 | 7 (3-14) | 33,633 | 236,302 | 33,144 |
+| `object-insert` | defs | 30 | 30/30 | 5 (4-16) | **30,233** | **148,544** | 28,839 |
+
+The per-round deltas are −3,484, −3,464 and −3,400 against the −3,469
+`count_tokens` predicted. As before, the saving is the schema and nothing else.
+`table-report` takes 3 rounds and `rewrite` 2 in every run of both arms.
+
+**`object-insert`, which is the whole question.** 30 runs an arm over three
+batches, two of them with `full` first inside the pair and one with `defs`
+first.
+
+| batch | pair order | full | defs |
+| --- | --- | --- | --- |
+| 3-task A/B | full first | 7.0 mean, `5,5,7,8,8,9` | 6.8 mean, `5,5,5,5,10,11` |
+| top-up 1 | full first | 8.9 mean, `6,7,7,7,7,9,9,9,10,11,11,14` | 6.9 mean, `4,4,5,5,5,5,5,7,7,8,12,16` |
+| top-up 2 | defs first | 4.9 mean, `3,3,3,3,3,5,5,5,7,7,7,8` | 6.0 mean, `4,4,4,4,5,5,5,5,7,7,10,12` |
+| **pooled** | | **n=30, median 7, mean 6.93** | **n=30, median 5, mean 6.53** |
+
+`P(a defs run takes more rounds than a full run) = 0.419`, Mann-Whitney
+`p ≈ 0.28`. The difference in means is **−0.40 rounds, 95% CI −1.85 to +1.05**.
+The full hoist's **+1.8** sits outside that interval, so the regression this
+experiment set out to rule out is ruled out. The point estimate is negative,
+but nothing here supports calling the split *better* — indistinguishable is the
+claim.
+
+**The A/A control**, 14 pairs, `--tools=full` against itself, run inside the
+same four-stream batch:
+
+| | n | rounds median | rounds mean |
+| --- | --- | --- | --- |
+| position 1 | 14 | 7 | 7.00 |
+| position 2 | 14 | 7 | 7.00 |
+
+`P = 0.495`, `p ≈ 0.96`. The two positions come out at the same mean to two
+decimals. Read that as luck rather than precision: the A/B batches show a
+1.3-round gap between the same two positions (7.37 against 6.10), and since the
+control says the design has no position effect, that gap is chance at n=30.
+Which is the reason both pair orders were run, and the reason the −0.40 above
+is quoted with its interval.
+
+**The mechanism, which is the actual finding.** The full hoist made the model
+compose a smaller first transaction, and on this task a small first transaction
+is the road into the chart-in-the-only-paragraph trap. Leaving the addresses
+inline stops that, from the same transcript measurement
+(`node bench/oi-first-edit.mjs`):
+
+| first `word_document_edit` | full | hoist everything | hoist content only |
+| --- | --- | --- | --- |
+| `insertChart` alone | 45% | 60% | 33% |
+| three or more operations | 30% | 18% | 20% |
+| operations, mean | 1.98 | 1.57 | **2.00** |
+
+The full-hoist column is the earlier experiment's 40 runs an arm; the last two
+columns are this one's 30 an arm, whose own `full` baseline reads 43% / 23% /
+1.80. Behind `$ref`s the mean first transaction shrank by a fifth. With the
+addresses spelled out it does not shrink at all. That is the hypothesis the
+previous section wrote down, tested and held.
+
+**Verdict: shipped.** The gate is "input tokens down, rounds and pass rate not
+down". Tokens: −11% per round on every task, and `object-insert`'s total billed
+input falls from 235,078 to 199,278 on the mean. Rounds: identical on
+`table-report` and `rewrite` across 24 runs, and on `object-insert`
+indistinguishable with the regression size excluded. Pass rate: 112/112.
+
+Reproduce: `sh bench/ab-tools.sh 6`, `sh bench/ab-tools.sh 12
+--task=object-insert --arms="defs full"`, and `sh bench/ab-tools.sh 14
+--task=object-insert --arms="full full"`. The batch names in this run's results
+files are `ab3task-full-first`, `oi-full-first`, `oi-defs-first` and
+`aa-full-full`, stamped 2026-08-12T10-00-22Z through 10-17-41Z. Those runs
+predate the harness recording a batch, so their batch names were written into
+the results files afterwards, from the four run logs.
 
 ### Prompt caching pays for most of this already
 

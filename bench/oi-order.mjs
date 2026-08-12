@@ -2,7 +2,16 @@
 // object-insert rounds, batch by batch, with the within-pair arm order that
 // produced them. The point of the split is that an interleaved A/B still has
 // a first-and-second position inside each pair, and this task turned out to
-// be sensitive to it. Pass batches as "label:arm-first:from:to".
+// be sensitive to it.
+//
+// Pass batches as "label:arm-first:batch-name", or as "label:arm-first:from:to"
+// to bound them by results-file stamp. The stamp form is what the first tool
+// experiment used; it only works when one batch ran at a time, which stopped
+// being true once four streams ran at once, so newer results files carry the
+// batch name they belong to.
+//
+// An A/A batch names one arm twice. There is then nothing to split on but the
+// position inside the pair, so that is what this reports for it.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,14 +24,17 @@ const median = (v) => {
 };
 const mean = (v) => v.reduce((a, b) => a + b, 0) / v.length;
 
+/** `from` alone is a batch name; `from` and `to` bound the results stamps. */
 function load(from, to) {
   const out = [];
   for (const file of fs.readdirSync(dir).sort()) {
     if (!file.endsWith(".json")) continue;
     const stamp = file.replace(/\.json$/, "");
-    if (stamp < from || stamp > to) continue;
+    if (to !== undefined && (stamp < from || stamp > to)) continue;
     for (const r of JSON.parse(fs.readFileSync(path.join(dir, file), "utf8")).results ?? []) {
-      if (r.task === "object-insert") out.push(r);
+      if (r.task !== "object-insert") continue;
+      if (to === undefined && r.batch !== from) continue;
+      out.push(r);
     }
   }
   return out;
@@ -34,20 +46,25 @@ console.log("| batch | pair order | arm | n | rounds median | rounds mean | roun
 console.log("| --- | --- | --- | --- | --- | --- | --- |");
 for (const [label, first, from, to] of batches) {
   const rows = load(from, to);
-  all.push(...rows.map((r) => ({ ...r, first })));
-  for (const arm of ["full", "defs"]) {
-    const rounds = rows.filter((r) => r.arm === arm).map((r) => r.rounds).sort((a, b) => a - b);
-    if (rounds.length === 0) continue;
+  const arms = [...new Set(rows.map((r) => r.arm))];
+  // An A/A batch has one arm; the only thing to compare is pair position.
+  const key = arms.length > 1 ? (r) => r.arm : (r) => `${r.arm} #${r.position}`;
+  all.push(...rows.map((r) => ({ ...r, first, key: key(r) })));
+  for (const label2 of [...new Set(rows.map(key))].sort()) {
+    const rounds = rows.filter((r) => key(r) === label2).map((r) => r.rounds).sort((a, b) => a - b);
     console.log(
-      `| ${label} | ${first} first | ${arm} | ${rounds.length} | ${median(rounds)} | ${mean(rounds).toFixed(1)} | ${rounds.join(", ")} |`,
+      `| ${label} | ${first} first | ${label2} | ${rounds.length} | ${median(rounds)} | ${mean(rounds).toFixed(1)} | ${rounds.join(", ")} |`,
     );
   }
 }
 
-// Mann-Whitney U on rounds, overall and split by which arm ran first.
+// Mann-Whitney U on rounds, overall and split by which arm ran first. The two
+// groups are whatever the batch tables above split on: the two arms, or, in an
+// A/A batch, the two positions inside the pair.
 function compare(label, rows) {
-  const D = rows.filter((r) => r.arm === "defs").map((r) => r.rounds);
-  const F = rows.filter((r) => r.arm === "full").map((r) => r.rounds);
+  const [second, firstKey] = [...new Set(rows.map((r) => r.key))].sort();
+  const D = rows.filter((r) => r.key === second).map((r) => r.rounds);
+  const F = rows.filter((r) => r.key === firstKey).map((r) => r.rounds);
   if (D.length === 0 || F.length === 0) return;
   let gt = 0;
   let eq = 0;
@@ -62,9 +79,11 @@ function compare(label, rows) {
     return s * y;
   };
   console.log(
-    `${label}: full n=${F.length} median ${median(F)} mean ${mean(F).toFixed(1)} | ` +
-      `defs n=${D.length} median ${median(D)} mean ${mean(D).toFixed(1)} | ` +
-      `P(defs>full)=${(U / (D.length * F.length)).toFixed(3)} p~${(2 * (1 - 0.5 * (1 + erf(z / Math.SQRT2)))).toFixed(3)}`,
+    `${label}: ${firstKey} n=${F.length} median ${median(F)} mean ${mean(F).toFixed(1)} | ` +
+      `${second} n=${D.length} median ${median(D)} mean ${mean(D).toFixed(1)} | ` +
+      // Two-sided, so the tail is taken on |z|: with the signed z a group that
+      // came out lower than the other printed a "p" above 1.
+      `P(${second}>${firstKey})=${(U / (D.length * F.length)).toFixed(3)} p~${(2 * (1 - 0.5 * (1 + erf(Math.abs(z) / Math.SQRT2)))).toFixed(3)}`,
   );
 }
 console.log("");

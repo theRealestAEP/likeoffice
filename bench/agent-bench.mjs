@@ -8,12 +8,15 @@
 // Usage:
 //   nice -n 19 node bench/agent-bench.mjs [--model=claude-opus-5] [--task=name,name]
 //                                         [--runs=N] [--tools=defs|full|menu] [--cache]
+//                                         [--batch=name] [--position=1|2]
 //
 // --tools picks the tool payload: "defs" (the default) is what the engine
-// emits, with the operations union's repeated subschemas hoisted into $defs;
-// "full" expands every $ref again, reproducing the pre-hoist payload byte for
-// byte; "menu" is the tiered-union experiment described beside toolPayload.
-// --cache mirrors model.ts's prompt-cache breakpoints.
+// emits, with the operations union's repeated content subschemas hoisted into
+// $defs; "full" expands every $ref again, reproducing the pre-hoist payload
+// byte for byte; "menu" is the tiered-union experiment described beside
+// toolPayload. --cache mirrors model.ts's prompt-cache breakpoints.
+// --batch and --position record which experiment a run belongs to and where it
+// sat inside its pair; ab-tools.sh sets both.
 //
 // A single run of a task is one sample of a noisy process: the same task can
 // take 3 rounds or 14. Use --runs=N (the summary reports the median and the
@@ -335,7 +338,7 @@ function clip(value) {
 
 // --- One task --------------------------------------------------------------
 
-async function runTask(task, { apiKey, model, blankBytes, arm, cache }) {
+async function runTask(task, { apiKey, model, blankBytes, arm, cache, batch, position }) {
   const metrics = {
     task: task.name,
     model,
@@ -368,6 +371,11 @@ async function runTask(task, { apiKey, model, blankBytes, arm, cache }) {
   metrics.toolPayloadChars = JSON.stringify(definitions).length;
   metrics.arm = arm;
   metrics.cache = cache;
+  // Which experiment this run belongs to, and where it sat inside its pair.
+  // Several interleaved streams can run at once, so a timestamp no longer
+  // identifies an experiment, and an A/A batch has nothing but the position.
+  metrics.batch = batch;
+  metrics.position = position;
 
   const firstMessage = await projectionMessage(tools, task.prompt);
   const messages = [{ role: "user", content: firstMessage }];
@@ -557,6 +565,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     process.exit(2);
   }
   const cache = args.cache === true;
+  const batch = typeof args.batch === "string" ? args.batch : undefined;
+  const position = typeof args.position === "string" ? Number(args.position) : undefined;
   const runs = typeof args.runs === "string" ? Number(args.runs) : 1;
   if (!Number.isInteger(runs) || runs < 1) {
     console.error(`--runs must be a positive integer, got ${args.runs}`);
@@ -580,7 +590,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     for (let run = 1; run <= runs; run++) {
       const label = runs === 1 ? task.name : `${task.name} (${run}/${runs})`;
       process.stdout.write(`running ${label} ... `);
-      const result = await runTask(task, { apiKey, model, blankBytes, arm, cache });
+      const result = await runTask(task, { apiKey, model, blankBytes, arm, cache, batch, position });
       results.push(result);
       console.log(
         `${result.pass ? "PASS" : "FAIL"} (${result.wallMs} ms, ${result.rounds} rounds)`,
@@ -592,10 +602,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const resultsDir = path.join(BENCH_DIR, "results");
   fs.mkdirSync(resultsDir, { recursive: true });
   const stamp = startedAt.toISOString().replace(/:/g, "-").replace(/\.\d+Z$/, "Z");
-  const resultsPath = path.join(resultsDir, `${stamp}.json`);
+  // Two invocations that start in the same second must not overwrite each
+  // other: A/B batches are run several at a time.
+  let resultsPath = path.join(resultsDir, `${stamp}.json`);
+  for (let n = 2; fs.existsSync(resultsPath); n++) resultsPath = path.join(resultsDir, `${stamp}-${n}.json`);
   fs.writeFileSync(
     resultsPath,
-    JSON.stringify({ startedAt: startedAt.toISOString(), model, arm, cache, results }, null, 2),
+    JSON.stringify({ startedAt: startedAt.toISOString(), model, arm, cache, batch, position, results }, null, 2),
   );
   const historyPath = path.join(BENCH_DIR, "history.jsonl");
   for (const r of results) {
@@ -611,6 +624,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
         outputTokens: r.tokens.output,
         arm: r.arm,
         cache: r.cache,
+        batch: r.batch,
         toolPayloadChars: r.toolPayloadChars,
         pass: r.pass,
       }) + "\n",

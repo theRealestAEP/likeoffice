@@ -2,16 +2,21 @@
 // Aggregate an interleaved A/B into one table, arm by arm and task by task.
 //
 //   node bench/ab-report.mjs 2026-08-12T08-11 2026-08-12T09-99
+//   node bench/ab-report.mjs --batch=oi-full-first --batch=oi-defs-first
 //
-// The two arguments bound the results-file names to one experiment. Each
-// results file records its own arm, so the mapping does not depend on the
-// order the files were written in.
+// The two positional arguments bound the results-file names to one experiment.
+// That is enough when one experiment ran at a time; --batch selects by the
+// batch name a results file records, which is what several concurrent streams
+// need. Each results file also records its own arm, so the arm mapping never
+// depends on the order the files were written in.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "results");
-const [from = "", to = "￿"] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const batches = args.filter((a) => a.startsWith("--batch=")).map((a) => a.slice(8));
+const [from = "", to = "￿"] = args.filter((a) => !a.startsWith("--"));
 
 const runs = [];
 for (const file of fs.readdirSync(dir).sort()) {
@@ -19,6 +24,7 @@ for (const file of fs.readdirSync(dir).sort()) {
   const stamp = file.replace(/\.json$/, "");
   if (stamp < from || stamp > to) continue;
   const json = JSON.parse(fs.readFileSync(path.join(dir, file), "utf8"));
+  if (batches.length > 0 && !batches.includes(json.batch)) continue;
   for (const r of json.results ?? []) runs.push({ stamp, ...r });
 }
 
