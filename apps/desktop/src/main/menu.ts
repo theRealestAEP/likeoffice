@@ -193,8 +193,8 @@ export function buildMenu(): Menu {
         send("Underline", "format:underline", "CmdOrCtrl+U"),
         send("Strikethrough", "format:strike", "Shift+CmdOrCtrl+X"),
         separator,
-        send("Superscript", "format:superscript"),
-        send("Subscript", "format:subscript"),
+        send("Superscript", "format:superscript", "Shift+CmdOrCtrl+="),
+        send("Subscript", "format:subscript", "CmdOrCtrl+="),
         separator,
         {
           label: "Styles",
@@ -294,8 +294,8 @@ export function buildMenu(): Menu {
       submenu: [
         send("AI Assistant", "toggle-ai", "Shift+CmdOrCtrl+A"),
         separator,
-        send("Zoom In", "zoom:in", "CmdOrCtrl+Plus"),
-        send("Zoom Out", "zoom:out", "CmdOrCtrl+-"),
+        send("Zoom In", "zoom:in", "Alt+CmdOrCtrl+="),
+        send("Zoom Out", "zoom:out", "Alt+CmdOrCtrl+-"),
         send("Actual Size", "zoom:reset", "CmdOrCtrl+0"),
         separator,
         // forceReload, not reload: reload's Cmd+R belongs to Format > Align Right.
