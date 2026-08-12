@@ -17,6 +17,7 @@
     "dist:linux": "npm run dist:linux -w @likeoffice/desktop"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1"
+    "@playwright/test": "^1.62.1",
+    "unpdf": "^1.8.0"
   }
 }

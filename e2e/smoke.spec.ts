@@ -11,7 +11,13 @@ test("open, edit, and save a document", async () => {
   await copyFile(path.join(APP_DIR, "resources/blank.docx"), docPath);
   const before = await stat(docPath);
 
-  const app = await electron.launch({ args: [APP_DIR, docPath] });
+  // Own userData: autosave files left by an earlier run open recovery windows
+  // ahead of the document window, and this test drives the first window.
+  const userData = await mkdtemp(path.join(tmpdir(), "likeoffice-userdata-"));
+  const app = await electron.launch({
+    args: [APP_DIR, docPath],
+    env: { ...process.env, LIKEOFFICE_USER_DATA: userData },
+  });
   const win = await app.firstWindow();
 
   await expect(win.locator(".dxw-page").first()).toBeAttached({ timeout: 30000 });
