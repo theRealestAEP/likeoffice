@@ -1,6 +1,6 @@
 # In-flight work and agent-empowerment roadmap
 
-Updated 2026-08-11. Two sections: (1) work that was in flight or filed when the
+Updated 2026-08-12 (see the Resolved section at the end for what has since landed). Two sections: (1) work that was in flight or filed when the
 API outage paused the pipeline, (2) the plan for the in-app LLM feedback from
 the drawing-resize session.
 
@@ -122,3 +122,57 @@ Plan:
 2. 2b is agent/inspect plumbing over existing layout data — no new layout.
 3. 2c adds an op plus layout honoring and one probe — the only Word-
    calibration item; last.
+
+
+---
+
+## Resolved since this document was written
+
+All three agent-empowerment items shipped, plus the two interrupted lanes and a
+run of bugs the work surfaced.
+
+**Agent empowerment (§2).** 2a story projections — non-body stories project in
+md mode inside the `<document>` tag (text mode renders a field as an opaque
+atom, so md was required); the real-API control proved the value is bigger than
+de-duplication: without the footer block the model fired the page-number
+gallery blind and REPLACED the whole footer. 2b `inspect kind:"fit"` reports box
+vs measured text extent, overflow, clipped lines, autofit mode and page fill.
+2c `setDrawingTextFit` writes `bodyPr` — and the probe overturned this
+document's own spec: Word's file path never computes a fontScale (bare
+normAutofit stays bare, authored caches unchanged, Word paints at the authored
+size and clips); only `spAutoFit` acts, so shrinkText writes through and keeps
+clipping to match Word.
+
+**Interrupted lanes.** Line numbering: renderer was already correct on every
+probed dimension; the one real divergence was `w:start` being an offset (Word
+prints start+1 whenever the attribute exists), and the pleading failure was an
+authoring gap — real CA templates bake digits into a header table rather than
+using lnNumType, now stated in the skill guidance the model reads. Toolbar:
+redesigned rather than patched — the ⋮ is deleted, the expand chevron is the
+sole affordance and renders only when controls are actually folded, the fit
+budget reserves the chevron's width (making folding monotone in width, which
+retired the hysteresis), and a backfill pass removes the dead space.
+
+**Bugs surfaced and fixed along the way.** The `NaN words` pill (two lanes
+disagreed on the API shape; the test used a simulated stub). Duplicate charts in
+AI runs — `removeDrawing` left the chart part, rels, content-type overrides and
+embedded workbook orphaned, so insert→delete→insert put two charts in the
+package with one in document.xml; released at save time. Rollback errors that
+told the model to "send the remaining operations" after a full rollback.
+
+**Two disciplined no-ships.** md-mode body projection (md emits a GFM table, so
+a cell patchable at text line 4 becomes a separator row — it would remove the
+quick-edit path from every table cell) and the line-preserving object-token
+alternative (A/B'd n=8/arm; the arms were byte-identical in 13 of 16 runs, so
+the numbers proved nothing — recorded rather than shipped).
+
+**Process changes worth keeping.** The bench harness gained `--runs=N` with
+median and range, per-round tool names, and full transcript recording, so
+single-sample conclusions and unreplayable corruption bugs are both off the
+table. Two weak tests that hid real defects were replaced with content
+assertions (word count; exported-PDF text extraction plus a multi-page case).
+Verification standard: sweep widths AND states — the earlier toolbar sweep
+captured only the closed bar, which is why the broken panel survived it.
+
+**Still open:** tool-schema payload (~60,856 chars every request, in progress),
+the filed backlog in §1 above, and the Cloudflare credential rotation.
