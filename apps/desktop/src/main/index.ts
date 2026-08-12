@@ -368,6 +368,11 @@ app.on("open-file", (e, p) => {
 });
 
 app.whenReady().then(async () => {
+  // A test run launches and exits the app dozens of times. Hidden windows are
+  // not enough: every launch still bounces an icon into the Dock and steals
+  // the space, which is unusable for anyone working at the machine. Leave the
+  // Dock alone entirely while LIKEOFFICE_HIDE_WINDOWS is set.
+  if (process.env.LIKEOFFICE_HIDE_WINDOWS) app.dock?.hide();
   await Promise.all([loadRecent(), loadMenuState()]);
   rebuildMenu();
   const argPaths = process.argv.slice(1).filter((a) => a.endsWith(".docx"));
