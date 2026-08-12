@@ -1,0 +1,88 @@
+{
+  "startedAt": "2026-08-12T05:35:10.567Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "rewrite",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 4494,
+      "rounds": 2,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 2964,
+          "inputTokens": 31973,
+          "outputTokens": 219,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_patch"
+          ]
+        },
+        {
+          "ms": 1525,
+          "inputTokens": 32817,
+          "outputTokens": 26,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 64790,
+        "output": 245
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 11918,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3238,
+          "inputTokens": 31847,
+          "outputTokens": 100,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 7213,
+          "inputTokens": 32140,
+          "outputTokens": 504,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1452,
+          "inputTokens": 32722,
+          "outputTokens": 37,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 96709,
+        "output": 641
+      },
+      "savedValid": true,
+      "failures": []
+    }
+  ]
+}

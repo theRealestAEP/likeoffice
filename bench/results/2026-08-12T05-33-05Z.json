@@ -1,0 +1,188 @@
+{
+  "startedAt": "2026-08-12T05:33:05.524Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "rewrite",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 4666,
+      "rounds": 2,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3288,
+          "inputTokens": 31973,
+          "outputTokens": 219,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_patch"
+          ]
+        },
+        {
+          "ms": 1361,
+          "inputTokens": 32817,
+          "outputTokens": 25,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 64790,
+        "output": 244
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 58947,
+      "rounds": 12,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 2607,
+          "inputTokens": 31847,
+          "outputTokens": 128,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 10246,
+          "inputTokens": 32168,
+          "outputTokens": 723,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1784,
+          "inputTokens": 32941,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 6684,
+          "inputTokens": 33338,
+          "outputTokens": 454,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2535,
+          "inputTokens": 33917,
+          "outputTokens": 148,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 4167,
+          "inputTokens": 34223,
+          "outputTokens": 236,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_project"
+          ]
+        },
+        {
+          "ms": 2047,
+          "inputTokens": 34693,
+          "outputTokens": 143,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_patch"
+          ]
+        },
+        {
+          "ms": 6892,
+          "inputTokens": 34929,
+          "outputTokens": 511,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_patch"
+          ]
+        },
+        {
+          "ms": 9647,
+          "inputTokens": 35526,
+          "outputTokens": 638,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2282,
+          "inputTokens": 36205,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 2838,
+          "inputTokens": 36926,
+          "outputTokens": 168,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2149,
+          "inputTokens": 37148,
+          "outputTokens": 42,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 3,
+        "word_document_edit": 5,
+        "word_document_project": 1,
+        "word_document_patch": 2
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_edit",
+          "message": "insertShape could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+        },
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. To create paragraphs, one insertText whose text contains \"\\n\" between paragraphs also works, in one operation. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+        },
+        {
+          "name": "word_document_patch",
+          "message": "Edit 1 covers lines 2-2, outside the projected 1-1 NOTHING was applied. The patch is all or nothing, so the document is unchanged and no earlier hunk in this patch landed either. Re-project the story, then send every edit again."
+        },
+        {
+          "name": "word_document_patch",
+          "message": "Projection line 1 column 20 is not inside editable text NOTHING was applied. The patch is all or nothing, so the document is unchanged and no earlier hunk in this patch landed either. Re-project the story, then send every edit again."
+        }
+      ],
+      "tokens": {
+        "input": 413861,
+        "output": 3337
+      },
+      "savedValid": true,
+      "failures": []
+    }
+  ]
+}

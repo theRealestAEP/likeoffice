@@ -146,12 +146,123 @@ Point 2 repeats a lesson a9624c2 already learned for stories: it chose md mode
 there because text mode renders a field as the opaque atom U+240E. The body
 projection has the same problem whenever the document holds objects.
 
-The obvious candidate fixes are to project the body in md mode when it holds
-objects, and to tell the model that a failed edit applies nothing. Neither is
-implemented here. Both change the prompt or the projection on every task, so
-each needs its own interleaved A/B run over more than one task before it ships.
-Shipping either on the strength of 4 runs would repeat the mistake this section
-documents.
+The two sections below take each candidate fix in turn. The first shipped. The
+second did not, and the measurement that stopped it also corrects point 2
+above.
+
+### Point 1, shipped: a failed write now says the document is unchanged
+
+The probe reproduces on `apps/desktop/resources/blank.docx` with no model in
+the loop. One `word_document_edit` carrying `insertText`, `insertChart`, and a
+`splitParagraph` against the offset the text held before the transaction throws
+on the split. The document then has zero chart parts and an empty projection.
+Nothing landed, including the two operations before the failing one.
+
+`packages/agent` now says that. `edit`, `patch`, and `compose` each apply to a
+trial clone and adopt it only after the whole request succeeds, so each names
+that state in its caller's own terms:
+
+| Path | Sentence appended to every error it throws |
+| --- | --- |
+| `word_document_edit` | NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again. |
+| `word_document_patch` | NOTHING was applied. The patch is all or nothing, so the document is unchanged and no earlier hunk in this patch landed either. Re-project the story, then send every edit again. |
+| `word_document_compose` | NOTHING was created. Compose is all or nothing, so the document is unchanged. Send the whole compose request again. |
+
+Errors thrown before any operation runs — a stale revision, a malformed
+operation — carry the same sentence. The rule is that an error describes the
+document, not the request. `applyFailure` keeps its diagnosis and its
+`splitParagraph` alternative; only the resolution sentence moved.
+
+No successful request changes, so no A/B is owed. Four runs after the change:
+3, 3, 9, and 12 rounds (median 6, range 3-12) against the recorded HEAD median
+of 8.5, range 3-11. Both sit inside this task's variance. One of the four still
+finished with 2 chart parts.
+
+### Point 2, measured and not shipped: spelling objects out in text mode
+
+**md mode was ruled out first, on line addressing.** The two modes number lines
+differently as soon as a document holds a table. text mode gives every cell
+paragraph its own line and every one of them is patchable. md mode writes a GFM
+table, so a probe on a 3x2 table plus one paragraph reads:
+
+| | text mode | md mode |
+| --- | --- | --- |
+| line 2 | `Q` | `` (blank line before the table) |
+| line 4 | `Q1` | `\| --- \| --- \|` |
+| patch line 4 | applies | throws "Projection line 4 is table content and cannot be patched" |
+
+Projecting the body in md would therefore take the quick-edit patch path away
+from every table cell. The alternative keeps line numbering identical: render
+an object in text mode with the token md already uses, so a chart reads
+`![chart](object:3:0)` instead of the opaque `￼`. That is a one-line change in
+`renderContent` (`packages/agent/src/project.ts`) — drop `mode === "text"` from
+the `object` helper's condition. It moves no line boundary, and md mode already
+proves the anchor map and the patch path handle a multi-character opaque
+segment.
+
+**The A/B.** Arm A is the point-1 build. Arm B is arm A plus that one line. The
+arms alternate A, B, A, B, so drift in API-side conditions cannot look like an
+arm effect. Each invocation runs `rewrite` once and `object-insert` once.
+
+| Run | object-insert A | object-insert B | rewrite A | rewrite B |
+| --- | --- | --- | --- | --- |
+| 1 | 10 rounds, 32.7 s | 3 rounds, 7.0 s | 2 rounds, 6.2 s | 2 rounds, 5.2 s |
+| 2 | 3 rounds, 8.4 s | 12 rounds, 58.9 s | 2 rounds, 5.2 s | 2 rounds, 4.7 s |
+| 3 | 10 rounds, 43.4 s | 3 rounds, 11.9 s | 2 rounds, 4.6 s | 2 rounds, 4.5 s |
+| 4 | 3 rounds, 6.7 s | 10 rounds, 41.0 s **FAIL** | 2 rounds, 4.6 s | 2 rounds, 5.1 s |
+| 5 | 3 rounds, 12.1 s | 11 rounds, 44.9 s | 2 rounds, 6.8 s | 2 rounds, 5.2 s |
+| 6 | 3 rounds, 14.3 s | 3 rounds, 7.5 s | 2 rounds, 4.9 s | 2 rounds, 4.8 s |
+| 7 | 3 rounds, 12.8 s | 3 rounds, 12.4 s | 2 rounds, 5.1 s | 2 rounds, 4.7 s |
+| 8 | 12 rounds, 71.4 s | 7 rounds, 23.3 s | 2 rounds, 5.5 s | 2 rounds, 5.1 s |
+| **median** | **3 rounds, 13.5 s** | **5 rounds, 17.9 s** | **2 rounds, 5.1 s** | **2 rounds, 4.9 s** |
+| range | 3-12 rounds, 6.7-71.4 s | 3-12 rounds, 7.0-58.9 s | 2 rounds, 4.6-6.8 s | 2 rounds, 4.5-5.2 s |
+| pass | 8/8 | 7/8 | 8/8 | 8/8 |
+
+The result files hold the per-round traces. A results file records no arm, so
+the mapping lives here: the run is one invocation per row above, arm A first,
+and the files in `results/` sort into that order — `2026-08-12T05-31-40Z` is
+run 1 arm A, `05-32-26Z` is run 1 arm B, through to `05-41-18Z`, run 8 arm B.
+`2026-08-12T05-22-56Z` is the four-run point-1 verification, which precedes
+them all.
+
+**Verdict: not shipped.** `object-insert` does not improve. Arm B's median is
+higher and it owns the only failing run. `rewrite` is untouched, which proves
+nothing on its own: its filler fixture holds no object, so the two arms send
+byte-identical requests on that task by construction.
+
+**The reason the numbers say nothing, which is the real finding.** The arms are
+byte-identical on `object-insert` too, in almost every run. The change alters
+one thing: the text a projection returns for an object. `object-insert` starts
+from a blank document, so the projection folded into the first user message is
+empty in both arms. The model only meets the change if it calls
+`word_document_project` again, or gets a projection back from a successful
+`word_document_patch`. Across the 16 `object-insert` runs above, **3 called
+either tool at all.** The other 13 sent the same bytes in both arms. The
+experiment measured this task's variance a second time.
+
+**Correction to point 2 of the section above.** The claim was that after a
+failed edit "the model projects, sees one opaque atom, cannot tell which
+objects landed, and inserts again". The traces do not support it. The model
+re-reads with `word_document_inspect`, not `word_document_project`, and inspect
+was never opaque: after one `insertChart` a `kind: "read"` returns
+
+```
+"components": [{ "ref": "object:3:0", "editRef": "object:3:0",
+                 "type": "chart", "label": "Revenue" }]
+```
+
+and `kind: "overview"` reports `"objectCounts": { "chart": 1 }`. The arm B run
+that failed with 2 chart parts had already called `read` twice. It could see
+the chart it had made, name it, and address it, and it inserted a second one
+anyway. Object opacity in the projection is real, but it is not what duplicates
+the chart here.
+
+Spelling the object out in text mode is still the right projection contract:
+`￼` names neither what the object is nor how to reach it. It needs a task that
+can see it. Either give `object-insert` a fixture that already holds an object,
+so the change reaches the `<document>` tag of every request, or add a task
+whose ask forces a re-projection. Until then the one-line change stays
+unmerged, with these numbers as the record of why.
 
 ## Notes
 

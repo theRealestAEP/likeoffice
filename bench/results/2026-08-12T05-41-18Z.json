@@ -1,0 +1,124 @@
+{
+  "startedAt": "2026-08-12T05:41:18.860Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "rewrite",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 5130,
+      "rounds": 2,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3687,
+          "inputTokens": 31973,
+          "outputTokens": 220,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_patch"
+          ]
+        },
+        {
+          "ms": 1439,
+          "inputTokens": 32819,
+          "outputTokens": 37,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 64792,
+        "output": 257
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 23329,
+      "rounds": 7,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 2399,
+          "inputTokens": 31847,
+          "outputTokens": 101,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 6676,
+          "inputTokens": 32141,
+          "outputTokens": 523,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1715,
+          "inputTokens": 32726,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 5468,
+          "inputTokens": 33285,
+          "outputTokens": 364,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 3107,
+          "inputTokens": 33690,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 2466,
+          "inputTokens": 34573,
+          "outputTokens": 171,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1461,
+          "inputTokens": 34798,
+          "outputTokens": 49,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 3,
+        "word_document_edit": 3
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 233060,
+        "output": 1354
+      },
+      "savedValid": true,
+      "failures": []
+    }
+  ]
+}

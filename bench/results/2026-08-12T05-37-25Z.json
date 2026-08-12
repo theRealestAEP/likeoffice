@@ -1,0 +1,169 @@
+{
+  "startedAt": "2026-08-12T05:37:25.537Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "rewrite",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 5208,
+      "rounds": 2,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3379,
+          "inputTokens": 31973,
+          "outputTokens": 247,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_patch"
+          ]
+        },
+        {
+          "ms": 1825,
+          "inputTokens": 32841,
+          "outputTokens": 39,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 64814,
+        "output": 286
+      },
+      "savedValid": true,
+      "failures": []
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 44863,
+      "rounds": 11,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 2708,
+          "inputTokens": 31847,
+          "outputTokens": 118,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 10599,
+          "inputTokens": 32158,
+          "outputTokens": 656,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1883,
+          "inputTokens": 32864,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 6429,
+          "inputTokens": 33261,
+          "outputTokens": 355,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1790,
+          "inputTokens": 33741,
+          "outputTokens": 121,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2405,
+          "inputTokens": 33900,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 4263,
+          "inputTokens": 34436,
+          "outputTokens": 271,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 4504,
+          "inputTokens": 34835,
+          "outputTokens": 327,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1519,
+          "inputTokens": 35203,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 2237,
+          "inputTokens": 35901,
+          "outputTokens": 124,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 1462,
+          "inputTokens": 36070,
+          "outputTokens": 44,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 4,
+        "word_document_edit": 6
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_edit",
+          "message": "insertShape could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+        },
+        {
+          "name": "word_document_edit",
+          "message": "insertMath could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+        }
+      ],
+      "tokens": {
+        "input": 374216,
+        "output": 2235
+      },
+      "savedValid": true,
+      "failures": []
+    }
+  ]
+}
