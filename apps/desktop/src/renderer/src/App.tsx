@@ -8,14 +8,20 @@ import {
 } from "wordinweb";
 import { AgentDocument, LocalDocumentSession, localDocumentViewBinding } from "@wordinweb/agent";
 import { AiPanel } from "./AiPanel";
+import { openProfilesManager, runMenuAction } from "./menu-actions";
 import { SettingsDialog } from "./SettingsDialog";
 import { attachSpellcheck } from "./spellcheck";
 import { WordCount } from "./WordCount";
 
 const EDIT_KEYS = new Set(["Enter", "Backspace", "Delete", "Tab"]);
 
+const ZOOM_STEPS = [0.5, 0.75, 0.9, 1, 1.25, 1.5, 2];
+
 export function App() {
   const [doc, setDoc] = useState<InitialDocument | null>(null);
+  // Revert replaces the document wholesale; a new key remounts the editor onto
+  // the reloaded bytes rather than trying to patch the live session.
+  const [generation, setGeneration] = useState(0);
 
   useEffect(() => {
     void window.likeoffice
@@ -23,11 +29,22 @@ export function App() {
       .then((d) => setDoc({ ...d, bytes: new Uint8Array(d.bytes) }));
   }, []);
 
+  const reload = useCallback((next: InitialDocument) => {
+    setDoc({ ...next, bytes: new Uint8Array(next.bytes) });
+    setGeneration((n) => n + 1);
+  }, []);
+
   if (!doc) return null;
-  return <Editor initial={doc} />;
+  return <Editor key={generation} initial={doc} onReload={reload} />;
 }
 
-function Editor({ initial }: { initial: InitialDocument }) {
+function Editor({
+  initial,
+  onReload,
+}: {
+  initial: InitialDocument;
+  onReload: (next: InitialDocument) => void;
+}) {
   const session = useMemo(() => new LocalDocumentSession(initial.bytes), [initial.bytes]);
   // The agent and view packages each bundle their own copy of the engine core,
   // so their DocxDocument types are nominally distinct. The shapes match.
@@ -43,9 +60,11 @@ function Editor({ initial }: { initial: InitialDocument }) {
 
   const [name, setName] = useState(initial.name);
   const [api, setApi] = useState<DocxViewApi | null>(null);
-  const [dirty, setDirty] = useState(initial.recovered);
+  const [dirty, setDirty] = useState(initial.dirty);
   const [panelOpen, setPanelOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [wordCountOpen, setWordCountOpen] = useState(false);
+  const [zoom, setZoom] = useState(1);
   const [settings, setSettings] = useState<SettingsView>({
     provider: "anthropic-api",
     hasKey: false,
@@ -113,38 +132,57 @@ function Editor({ initial }: { initial: InitialDocument }) {
   useEffect(() => {
     return window.likeoffice.onMenu((action) => {
       const a = apiRef.current;
+      // Window-level items live here; everything that acts on the document
+      // goes to the router (see menu-actions.ts).
       switch (action) {
         case "save":
           void save(false);
-          break;
+          return;
         case "save-as":
           void save(true);
-          break;
-        case "print":
-          a?.print();
-          break;
+          return;
+        case "duplicate":
+          if (a) void window.likeoffice.duplicateDocument(a.save());
+          return;
+        case "revert":
+          void window.likeoffice.revertDocument().then((next) => {
+            if (next) onReload(next);
+          });
+          return;
         case "export-pdf": {
           const html = a?.exportPrintHtml();
           if (html) void window.likeoffice.exportPdf(html);
-          break;
+          return;
         }
-        case "undo":
-          a?.undo();
-          setDirty(true);
-          break;
-        case "redo":
-          a?.redo();
-          setDirty(true);
-          break;
+        case "export-docx":
+          if (a) void window.likeoffice.saveCopy(a.save());
+          return;
         case "settings":
           setSettingsOpen(true);
-          break;
+          return;
         case "toggle-ai":
           setPanelOpen((open) => !open);
-          break;
+          return;
+        case "ai-profiles":
+          setPanelOpen(true);
+          void openProfilesManager();
+          return;
+        case "word-count":
+          setWordCountOpen((open) => !open);
+          return;
+        case "zoom:in":
+          setZoom((z) => ZOOM_STEPS.find((s) => s > z) ?? z);
+          return;
+        case "zoom:out":
+          setZoom((z) => [...ZOOM_STEPS].reverse().find((s) => s < z) ?? z);
+          return;
+        case "zoom:reset":
+          setZoom(1);
+          return;
       }
+      if (a) runMenuAction(action, { api: a, markDirty });
     });
-  }, [save]);
+  }, [markDirty, onReload, save]);
 
   return (
     <div className="app-shell">
@@ -187,8 +225,15 @@ function Editor({ initial }: { initial: InitialDocument }) {
           onCutCapture={markDirty}
           onDropCapture={markDirty}
         >
-          <DocxView {...view} editable onReady={setApi} style={{ height: "100%" }} />
-          {api && <WordCount api={api} observeEl={docRoot} />}
+          <DocxView {...view} editable zoom={zoom} onReady={setApi} style={{ height: "100%" }} />
+          {api && (
+            <WordCount
+              api={api}
+              observeEl={docRoot}
+              open={wordCountOpen}
+              onOpenChange={setWordCountOpen}
+            />
+          )}
         </div>
         {panelOpen && api && (
           <AiPanel

@@ -88,9 +88,19 @@ export function computeStats(api: DocxViewApi): Stats {
 /** UX guard: a stat that is somehow non-finite paints as "—", never "NaN". */
 export const fmt = (n: number): string => (Number.isFinite(n) ? n.toLocaleString("en-US") : "—");
 
-export function WordCount({ api, observeEl }: { api: DocxViewApi; observeEl: HTMLElement | null }) {
+export function WordCount({
+  api,
+  observeEl,
+  open,
+  onOpenChange,
+}: {
+  api: DocxViewApi;
+  observeEl: HTMLElement | null;
+  /** Controlled by the app: the badge and Tools > Word Count open the same panel. */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const [stats, setStats] = useState<Stats | null>(null);
-  const [open, setOpen] = useState(false);
   const timer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -134,7 +144,7 @@ export function WordCount({ api, observeEl }: { api: DocxViewApi; observeEl: HTM
       <button
         className="word-count"
         data-testid="word-count"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => onOpenChange(!open)}
         title="Word count — click for details"
         aria-expanded={open}
       >

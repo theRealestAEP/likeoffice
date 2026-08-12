@@ -4,7 +4,8 @@ export interface InitialDocument {
   path: string | null;
   name: string;
   bytes: Uint8Array;
-  recovered: boolean;
+  /** Recovered or duplicated content that is not on disk yet. */
+  dirty: boolean;
 }
 
 export interface SaveResult {
@@ -138,6 +139,12 @@ const api = {
     ipcRenderer.invoke("document:init"),
   saveDocument: (bytes: Uint8Array, saveAs: boolean): Promise<SaveResult | null> =>
     ipcRenderer.invoke("document:save", bytes, saveAs),
+  duplicateDocument: (bytes: Uint8Array): Promise<void> =>
+    ipcRenderer.invoke("document:duplicate", bytes),
+  revertDocument: (): Promise<InitialDocument | null> =>
+    ipcRenderer.invoke("document:revert"),
+  saveCopy: (bytes: Uint8Array): Promise<SaveResult | null> =>
+    ipcRenderer.invoke("document:save-copy", bytes),
   setDirty: (dirty: boolean): void => {
     ipcRenderer.send("document:set-dirty", dirty);
   },

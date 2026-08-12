@@ -78,6 +78,13 @@ ipcMain.handle("settings:get", async () => {
   };
 });
 
+/** Write settings and announce them. The Settings dialog and the Tools >
+ * Spelling menu both change settings, so the write lives in one place. */
+export async function saveSettings(next: Settings): Promise<void> {
+  await writeFile(settingsFile(), JSON.stringify(next, null, 2));
+  settingsEvents.emit("changed", next);
+}
+
 ipcMain.handle(
   "settings:set",
   async (_e, apiKey: string | null, model: string, provider: Provider, spellLanguage: SpellLanguage) => {
@@ -88,8 +95,7 @@ ipcMain.handle(
       model,
       spellLanguage: SPELL_LANGUAGES.includes(spellLanguage) ? spellLanguage : current.spellLanguage,
     };
-    await writeFile(settingsFile(), JSON.stringify(next, null, 2));
-    settingsEvents.emit("changed", next);
+    await saveSettings(next);
     return {
       provider: next.provider,
       hasKey: next.apiKey !== "",

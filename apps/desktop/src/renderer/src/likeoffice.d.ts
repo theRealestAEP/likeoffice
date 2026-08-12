@@ -2,7 +2,8 @@ interface InitialDocument {
   path: string | null;
   name: string;
   bytes: Uint8Array;
-  recovered: boolean;
+  /** Recovered or duplicated content that is not on disk yet. */
+  dirty: boolean;
 }
 
 interface SaveResult {
@@ -124,6 +125,9 @@ type ModelReply =
 interface LikeOfficeBridge {
   getInitialDocument(): Promise<InitialDocument>;
   saveDocument(bytes: Uint8Array, saveAs: boolean): Promise<SaveResult | null>;
+  duplicateDocument(bytes: Uint8Array): Promise<void>;
+  revertDocument(): Promise<InitialDocument | null>;
+  saveCopy(bytes: Uint8Array): Promise<SaveResult | null>;
   setDirty(dirty: boolean): void;
   autosave(bytes: Uint8Array): void;
   exportPdf(html: string): Promise<{ path: string } | null>;

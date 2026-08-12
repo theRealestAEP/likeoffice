@@ -1,0 +1,71 @@
+/**
+ * Open Recent (the MRU list).
+ *
+ * The list lives in userData/recent.json — most recent first, capped at ten.
+ * The application menu is rebuilt synchronously, so the list is kept in memory
+ * and the file is only touched when it changes. Entries whose file is gone are
+ * pruned on load and on every add, which is when a stale entry would otherwise
+ * become visible.
+ */
+import { app } from "electron";
+import { access, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+
+const MAX_ENTRIES = 10;
+
+let entries: string[] = [];
+
+function recentFile(): string {
+  return path.join(app.getPath("userData"), "recent.json");
+}
+
+async function exists(p: string): Promise<boolean> {
+  try {
+    await access(p);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function prune(list: string[]): Promise<string[]> {
+  const keep = await Promise.all(list.map(exists));
+  return list.filter((_, i) => keep[i]);
+}
+
+async function persist(): Promise<void> {
+  await writeFile(recentFile(), JSON.stringify(entries, null, 2));
+}
+
+/** The list as the menu should show it. Synchronous: the menu builds from it. */
+export function recentPaths(): string[] {
+  return entries;
+}
+
+/** Read the stored list and drop entries whose file no longer exists. */
+export async function loadRecent(): Promise<void> {
+  let stored: string[] = [];
+  try {
+    const raw = JSON.parse(await readFile(recentFile(), "utf8"));
+    if (Array.isArray(raw)) stored = raw.filter((p): p is string => typeof p === "string");
+  } catch {
+    stored = [];
+  }
+  entries = await prune(stored.slice(0, MAX_ENTRIES));
+  if (entries.length !== stored.length) await persist();
+}
+
+/** Put a path at the front of the list. */
+export async function addRecent(filePath: string): Promise<void> {
+  app.addRecentDocument(filePath);
+  const next = [filePath, ...entries.filter((p) => p !== filePath)].slice(0, MAX_ENTRIES);
+  entries = await prune(next);
+  await persist();
+}
+
+/** The "Clear Menu" item. */
+export async function clearRecent(): Promise<void> {
+  app.clearRecentDocuments();
+  entries = [];
+  await persist();
+}

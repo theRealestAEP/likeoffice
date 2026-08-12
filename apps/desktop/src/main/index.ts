@@ -1,7 +1,8 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { buildMenu } from "./menu";
+import { loadMenuState, rebuildMenu } from "./menu";
+import { addRecent, loadRecent } from "./recent";
 import "./settings";
 import "./profiles";
 import "./spellcheck";
@@ -15,9 +16,21 @@ interface DocState {
   pendingClose: boolean;
   autosaveFile: string;
   recovered: boolean;
+  /** Bytes for a window that starts from content rather than a file (Duplicate). */
+  seed: Uint8Array | null;
+  /** File name to suggest when this document has no path yet. */
+  suggestedName: string;
 }
 
 const docs = new Map<number, DocState>();
+
+/**
+ * The document window the menu describes. Menu items are enabled from it, and
+ * `BrowserWindow.getFocusedWindow()` is null whenever the app is not frontmost
+ * — including right after a window is created — so the last window to be
+ * created or focused stands in.
+ */
+let activeDocId: number | null = null;
 
 if (process.env.LIKEOFFICE_USER_DATA) {
   app.setPath("userData", process.env.LIKEOFFICE_USER_DATA);
@@ -55,10 +68,15 @@ async function listRecoveries(): Promise<RecoveryEntry[]> {
   return entries;
 }
 
-export async function createDocumentWindow(
-  filePath?: string,
-  recovery?: RecoveryEntry,
-): Promise<void> {
+interface NewWindowOptions {
+  filePath?: string;
+  recovery?: RecoveryEntry;
+  /** Start from these bytes instead of a file: File > Duplicate. */
+  seed?: { bytes: Uint8Array; name: string };
+}
+
+export async function createDocumentWindow(options: NewWindowOptions = {}): Promise<void> {
+  const { filePath, recovery, seed } = options;
   const win = new BrowserWindow({
     width: 1320,
     height: 920,
@@ -70,11 +88,15 @@ export async function createDocumentWindow(
   const id = win.webContents.id;
   docs.set(id, {
     path: recovery?.originalPath ?? filePath ?? null,
-    dirty: false,
+    // Duplicated content exists only in the new window, so it starts dirty and
+    // closing it asks to save.
+    dirty: seed != null,
     pendingClose: false,
     autosaveFile:
       recovery?.autosaveFile ?? path.join(autosaveDir(), `${Date.now()}-${id}.docx`),
     recovered: recovery != null,
+    seed: seed?.bytes ?? null,
+    suggestedName: seed?.name ?? "Untitled",
   });
 
   // Tests set LIKEOFFICE_HIDE_WINDOWS: Playwright drives windows over CDP,
@@ -82,16 +104,23 @@ export async function createDocumentWindow(
   win.once("ready-to-show", () => {
     if (!process.env.LIKEOFFICE_HIDE_WINDOWS) win.show();
   });
+  activeDocId = id;
+  win.on("focus", () => {
+    activeDocId = id;
+    rebuildMenu();
+  });
   win.on("closed", () => {
     const st = docs.get(id);
     if (st) void removeAutosave(st);
     docs.delete(id);
+    if (activeDocId === id) activeDocId = null;
+    rebuildMenu();
   });
   win.on("close", (e) => {
     const st = docs.get(id);
     if (!st?.dirty) return;
     e.preventDefault();
-    const name = st.path ? path.basename(st.path) : "Untitled";
+    const name = st.path ? path.basename(st.path) : st.suggestedName;
     const choice = dialog.showMessageBoxSync(win, {
       type: "warning",
       buttons: ["Save", "Don't Save", "Cancel"],
@@ -115,15 +144,36 @@ export async function createDocumentWindow(
   }
 }
 
+/** Open a file in a window and record it in Open Recent. */
+export async function openDocument(filePath: string): Promise<void> {
+  try {
+    await readFile(filePath);
+  } catch {
+    // The file moved or was deleted since the menu was built. Drop it from the
+    // list rather than opening a window onto nothing.
+    await loadRecent();
+    rebuildMenu();
+    dialog.showErrorBox("Cannot open document", `${filePath} is no longer there.`);
+    return;
+  }
+  await addRecent(filePath);
+  rebuildMenu();
+  await createDocumentWindow({ filePath });
+}
+
 export async function openDocumentDialog(): Promise<void> {
   const result = await dialog.showOpenDialog({
     properties: ["openFile", "multiSelections"],
     filters: [DOCX_FILTER],
   });
-  for (const p of result.filePaths) {
-    app.addRecentDocument(p);
-    await createDocumentWindow(p);
-  }
+  for (const p of result.filePaths) await openDocument(p);
+}
+
+/** Path and dirty state of the active document, for menu item enablement. */
+export function focusedDocState(): { path: string | null; dirty: boolean } | null {
+  const id = BrowserWindow.getFocusedWindow()?.webContents.id ?? activeDocId;
+  const st = id != null ? docs.get(id) : undefined;
+  return st ? { path: st.path, dirty: st.dirty } : null;
 }
 
 function windowFor(webContentsId: number): BrowserWindow | null {
@@ -136,15 +186,73 @@ ipcMain.handle("document:init", async (e) => {
   const st = docs.get(e.sender.id);
   if (st?.recovered) {
     const bytes = await readFile(st.autosaveFile);
-    const name = st.path ? path.basename(st.path) : "Untitled";
-    return { path: st.path, name, bytes, recovered: true };
+    const name = st.path ? path.basename(st.path) : st.suggestedName;
+    return { path: st.path, name, bytes, dirty: true };
+  }
+  if (st?.seed) {
+    return { path: null, name: st.suggestedName, bytes: st.seed, dirty: true };
   }
   if (st?.path) {
     const bytes = await readFile(st.path);
-    return { path: st.path, name: path.basename(st.path), bytes, recovered: false };
+    return { path: st.path, name: path.basename(st.path), bytes, dirty: false };
   }
   const blank = await readFile(path.join(app.getAppPath(), "resources/blank.docx"));
-  return { path: null, name: "Untitled", bytes: blank, recovered: false };
+  return { path: null, name: st?.suggestedName ?? "Untitled", bytes: blank, dirty: false };
+});
+
+/** File > Duplicate: the current bytes, in a new unsaved window. */
+ipcMain.handle("document:duplicate", async (e, bytes: Uint8Array) => {
+  const st = docs.get(e.sender.id);
+  const base = st?.path ? path.basename(st.path, ".docx") : (st?.suggestedName ?? "Untitled").replace(/\.docx$/, "");
+  await createDocumentWindow({ seed: { bytes, name: `${base} copy.docx` } });
+});
+
+/** File > Revert to Saved. Returns the file's bytes, or null when the user
+ * cancels — the confirmation is native, so it lives here. */
+ipcMain.handle("document:revert", async (e) => {
+  const st = docs.get(e.sender.id);
+  const win = windowFor(e.sender.id);
+  if (!st?.path || !win) return null;
+
+  const choice = dialog.showMessageBoxSync(win, {
+    type: "warning",
+    buttons: ["Revert", "Cancel"],
+    defaultId: 1,
+    cancelId: 1,
+    message: `Revert to the last saved version of ${path.basename(st.path)}?`,
+    detail: "Your unsaved changes will be lost.",
+  });
+  if (choice !== 0) return null;
+
+  const bytes = await readFile(st.path);
+  st.dirty = false;
+  st.recovered = false;
+  st.seed = null;
+  win.setDocumentEdited(false);
+  await removeAutosave(st);
+  rebuildMenu();
+  return { path: st.path, name: path.basename(st.path), bytes, dirty: false };
+});
+
+/** File > Export as DOCX Copy: write the bytes elsewhere without rebinding
+ * this window to the new file. */
+ipcMain.handle("document:save-copy", async (e, bytes: Uint8Array) => {
+  const st = docs.get(e.sender.id);
+  const win = windowFor(e.sender.id);
+  if (!st || !win) return null;
+
+  const base = st.path ? path.basename(st.path, ".docx") : st.suggestedName.replace(/\.docx$/, "");
+  const result = await dialog.showSaveDialog(win, {
+    defaultPath: `${base} copy.docx`,
+    filters: [DOCX_FILTER],
+  });
+  if (result.canceled || !result.filePath) return null;
+  const target = result.filePath.endsWith(".docx") ? result.filePath : `${result.filePath}.docx`;
+
+  const tmp = `${target}.tmp-${process.pid}`;
+  await writeFile(tmp, bytes);
+  await rename(tmp, target);
+  return { path: target, name: path.basename(target) };
 });
 
 ipcMain.on("document:autosave", async (e, bytes: Uint8Array) => {
@@ -168,7 +276,7 @@ ipcMain.handle(
     let target = st.path;
     if (!target || saveAs) {
       const result = await dialog.showSaveDialog(win, {
-        defaultPath: st.path ?? "Untitled.docx",
+        defaultPath: st.path ?? st.suggestedName,
         filters: [DOCX_FILTER],
       });
       if (result.canceled || !result.filePath) {
@@ -187,8 +295,10 @@ ipcMain.handle(
     st.path = target;
     st.dirty = false;
     st.recovered = false;
+    st.seed = null;
     win.setDocumentEdited(false);
-    app.addRecentDocument(target);
+    await addRecent(target);
+    rebuildMenu();
     await removeAutosave(st);
     if (st.pendingClose) {
       win.destroy();
@@ -239,8 +349,11 @@ ipcMain.on("document:set-dirty", (e, dirty: boolean) => {
   const st = docs.get(e.sender.id);
   const win = windowFor(e.sender.id);
   if (!st || !win) return;
+  if (st.dirty === dirty) return;
   st.dirty = dirty;
   win.setDocumentEdited(dirty);
+  // File > Revert to Saved is enabled only while there is something to revert.
+  rebuildMenu();
 });
 
 let pendingOpenPaths: string[] = [];
@@ -248,21 +361,22 @@ let pendingOpenPaths: string[] = [];
 app.on("open-file", (e, p) => {
   e.preventDefault();
   if (app.isReady()) {
-    void createDocumentWindow(p);
+    void openDocument(p);
   } else {
     pendingOpenPaths.push(p);
   }
 });
 
 app.whenReady().then(async () => {
-  Menu.setApplicationMenu(buildMenu());
+  await Promise.all([loadRecent(), loadMenuState()]);
+  rebuildMenu();
   const argPaths = process.argv.slice(1).filter((a) => a.endsWith(".docx"));
   const toOpen = [...pendingOpenPaths, ...argPaths];
   pendingOpenPaths = [];
   const recoveries = await listRecoveries();
-  for (const r of recoveries) await createDocumentWindow(undefined, r);
+  for (const r of recoveries) await createDocumentWindow({ recovery: r });
   if (toOpen.length > 0) {
-    for (const p of toOpen) await createDocumentWindow(p);
+    for (const p of toOpen) await openDocument(p);
   } else if (recoveries.length === 0) {
     await createDocumentWindow();
   }
