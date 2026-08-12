@@ -18,12 +18,33 @@ nice -n 19 node bench/agent-bench.mjs                 # all tasks, claude-opus-5
 nice -n 19 node bench/agent-bench.mjs --model=claude-sonnet-5
 nice -n 19 node bench/agent-bench.mjs --task=memo,table-report
 nice -n 19 node bench/agent-bench.mjs --task=object-insert --runs=4
+nice -n 19 node bench/agent-bench.mjs --tools=full --cache
 ```
 
 `--runs=N` repeats every selected task N times. The summary then reports the
 median and the range per task. Use it before you draw a conclusion from a
 number: one run is one sample of a noisy process. `object-insert` alone ranges
 from 3 to 14 rounds on an unchanged build. See "Run-to-run variance" below.
+
+`--tools` picks the tool payload the request carries:
+
+| value | payload |
+| --- | --- |
+| `defs` (default) | what the engine emits: the operations union with its repeated subschemas hoisted into `$defs` |
+| `full` | every `$ref` expanded again — byte for byte the payload the engine sent before that change |
+| `menu` | the tiered-union experiment: create-side operations inline, adjust-side ones named in one open branch |
+
+`--cache` mirrors `model.ts`'s prompt-cache breakpoints (`cache_control` on the
+system prompt and the last tool). It is off by default, because the recorded
+history is uncached and because the cached and uncached cost of a change are
+different questions. Either way the harness records
+`cache_creation_input_tokens` and `cache_read_input_tokens` per call.
+
+Helpers: `sh bench/ab-tools.sh N` and `sh bench/ab-menu.sh N` run an
+interleaved A/B; `node bench/ab-report.mjs <from-stamp> <to-stamp>` aggregates
+one into a table; `node bench/oi-order.mjs <label:arm-first:from:to> ...`
+splits `object-insert` by which arm ran first inside each pair, which turned
+out to matter (see below).
 
 The API key comes from this repo's `.env` (`ANTHROPIC` or
 `ANTHROPIC_API_KEY`). Real API spend occurs on every run. The harness never
@@ -388,6 +409,302 @@ every way the model has of adding a sibling paragraph, and the model needs five
 failed calls to discover it. Fixing the leak stops the corruption; it does not
 make that run fast. The opaque `￼` at R6 is the same atom the section above
 measured and left unshipped.
+
+## The tool payload, measured (2026-08-12)
+
+Every earlier section here argued about the prompt. The prompt is not where the
+input tokens are. The tool definitions the panel sends are, and unlike the
+first user message they ship again on **every** request of **every** round.
+
+Measure first. `agentDoc.tools()` mapped to `{ name, description, input_schema }`
+— exactly what `AiPanel.tsx` sends — is 61,343 characters on a blank document,
+and the API counts that at **31,508 input tokens** beside a one-word user
+message. The benchmark's per-round input was 32k. The tools were essentially
+the whole round.
+
+| tool | payload chars | of which schema |
+| --- | --- | --- |
+| `word_document_edit` | 54,892 | 54,762 |
+| `word_document_capabilities` | 2,528 | 2,370 |
+| `word_document_inspect` | 1,973 | 1,794 |
+| `word_document_patch` | 989 | 849 |
+| `word_document_project` | 564 | 395 |
+| `word_document_asset` | 236 | 104 |
+| `word_document_save` | 153 | 46 |
+
+89% of the payload is one tool, and 99.7% of that tool is its `operations`
+union: 125 branches, one per `INTENT_KIND`, 54,544 characters, mean 436 each.
+The five largest are `createStyle` (4,789), `insertShape` (2,774),
+`setParagraphBorders` (2,689), `modifyStyle` (1,934), `setPageLayout` (1,135).
+
+**The prose hypothesis is wrong, and worth recording as wrong.** The obvious
+suspect was verbose auto-generated description text. There is none. The whole
+payload holds **1,054 characters** of `description` across every tool and every
+nested field — 1.7% — and the operations union holds **zero**. Nothing in that
+54k is explanation. It is all field schemas, and the same shapes recur:
+`^block:[0-9]+$` is written out 44 times, `^run:[0-9]+$` 38 times,
+`^object:[0-9]+:[0-9]+$` 19 times, the border-style enum 13 times, the
+border-edge object 6 times inside `setParagraphBorders` alone.
+
+### Does the Messages API accept `$defs`/`$ref` in `input_schema`? Yes
+
+This had to be settled against the live API before anything was built on it.
+One tool, one shape written three times versus the same shape behind three
+`$ref`s into a root `$defs`:
+
+| form | schema chars | `count_tokens` | `messages` | the input the model produced |
+| --- | --- | --- | --- | --- |
+| expanded | 846 | 783 | 200 | `{"a":{"blockRef":"block:1","runRef":"run:2","offset":3}}` |
+| `$defs` + `$ref` | 435 | 584 | 200 | identical |
+| `$ref` inside an `anyOf` branch | — | — | 200 | `{"op":{"kind":"y","at":{…}}}` |
+
+So the API does not expand references before charging for them, and the model
+fills a referenced shape in correctly, including through the `anyOf` branch
+the operations union is made of. `model.ts`'s `validateRequestShape` forbids
+only a **top-level** combinator; `$defs` is a sibling key, not a combinator.
+
+### Measured, not shipped: hoist the repeated subschemas
+
+`hoistRepeatedSubschemas` (`packages/agent/src/capabilities.ts`) collapses every
+subschema that appears more than once into one `$defs` entry and a `$ref` at
+each site, and leaves alone any shape that would cost more as a reference than
+as itself (`{"type":"boolean"}` is 18 characters; a reference to it is 26). It
+reaches its fixed point in one pass: 53 definitions, 45,113 → 45,088 characters
+of edit schema.
+
+| | payload chars | input tokens (blank document) |
+| --- | --- | --- |
+| before | 61,343 | 31,508 |
+| after | 51,669 | 26,996 |
+| | **-15.8%** | **-4,512 (-14.3%)** |
+
+The resolved schema is byte-identical to the union it was built from —
+`packages/agent/test/tool-schema-defs.test.ts` asserts exactly that, so the
+change is invisible to every reader except the byte counter.
+
+The token saving held up exactly. It is **not** shipped anyway: `object-insert`
+takes more rounds under it, and the extra rounds cost more than the smaller
+rounds save. The measurement is below, and the verdict is three sections
+down.
+
+### The A/B
+
+`--tools=full` expands every `$ref` again, which reproduces the pre-hoist
+payload byte for byte. So one build serves both arms and the arms provably
+differ, which is more than three earlier sections in this file could say. The
+arms alternate invocation by invocation; each invocation runs all three tasks
+once; six pairs. All 36 runs passed.
+
+| task | arm | n | pass | rounds median (range) | total input median (range) | ms median (range) |
+| --- | --- | --- | --- | --- | --- | --- |
+| `table-report` | full | 6 | 6/6 | 3 (3-3) | 96,895 (96,876-96,958) | 10,450 (8,862-11,937) |
+| `table-report` | defs | 6 | 6/6 | 3 (3-3) | **83,356** (83,304-83,443) | 9,530 (9,081-10,648) |
+| `rewrite` | full | 6 | 6/6 | 2 (2-2) | 65,254 (65,234-65,287) | 6,597 (5,997-6,979) |
+| `rewrite` | defs | 6 | 6/6 | 2 (2-2) | **56,231** (56,230-56,256) | 6,685 (6,253-7,690) |
+| `object-insert` | full | 6 | 6/6 | 8 (3-8) | 250,609 (97,371-272,027) | 33,362 (12,023-53,226) |
+| `object-insert` | defs | 6 | 6/6 | 8 (3-11) | 235,533 (83,919-337,045) | 41,744 (12,949-79,982) |
+
+Total input carries `object-insert`'s round variance, so read the per-round
+figure instead. It is the number the payload actually moves, and it is flat:
+
+| task | full | defs | delta |
+| --- | --- | --- | --- |
+| `table-report` | 32,315 | 27,805 | **-4,510** |
+| `rewrite` | 32,617 | 28,115 | **-4,502** |
+| `object-insert` | 33,207 | 29,250 | -3,957 |
+
+−4,510 and −4,502 against the −4,512 `count_tokens` predicted: the saving is
+the schema and nothing else. `object-insert`'s smaller delta is a sampling
+artefact — its later rounds carry accumulated tool results, so the fixed saving
+is a smaller share of a larger round, and its rounds are not matched between
+arms. `table-report` and `rewrite` take the same number of rounds in every
+single run of both arms. `object-insert` needed 44 more runs before its number
+could be read; see the section after next.
+
+Reproduce: `sh bench/ab-tools.sh 6`, then `node bench/ab-report.mjs <from> <to>`
+over the results stamps. The arm is recorded in each results file, so the
+mapping does not depend on file order. The `defs` arm above ran on a build
+whose `$defs` keys were named 25 characters longer in total than the committed
+one (51,694 rather than 51,669 characters, 0.05%).
+
+### `object-insert` costs rounds under `$defs`, and that is the verdict
+
+Six pairs were not enough to read `object-insert`, so it ran 34 more per arm:
+two further interleaved batches with `full` first inside each pair, and two
+with `defs` first, in case the position inside a pair mattered. It did not.
+
+| batch | pair order | full | defs |
+| --- | --- | --- | --- |
+| uncached A/B | full first | 6.2 mean, `3,3,7,8,8,8` | 7.5 mean, `3,5,7,9,10,11` |
+| cached A/B | full first | 6.5 mean, `3,3,5,7,7,14` | 9.3 mean, `3,7,11,11,12,12` |
+| top-up 1 | full first | 5.9 mean, `3,3,4,5,7,7,9,9` | 8.8 mean, `3,4,5,7,11,11,12,17` |
+| top-up 2 | defs first | 7.9 mean, `3,5,5,7,7,10,10,10,11,11` | 8.0 mean, `3,5,7,7,8,9,9,9,11,12` |
+| top-up 3 | defs first | 6.6 mean, `3,3,5,5,7,7,7,8,8,13` | 9.0 mean, `3,5,5,9,9,9,10,11,13,16` |
+| **pooled** | | **n=40, median 7, mean 6.7** | **n=40, median 9, mean 8.5** |
+
+`P(a defs run takes more rounds than a full run) = 0.658`, Mann-Whitney
+`p ≈ 0.015`. Four of the five batches lean the same way. All 80 runs passed;
+this is rounds, not correctness.
+
+**The A/A control.** This file has three sections that measured two arms which
+could not differ, so before believing 1.8 rounds, the same alternating design
+ran `--tools=full` against `--tools=full` — byte-identical arms, 14 pairs.
+Position A: median 7, mean 6.4. Position B: median 6, mean 5.9.
+`P(B>A) = 0.426`, not significant. So the design's own noise on this task is
+about half a round, and the arm difference is three to four times that. The
+control does not explain it away.
+
+**The cost, in the terms that matter.** The per-round saving is real but the
+extra rounds swallow it and then some:
+
+| `object-insert` | full | defs |
+| --- | --- | --- |
+| input tokens per round | 33,492 | 29,523 |
+| rounds, mean | 6.7 | 8.5 |
+| total billed input, median | 234,380 | **267,262** |
+| wall clock, median | 30.8 s | **48.2 s** |
+
+**Where the arms diverge, from the transcripts.** Always at the first
+`word_document_edit`. `object-insert` is fast when that one transaction carries
+the chart, the text box and the equation together, and slow when it carries the
+chart alone into the document's only paragraph — the trap the "still unfixed"
+note above describes.
+
+| first `word_document_edit` | full | defs |
+| --- | --- | --- |
+| `insertChart` alone | 18/40 (45%) | 24/40 (60%) |
+| three or more operations | 12/40 (30%) | 7/40 (18%) |
+| operations, mean | 1.98 | 1.57 |
+
+So `$defs` does not make the model write invalid operations — across all 80
+runs, both arms, the engine's own validator rejected **zero** inputs, and every
+error was the familiar stale-reference or opaque-atom kind. It makes the model
+compose smaller first transactions, and on this task a small first transaction
+is the road into the trap.
+
+**Verdict: do not ship as it stands.** The gate is "input tokens down, rounds
+and pass rate not down". Two of the three tasks meet it outright and are
+identical in rounds across 24 runs. The third fails it, and fails it on total
+cost as well as rounds. The change stays on `lean-tool-schemas`, unmerged, with
+this section as the reason.
+
+**The follow-up worth trying.** The divergence is about composing an edit, and
+composing an edit is reasoning about *where* — `at`, `blockRef`, `runRef`,
+`objectRef`. Those are exactly the shapes the hoist makes indirect, and they
+are also the cheapest to leave alone: keeping all four inline costs 2,319 of
+the 9,674 characters saved, so a hoist restricted to shapes that describe
+*what to write* rather than *where to write it* still takes 7,355 characters,
+76% of the win. That is a stated rule rather than a benchmark fit, and it is
+testable with the same 20-pair `object-insert` design used here.
+
+### Prompt caching pays for most of this already
+
+`model.ts` sets `cache_control` on the system prompt and on the last tool, so
+rounds 2+ of a turn read the whole prefix back at cache prices. The bench did
+not mirror that — it is the one place where the "request shape mirrors
+model.ts" claim at the top of this file was stale. `--cache` now does mirror
+it, and the harness records `cache_creation_input_tokens` and
+`cache_read_input_tokens`.
+
+Turning it on changes the shape of the answer. One uncached `rewrite` run bills
+56,256 input tokens over two rounds; the same run with `--cache` bills 1,476
+uncached plus 27,390 read from cache. So the tool payload is paid **once per
+turn at 1.25x, then at 0.1x** for every round after — and shrinking it helps
+the first round of every turn, and every short turn, far more than it helps a
+long one.
+
+The same six-pair interleaved A/B with `--cache` on, 36 runs, all passing. The
+saving moves out of `input_tokens` and into `cache_read_input_tokens`, at the
+same 14%. Every `cache_creation_input_tokens` is zero: consecutive invocations
+share a prefix and land inside the five-minute window, which is what a user
+sending a second message a minute later also does.
+
+| task | arm | n | uncached in | cache read per turn | billed-equivalent |
+| --- | --- | --- | --- | --- | --- |
+| `table-report` | full | 6 | 1,186 | 95,706 | 10,761 |
+| `table-report` | defs | 6 | 1,180 | **82,143** | **9,394** |
+| `rewrite` | full | 6 | 1,450 | 63,804 | 7,830 |
+| `rewrite` | defs | 6 | 1,473 | **54,762** | **6,926** |
+
+Billed-equivalent is `uncached + 1.25 x write + 0.1 x read` in token units. So
+the honest headline is two numbers, not one: **-14% of input tokens on a cold
+turn, -12% of billed input on a warm one.** The absolute saving is the same
+4,500 tokens per round either way; caching just makes each of those tokens ten
+times cheaper.
+
+### Measured, not shipped: a tiered operations union
+
+After the hoist, the payload is still 51,669 characters and 26,996 tokens, and
+it is still one thing: 125 operation field schemas. Nothing more can be
+squeezed out of them without changing what the model is told.
+
+`--tools=menu` changes it. Operations that **put content into** the document —
+categories `text`, `paragraph`, `math`, `insert`, 59 of the 125 — keep their
+full field schema inline. Operations that **adjust something already there** —
+`document`, `table`, `drawing`, `review`, the other 66 — appear in one open
+branch that carries a `kind` enum and one line each of purpose and field names,
+with the exact types a `word_document_capabilities` call away. The split is
+create-versus-adjust, not a list of the operations this benchmark happens to
+use. An adjust operation presupposes the model has already looked at the thing
+it adjusts, so it has a round in hand to fetch a schema in. A probe first
+confirmed the model will put fields on an open branch that does not declare
+them, which the tier depends on. `--tools=menu` also appends a sentence to the
+system prompt naming the hatch.
+
+Payload 51,669 -> 36,220 characters. Six interleaved pairs, 36 runs, all passed.
+
+| task | arm | n | pass | rounds median (range) | input tokens per round |
+| --- | --- | --- | --- | --- | --- |
+| `table-report` | defs | 6 | 6/6 | 3 (3-3) | 27,795 |
+| `table-report` | menu | 6 | 6/6 | 3 (3-3) | **18,852** |
+| `rewrite` | defs | 6 | 6/6 | 2 (2-2) | 28,106 |
+| `rewrite` | menu | 6 | 6/6 | 2 (2-2) | **19,165** |
+| `object-insert` | defs | 6 | 6/6 | 11 (3-14) | 29,907 |
+| `object-insert` | menu | 6 | 6/6 | 9 (3-12) | **20,466** |
+
+A further **-32% per round**, on top of the 14% the hoist already took, with no
+round or pass-rate cost in these runs.
+
+**It is not shipped, because the runs do not test the thing that could break.**
+Across all 36 runs, both arms, the model called `word_document_capabilities`
+**zero** times and used **zero** adjust-side operations. Every operation either
+arm reached for — `insertChart`, `insertShape`, `insertMath`, `insertTable`,
+`insertText`, `pasteBlocks`, `splitParagraph`, `deleteText`, `removeDrawing` —
+is in the inline tier. So the experiment establishes that deleting schemas the
+task never uses costs nothing, which was never in doubt, and says nothing at
+all about the hatch that keeps those 66 operations reachable. This file has
+recorded three earlier experiments that measured two arms that could not
+differ; this is the same mistake caught before the conclusion rather than
+after.
+
+`bench/menu-escape-probe.mjs` asks for an adjust-side operation directly:
+"Set the page to landscape orientation with 2 inch left and right margins", on
+a blank document, which needs `setPageLayout` — category `document`, so the
+menu payload gives it a name and its field names and nothing more. Four runs
+per arm:
+
+| arm | tools called, in order | result | rounds |
+| --- | --- | --- | --- |
+| defs | `inspect`, `edit` (3 of 4 runs) | landscape applied, 4/4 | 3, 4, 3, 3 |
+| menu | **`capabilities`**, `inspect`, `edit` (4 of 4 runs) | landscape applied, 4/4 | 4, 4, 4, 4 |
+
+The hatch works, and it costs **exactly one extra round, every time**. The
+model fetched the schema before writing the call in all four runs, wrote a
+valid `setPageLayout` each time, and never guessed.
+
+So the trade is now measurable rather than assumed. Against the 3-round
+`table-report` shape: `defs` bills 3 x 27,795 = 83,385 and `menu` bills
+4 x 18,852 = 75,408, still ahead. Against a 2-round `rewrite`:
+2 x 28,106 = 56,212 versus 3 x 19,165 = 57,495, a wash. Against the majority of
+turns, which never touch an adjust-side operation, `menu` wins by 32% outright.
+
+**Verdict: not shipped.** The ship gate is "input tokens down, rounds and pass
+rate not down", and `menu` fails it by exactly one round on any turn that
+reaches an adjust-side operation. It is worth revisiting under a gate written
+in tokens rather than rounds, or with the adjust-side field types folded into
+the branch description so the hatch is never needed — the 66-operation menu
+with descriptions and field names is 11,840 characters, and the field *types*
+would be the only thing left to add.
 
 ## Notes
 

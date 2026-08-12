@@ -1,0 +1,126 @@
+{
+  "startedAt": "2026-08-12T09:00:05.102Z",
+  "model": "claude-opus-5",
+  "arm": "full",
+  "cache": false,
+  "results": [
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 16541,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 4422,
+          "inputTokens": 32079,
+          "outputTokens": 101,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 9768,
+          "inputTokens": 32373,
+          "outputTokens": 686,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2325,
+          "inputTokens": 33163,
+          "outputTokens": 49,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 97615,
+        "output": 836,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01DwpmzqJnu1utiehsFvLNG7",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01DwpmzqJnu1utiehsFvLNG7",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01X2LULuSJ4qiezZ1WX2uXb9",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertSeparator\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:2\",\"offset\":0},\"separator\":\"br\"},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertSeparator\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:2\",\"offset\":0},\"separator\":\"br\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01X2LULuSJ4qiezZ1WX2uXb9",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertSeparator\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:2\",\"offset\":0},\"separator\":\"br\"},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertSeparator\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:2\",\"offset\":0},\"separator\":\"br\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"5\",\"status\":\"submitted\",\"operations\":[\"insertChart\",\"insertSeparator\",\"insertShape\",\"insertSeparator\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, a \"Draft — internal only\" text box, and the quadratic formula equation, each on its own line as tracked changes.",
+          "calls": []
+        }
+      ],
+      "toolPayloadChars": 61343,
+      "arm": "full",
+      "cache": false
+    }
+  ]
+}

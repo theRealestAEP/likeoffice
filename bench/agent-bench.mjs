@@ -7,7 +7,13 @@
 //
 // Usage:
 //   nice -n 19 node bench/agent-bench.mjs [--model=claude-opus-5] [--task=name,name]
-//                                         [--runs=N]
+//                                         [--runs=N] [--tools=defs|full|menu] [--cache]
+//
+// --tools picks the tool payload: "defs" (the default) is what the engine
+// emits, with the operations union's repeated subschemas hoisted into $defs;
+// "full" expands every $ref again, reproducing the pre-hoist payload byte for
+// byte; "menu" is the tiered-union experiment described beside toolPayload.
+// --cache mirrors model.ts's prompt-cache breakpoints.
 //
 // A single run of a task is one sample of a noisy process: the same task can
 // take 3 rounds or 14. Use --runs=N (the summary reports the median and the
@@ -19,7 +25,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { AgentDocument, LocalDocumentSession } from "@wordinweb/agent";
+import { AgentDocument, LocalDocumentSession, agentCapabilities, hoistRepeatedSubschemas } from "@wordinweb/agent";
 import {
   acceptAllBytes,
   buildFillerBytes,
@@ -173,9 +179,22 @@ async function callModel(apiKey, request) {
         body: JSON.stringify({
           model: request.model,
           max_tokens: 16000, // mirrors model.ts
-          system: request.system,
+          // model.ts marks the system prompt and the last tool as cache
+          // breakpoints, so rounds 2+ of a turn read the whole prefix back at
+          // cache prices. --cache turns that on here too. It is off by default
+          // because the recorded history is uncached, and because the cached
+          // and uncached costs of a schema change are different questions.
+          system: request.cache
+            ? [{ type: "text", text: request.system, cache_control: { type: "ephemeral" } }]
+            : request.system,
           messages: request.messages,
-          tools: request.tools,
+          tools: request.cache
+            ? request.tools.map((tool, index) =>
+                index === request.tools.length - 1
+                  ? { ...tool, cache_control: { type: "ephemeral" } }
+                  : tool,
+              )
+            : request.tools,
         }),
       });
     } catch (error) {
@@ -206,8 +225,98 @@ async function callModel(apiKey, request) {
       stopReason: json.stop_reason,
       inputTokens: json.usage?.input_tokens ?? 0,
       outputTokens: json.usage?.output_tokens ?? 0,
+      cacheWriteTokens: json.usage?.cache_creation_input_tokens ?? 0,
+      cacheReadTokens: json.usage?.cache_read_input_tokens ?? 0,
     };
   }
+}
+
+// --- Tool payload arms ------------------------------------------------------
+
+// The tool definitions are the dominant per-round input: on a blank document
+// they alone count ~31.5k tokens, which is essentially the whole 32k round.
+// The engine now ships the operations union with its repeated subschemas
+// hoisted into $defs. --tools=full expands every $ref again, which reproduces
+// the pre-hoist payload byte for byte, so an A/B compares two payloads that
+// really do differ rather than two arms that cannot.
+function expandRefs(node, defs) {
+  if (Array.isArray(node)) return node.map((entry) => expandRefs(entry, defs));
+  if (!node || typeof node !== "object") return node;
+  if (typeof node.$ref === "string") {
+    return expandRefs(defs[node.$ref.replace("#/$defs/", "")], defs);
+  }
+  return Object.fromEntries(Object.entries(node).map(([key, value]) => [key, expandRefs(value, defs)]));
+}
+
+// --tools=menu goes further, and is an experiment rather than something the
+// engine ships. Operations that put content into the document keep their full
+// field schema inline. Operations that adjust something already there are
+// named in one open branch, with their purpose and their field names, and the
+// model fetches exact types from word_document_capabilities if it needs them.
+// The split is create-vs-adjust, not a list of the operations this benchmark
+// happens to use.
+const MENU_CATEGORIES = ["text", "paragraph", "math", "insert"];
+
+const MENU_PROMPT_SENTENCE = `
+Most word_document_edit operations carry their full field schema. The rest are
+listed by name, purpose, and field names in the last branch of the operations
+union; call word_document_capabilities with one of those kinds when you need
+its exact field types before writing the call.`;
+
+function menuOperationsUnion(inline, rest) {
+  return {
+    anyOf: [
+      ...inline.map((c) => c.inputSchema),
+      {
+        type: "object",
+        description:
+          "Any other operation. Its fields are listed here; call word_document_capabilities with its kind for the exact types and ranges.\n" +
+          rest
+            .map(
+              (c) =>
+                `${c.kind}(${[...c.required, ...(c.optional ?? []).map((o) => `${o}?`)].join(", ")}) — ${c.description}`,
+            )
+            .join("\n"),
+        properties: { kind: { enum: rest.map((c) => c.kind) } },
+        required: ["kind"],
+      },
+    ],
+  };
+}
+
+function menuEditSchema() {
+  const caps = agentCapabilities();
+  return hoistRepeatedSubschemas({
+    type: "object",
+    properties: {
+      revision: { type: "string", minLength: 1 },
+      operations: {
+        type: "array",
+        minItems: 1,
+        maxItems: 100,
+        items: menuOperationsUnion(
+          caps.filter((c) => MENU_CATEGORIES.includes(c.category)),
+          caps.filter((c) => !MENU_CATEGORIES.includes(c.category)),
+        ),
+      },
+    },
+    required: ["revision", "operations"],
+    additionalProperties: false,
+  });
+}
+
+function toolPayload(tools, arm) {
+  return tools.map((t) => {
+    const schema = t.inputSchema;
+    if (arm === "menu" && t.name === "word_document_edit") {
+      return { name: t.name, description: t.description, input_schema: menuEditSchema() };
+    }
+    if (arm !== "full" || !schema?.$defs) {
+      return { name: t.name, description: t.description, input_schema: schema };
+    }
+    const { $defs, ...rest } = schema;
+    return { name: t.name, description: t.description, input_schema: expandRefs(rest, $defs) };
+  });
 }
 
 // --- Transcript recording ---------------------------------------------------
@@ -226,7 +335,7 @@ function clip(value) {
 
 // --- One task --------------------------------------------------------------
 
-async function runTask(task, { apiKey, model, blankBytes }) {
+async function runTask(task, { apiKey, model, blankBytes, arm, cache }) {
   const metrics = {
     task: task.name,
     model,
@@ -237,7 +346,7 @@ async function runTask(task, { apiKey, model, blankBytes }) {
     apiCalls: [],
     toolCalls: {},
     toolErrors: [],
-    tokens: { input: 0, output: 0 },
+    tokens: { input: 0, output: 0, cacheWrite: 0, cacheRead: 0 },
     savedValid: false,
     failures: [],
     // Round-by-round: what the model said, what it asked each tool to do, and
@@ -255,11 +364,10 @@ async function runTask(task, { apiKey, model, blankBytes }) {
   const session = new LocalDocumentSession(fixtureBytes);
   const agentDoc = AgentDocument.connect(session, { provenance: { author: "AI" } });
   const tools = agentDoc.tools();
-  const definitions = tools.map((t) => ({
-    name: t.name,
-    description: t.description,
-    input_schema: t.inputSchema,
-  }));
+  const definitions = toolPayload(tools, arm);
+  metrics.toolPayloadChars = JSON.stringify(definitions).length;
+  metrics.arm = arm;
+  metrics.cache = cache;
 
   const firstMessage = await projectionMessage(tools, task.prompt);
   const messages = [{ role: "user", content: firstMessage }];
@@ -271,9 +379,10 @@ async function runTask(task, { apiKey, model, blankBytes }) {
     for (; round < MAX_ROUNDS; round++) {
       const reply = await callModel(apiKey, {
         model,
-        system: SYSTEM_PROMPT,
+        system: arm === "menu" ? SYSTEM_PROMPT + "\n" + MENU_PROMPT_SENTENCE : SYSTEM_PROMPT,
         messages,
         tools: definitions,
+        cache,
       });
       messages.push({ role: "assistant", content: reply.content });
       const calls = reply.content.filter((b) => b.type === "tool_use");
@@ -281,6 +390,8 @@ async function runTask(task, { apiKey, model, blankBytes }) {
         ms: reply.ms,
         inputTokens: reply.inputTokens,
         outputTokens: reply.outputTokens,
+        cacheWriteTokens: reply.cacheWriteTokens,
+        cacheReadTokens: reply.cacheReadTokens,
         stopReason: reply.stopReason,
         // What the model asked for this round, in order: a slow run is only
         // diagnosable if the round-by-round sequence survives in the JSON.
@@ -288,6 +399,8 @@ async function runTask(task, { apiKey, model, blankBytes }) {
       });
       metrics.tokens.input += reply.inputTokens;
       metrics.tokens.output += reply.outputTokens;
+      metrics.tokens.cacheWrite += reply.cacheWriteTokens;
+      metrics.tokens.cacheRead += reply.cacheReadTokens;
       metrics.stopReason = reply.stopReason;
       metrics.transcript.push({
         round: round + 1,
@@ -392,7 +505,7 @@ function median(values) {
 /** One row per task. Each cell is the median across that task's runs, with the
  * range in parentheses when the task ran more than once. */
 function summaryTable(results) {
-  const headers = ["task", "pass", "ms", "rounds", "api calls", "in tok", "out tok", "tool errs"];
+  const headers = ["task", "pass", "ms", "rounds", "api calls", "in tok", "cache rd", "out tok", "tool errs"];
   const byTask = new Map();
   for (const r of results) {
     if (!byTask.has(r.task)) byTask.set(r.task, []);
@@ -413,6 +526,7 @@ function summaryTable(results) {
       stat((r) => r.rounds),
       stat((r) => r.apiCalls.length),
       stat((r) => r.tokens.input),
+      stat((r) => r.tokens.cacheRead),
       stat((r) => r.tokens.output),
       stat((r) => r.toolErrors.length),
     ];
@@ -424,77 +538,96 @@ function summaryTable(results) {
 
 // --- Main ------------------------------------------------------------------
 
-const args = Object.fromEntries(
-  process.argv.slice(2).map((a) => {
-    const m = a.match(/^--([^=]+)(?:=(.*))?$/);
-    return m ? [m[1], m[2] ?? true] : [a, true];
-  }),
-);
-const model = typeof args.model === "string" ? args.model : "claude-opus-5";
-const runs = typeof args.runs === "string" ? Number(args.runs) : 1;
-if (!Number.isInteger(runs) || runs < 1) {
-  console.error(`--runs must be a positive integer, got ${args.runs}`);
-  process.exit(2);
-}
-const selected =
-  typeof args.task === "string"
-    ? tasks.filter((t) => args.task.split(",").includes(t.name))
-    : tasks;
-if (selected.length === 0) {
-  console.error(`No matching tasks. Available: ${tasks.map((t) => t.name).join(", ")}`);
-  process.exit(2);
-}
+// Running this file is what normally happens; importing it is what
+// bench/menu-escape-probe.mjs does, to reuse the request shape and the tool
+// payload arms instead of copying them.
+export { SYSTEM_PROMPT, MENU_PROMPT_SENTENCE, callModel, readApiKey, toolPayload };
 
-const apiKey = readApiKey();
-const blankBytes = fs.readFileSync(BLANK_DOCX);
-const startedAt = new Date();
-const results = [];
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const args = Object.fromEntries(
+    process.argv.slice(2).map((a) => {
+      const m = a.match(/^--([^=]+)(?:=(.*))?$/);
+      return m ? [m[1], m[2] ?? true] : [a, true];
+    }),
+  );
+  const model = typeof args.model === "string" ? args.model : "claude-opus-5";
+  const arm = typeof args.tools === "string" ? args.tools : "defs";
+  if (arm !== "defs" && arm !== "full" && arm !== "menu") {
+    console.error(`--tools must be defs, full, or menu, got ${args.tools}`);
+    process.exit(2);
+  }
+  const cache = args.cache === true;
+  const runs = typeof args.runs === "string" ? Number(args.runs) : 1;
+  if (!Number.isInteger(runs) || runs < 1) {
+    console.error(`--runs must be a positive integer, got ${args.runs}`);
+    process.exit(2);
+  }
+  const selected =
+    typeof args.task === "string"
+      ? tasks.filter((t) => args.task.split(",").includes(t.name))
+      : tasks;
+  if (selected.length === 0) {
+    console.error(`No matching tasks. Available: ${tasks.map((t) => t.name).join(", ")}`);
+    process.exit(2);
+  }
 
-for (const task of selected) {
-  for (let run = 1; run <= runs; run++) {
-    const label = runs === 1 ? task.name : `${task.name} (${run}/${runs})`;
-    process.stdout.write(`running ${label} ... `);
-    const result = await runTask(task, { apiKey, model, blankBytes });
-    results.push(result);
-    console.log(
-      `${result.pass ? "PASS" : "FAIL"} (${result.wallMs} ms, ${result.rounds} rounds)`,
+  const apiKey = readApiKey();
+  const blankBytes = fs.readFileSync(BLANK_DOCX);
+  const startedAt = new Date();
+  const results = [];
+
+  for (const task of selected) {
+    for (let run = 1; run <= runs; run++) {
+      const label = runs === 1 ? task.name : `${task.name} (${run}/${runs})`;
+      process.stdout.write(`running ${label} ... `);
+      const result = await runTask(task, { apiKey, model, blankBytes, arm, cache });
+      results.push(result);
+      console.log(
+        `${result.pass ? "PASS" : "FAIL"} (${result.wallMs} ms, ${result.rounds} rounds)`,
+      );
+    }
+  }
+
+  // Results file + history.
+  const resultsDir = path.join(BENCH_DIR, "results");
+  fs.mkdirSync(resultsDir, { recursive: true });
+  const stamp = startedAt.toISOString().replace(/:/g, "-").replace(/\.\d+Z$/, "Z");
+  const resultsPath = path.join(resultsDir, `${stamp}.json`);
+  fs.writeFileSync(
+    resultsPath,
+    JSON.stringify({ startedAt: startedAt.toISOString(), model, arm, cache, results }, null, 2),
+  );
+  const historyPath = path.join(BENCH_DIR, "history.jsonl");
+  for (const r of results) {
+    fs.appendFileSync(
+      historyPath,
+      JSON.stringify({
+        ts: startedAt.toISOString(),
+        task: r.task,
+        model,
+        ms: r.wallMs,
+        rounds: r.rounds,
+        inputTokens: r.tokens.input,
+        outputTokens: r.tokens.output,
+        arm: r.arm,
+        cache: r.cache,
+        toolPayloadChars: r.toolPayloadChars,
+        pass: r.pass,
+      }) + "\n",
     );
   }
-}
 
-// Results file + history.
-const resultsDir = path.join(BENCH_DIR, "results");
-fs.mkdirSync(resultsDir, { recursive: true });
-const stamp = startedAt.toISOString().replace(/:/g, "-").replace(/\.\d+Z$/, "Z");
-const resultsPath = path.join(resultsDir, `${stamp}.json`);
-fs.writeFileSync(
-  resultsPath,
-  JSON.stringify({ startedAt: startedAt.toISOString(), model, results }, null, 2),
-);
-const historyPath = path.join(BENCH_DIR, "history.jsonl");
-for (const r of results) {
-  fs.appendFileSync(
-    historyPath,
-    JSON.stringify({
-      ts: startedAt.toISOString(),
-      task: r.task,
-      model,
-      ms: r.wallMs,
-      rounds: r.rounds,
-      inputTokens: r.tokens.input,
-      outputTokens: r.tokens.output,
-      pass: r.pass,
-    }) + "\n",
+  console.log(
+    `\narm: --tools=${arm}${cache ? " --cache" : ""}, tool payload ${results[0]?.toolPayloadChars ?? 0} chars`,
   );
-}
-
-console.log("\n" + summaryTable(results));
-for (const r of results) {
-  if (r.failures.length > 0) {
-    console.log(`\n${r.task} failures:`);
-    for (const f of r.failures) console.log(`  - ${f}`);
+  console.log(summaryTable(results));
+  for (const r of results) {
+    if (r.failures.length > 0) {
+      console.log(`\n${r.task} failures:`);
+      for (const f of r.failures) console.log(`  - ${f}`);
+    }
   }
-}
-console.log(`\nresults: ${path.relative(REPO_ROOT, resultsPath)}`);
+  console.log(`\nresults: ${path.relative(REPO_ROOT, resultsPath)}`);
 
-process.exit(results.every((r) => r.pass) ? 0 : 1);
+  process.exit(results.every((r) => r.pass) ? 0 : 1);
+}

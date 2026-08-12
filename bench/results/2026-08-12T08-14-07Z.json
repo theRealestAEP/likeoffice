@@ -1,0 +1,326 @@
+{
+  "startedAt": "2026-08-12T08:14:07.019Z",
+  "model": "claude-opus-5",
+  "arm": "full",
+  "cache": false,
+  "results": [
+    {
+      "task": "table-report",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 11937,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3818,
+          "inputTokens": 32024,
+          "outputTokens": 98,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 5028,
+          "inputTokens": 32315,
+          "outputTokens": 187,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 3076,
+          "inputTokens": 32558,
+          "outputTokens": 52,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 96897,
+        "output": 337,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\ncreate a 3-column, 4-row table of quarterly sales with a header row"
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01KWjS98cwuC2se6f2GXvEpB",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01KWjS98cwuC2se6f2GXvEpB",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01LMWSTn3f1uZ6xSjqe9jPeS",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertTable\",\"runRef\":\"run:2\",\"rows\":4,\"cols\":3,\"headerRow\":true,\"cells\":[[\"Quarter\",\"Sales\",\"Change\"],[\"Q1\",\"$1,250,000\",\"—\"],[\"Q2\",\"$1,410,000\",\"+12.8%\"],[\"Q3\",\"$1,375,000\",\"-2.5%\"]]}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01LMWSTn3f1uZ6xSjqe9jPeS",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertTable\",\"runRef\":\"run:2\",\"rows\":4,\"cols\":3,\"headerRow\":true,\"cells\":[[\"Quarter\",\"Sales\",\"Change\"],[\"Q1\",\"$1,250,000\",\"—\"],[\"Q2\",\"$1,410,000\",\"+12.8%\"],[\"Q3\",\"$1,375,000\",\"-2.5%\"]]}]}",
+              "result": "{\"revision\":\"1\",\"status\":\"submitted\",\"operations\":[\"insertTable\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "Added a 4-row, 3-column quarterly sales table with a header row (Quarter, Sales, Change) and sample figures for Q1–Q3.",
+          "calls": []
+        }
+      ],
+      "toolPayloadChars": 61343,
+      "arm": "full",
+      "cache": false
+    },
+    {
+      "task": "rewrite",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 5997,
+      "rounds": 2,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 4057,
+          "inputTokens": 32205,
+          "outputTokens": 209,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_patch"
+          ]
+        },
+        {
+          "ms": 1936,
+          "inputTokens": 33029,
+          "outputTokens": 25,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_patch": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 65234,
+        "output": 234,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: Contoso Ltd. opened the fiscal year with a cautious plan and a small, focused team.\n2: The second quarter brought a broad expansion across every region that Contoso served: the field organization doubled its visit cadence, the support desk cleared a backlog that had lingered since winter, marketing shipped three campaigns that each outperformed the internal forecast, and the finance group closed the books early in both months while still finding time to retire two legacy reporting systems.\n3: By December the pace had settled, and Contoso archived the records of the year without ceremony.\n</document>\n\nRewrite the second paragraph to half its length. Do not change the other paragraphs."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01QpjzQqgZk2TD5kYzxpEE5p",
+              "name": "word_document_patch",
+              "input": "{\"revision\":\"0\",\"story\":\"body\",\"mode\":\"text\",\"edits\":[{\"startLine\":2,\"endLine\":2,\"newText\":\"The second quarter brought a broad expansion across every region Contoso served: the field organization doubled its visit cadence, the support desk cleared its winter backlog, and marketing shipped three campaigns that beat forecast.\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01QpjzQqgZk2TD5kYzxpEE5p",
+              "name": "word_document_patch",
+              "sent": "{\"revision\":\"0\",\"story\":\"body\",\"mode\":\"text\",\"edits\":[{\"startLine\":2,\"endLine\":2,\"newText\":\"The second quarter brought a broad expansion across every region Contoso served: the field organization doubled its visit cadence, the support desk cleared its winter backlog, and marketing shipped three campaigns that beat forecast.\"}],\"suggest\":true}",
+              "result": "{\"revision\":\"2\",\"status\":\"submitted\",\"operations\":[\"suggestRevision\",\"insertText\"],\"connection\":\"local\",\"projection\":{\"revision\":\"2\",\"story\":\"body\",\"mode\":\"text\",\"text\":\"Contoso Ltd. opened the fiscal year with a cautious plan and a small, focused team.\\nThe second quarter brought a broad expansion across every region Contoso served: the field organization doubled its visit cadence, the support desk cleared its winter backlog, and marketing shipped three campaigns that beat forecast.\\nBy December the pace had settled, and Contoso archived the records of the year without ceremony.\",\"lines\":3,\"window\":{\"cursor\":null,\"startBlock\":0,\"endBlock\":3,\"maxBlocks\":200,\"maxCharacters\":50000},\"anchors\":[{\"line\":1,\"role\":\"paragraph\",\"blockRef\":\"block:1\",\"marker\":0,\"editable\":true,\"segments\":[{\"start\":0,\"end\":83,\"runRef\":\"run:2\",\"wireStart\":0,\"wireEnd\":83,\"editable\":true}]},{\"line\":2,\"role\":\"paragraph\",\"blockRef\":\"block:3\",\"marker\":0,\"editable\":true,\"segments\":[{\"start\":0,\"end\":65,\"runRef\":\"run:4\",\"wireStart\":0,\"wireEnd\":65,\"editable\":true},{\"start\":65,\"end\":232,\"runRef\":\"run:9\",\"wireStart\":0,\"wireEnd\":167,\"editable\":true},{\"start\":232,\"end\":233,\"runRef\":\"run:8\",\"wireStart\":0,\"wireEnd\":1,\"editable\":true}]},{\"line\":3,\"role\":\"paragraph\",\"blockRef\":\"block:5\",\"marker\":0,\"editable\":true,\"segments\":[{\"start\":0,\"end\":96,\"runRef\":\"run:6\",\"wireStart\":0,\"wireEnd\":96,\"editable\":true}]}],\"truncated\":false}}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "Trimmed the second paragraph to about half its length as a tracked change.",
+          "calls": []
+        }
+      ],
+      "toolPayloadChars": 61343,
+      "arm": "full",
+      "cache": false
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 12023,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3414,
+          "inputTokens": 32079,
+          "outputTokens": 120,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 6337,
+          "inputTokens": 32392,
+          "outputTokens": 430,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2262,
+          "inputTokens": 32900,
+          "outputTokens": 37,
+          "cacheWriteTokens": 0,
+          "cacheReadTokens": 0,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 97371,
+        "output": 587,
+        "cacheWrite": 0,
+        "cacheRead": 0
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01LGwyfv8SD9HJC6ji3bKLCo",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01LGwyfv8SD9HJC6ji3bKLCo",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01CieWVqUXr1iTvQtoHatiZT",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x = (-b ± √(b^2 - 4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01CieWVqUXr1iTvQtoHatiZT",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x = (-b ± √(b^2 - 4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"3\",\"status\":\"submitted\",\"operations\":[\"insertChart\",\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, the \"Draft — internal only\" text box, and the quadratic formula equation.",
+          "calls": []
+        }
+      ],
+      "toolPayloadChars": 61343,
+      "arm": "full",
+      "cache": false
+    }
+  ]
+}
