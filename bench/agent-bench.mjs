@@ -210,6 +210,20 @@ async function callModel(apiKey, request) {
   }
 }
 
+// --- Transcript recording ---------------------------------------------------
+
+/** Cap one recorded value so a results file stays readable. Long projections
+ * are the only things that reach this; the tail matters less than the head. */
+const TRANSCRIPT_MAX_CHARACTERS = 20_000;
+
+function clip(value) {
+  const text = typeof value === "string" ? value : JSON.stringify(value);
+  if (typeof text !== "string") return text;
+  return text.length <= TRANSCRIPT_MAX_CHARACTERS
+    ? text
+    : `${text.slice(0, TRANSCRIPT_MAX_CHARACTERS)}…[${text.length - TRANSCRIPT_MAX_CHARACTERS} more characters]`;
+}
+
 // --- One task --------------------------------------------------------------
 
 async function runTask(task, { apiKey, model, blankBytes }) {
@@ -226,6 +240,10 @@ async function runTask(task, { apiKey, model, blankBytes }) {
     tokens: { input: 0, output: 0 },
     savedValid: false,
     failures: [],
+    // Round-by-round: what the model said, what it asked each tool to do, and
+    // what each tool answered. Tool names alone cannot tell you why a run
+    // inserted a second chart; the inputs and the results can.
+    transcript: [],
   };
 
   const fixtureBytes =
@@ -243,7 +261,9 @@ async function runTask(task, { apiKey, model, blankBytes }) {
     input_schema: t.inputSchema,
   }));
 
-  const messages = [{ role: "user", content: await projectionMessage(tools, task.prompt) }];
+  const firstMessage = await projectionMessage(tools, task.prompt);
+  const messages = [{ role: "user", content: firstMessage }];
+  metrics.transcript.push({ round: 0, role: "user", text: clip(firstMessage) });
   const started = Date.now();
 
   try {
@@ -269,6 +289,15 @@ async function runTask(task, { apiKey, model, blankBytes }) {
       metrics.tokens.input += reply.inputTokens;
       metrics.tokens.output += reply.outputTokens;
       metrics.stopReason = reply.stopReason;
+      metrics.transcript.push({
+        round: round + 1,
+        role: "assistant",
+        text: reply.content
+          .filter((b) => b.type === "text")
+          .map((b) => b.text)
+          .join("\n"),
+        calls: calls.map((c) => ({ id: c.id, name: c.name, input: clip(c.input) })),
+      });
 
       if (calls.length === 0) {
         round++;
@@ -276,6 +305,7 @@ async function runTask(task, { apiKey, model, blankBytes }) {
       }
 
       const results = [];
+      const observed = [];
       for (const call of calls) {
         metrics.toolCalls[call.name] = (metrics.toolCalls[call.name] ?? 0) + 1;
         const tool = tools.find((t) => t.name === call.name);
@@ -287,15 +317,20 @@ async function runTask(task, { apiKey, model, blankBytes }) {
             content: `Unknown tool ${call.name}`,
             is_error: true,
           });
+          observed.push({ id: call.id, name: call.name, error: "unknown tool" });
           continue;
         }
+        // The harness injects suggest, so the tool sees different input than
+        // the model wrote. Record what the tool actually ran.
+        const effective = withSuggestions(call.name, call.input);
         try {
-          const output = await tool.execute(withSuggestions(call.name, call.input));
+          const output = await tool.execute(effective);
           results.push({
             type: "tool_result",
             tool_use_id: call.id,
             content: JSON.stringify(output),
           });
+          observed.push({ id: call.id, name: call.name, sent: clip(effective), result: clip(output) });
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           metrics.toolErrors.push({ name: call.name, message });
@@ -305,8 +340,10 @@ async function runTask(task, { apiKey, model, blankBytes }) {
             content: message,
             is_error: true,
           });
+          observed.push({ id: call.id, name: call.name, sent: clip(effective), error: clip(message) });
         }
       }
+      metrics.transcript.push({ round: round + 1, role: "tool_results", results: observed });
       messages.push({ role: "user", content: results });
     }
     metrics.rounds = round;

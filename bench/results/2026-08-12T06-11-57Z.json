@@ -1,0 +1,2572 @@
+{
+  "startedAt": "2026-08-12T06:11:57.332Z",
+  "model": "claude-opus-5",
+  "results": [
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 19692,
+      "rounds": 4,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 4392,
+          "inputTokens": 32079,
+          "outputTokens": 125,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 10971,
+          "inputTokens": 32397,
+          "outputTokens": 622,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2094,
+          "inputTokens": 33097,
+          "outputTokens": 53,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 2198,
+          "inputTokens": 33440,
+          "outputTokens": 40,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 2,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 131013,
+        "output": 840
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01UFmKw1rtDK4GkU1HsSMmK3",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01UFmKw1rtDK4GkU1HsSMmK3",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01EeX2DnTUeYQGYoLHiY3RkS",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x = (-b ± √(b^2-4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01EeX2DnTUeYQGYoLHiY3RkS",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x = (-b ± √(b^2-4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"3\",\"status\":\"submitted\",\"operations\":[\"insertChart\",\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01MwhwyRYiXqVWFATp3RP8Uk",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"overview\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01MwhwyRYiXqVWFATp3RP8Uk",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"overview\"}",
+              "result": "{\"revision\":\"3\",\"sections\":1,\"mirrorMargins\":false,\"sectionLayouts\":[{\"index\":0,\"page\":{\"width\":816,\"height\":1056},\"margins\":{\"top\":96,\"right\":96,\"bottom\":96,\"left\":96},\"headerDistance\":48,\"footerDistance\":48,\"gutter\":0,\"columns\":{\"count\":1,\"space\":48},\"titlePage\":false}],\"stories\":[{\"id\":\"body\",\"kind\":\"body\",\"blocks\":1},{\"id\":\"textbox:object:27:0:text\",\"kind\":\"textbox\",\"blocks\":1}],\"blocks\":{\"paragraphs\":1,\"tables\":0},\"characters\":37,\"comments\":0,\"components\":{\"math\":1,\"text\":2,\"anchor\":1,\"drawing\":1},\"objectCounts\":{\"math\":1,\"anchored-textbox\":1,\"chart\":1},\"outline\":[]}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "assistant",
+          "text": "All three are in: the Revenue column chart, a \"Draft — internal only\" text box, and the quadratic formula equation.",
+          "calls": []
+        }
+      ]
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 44527,
+      "rounds": 10,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 4432,
+          "inputTokens": 32079,
+          "outputTokens": 97,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 5719,
+          "inputTokens": 32369,
+          "outputTokens": 293,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2157,
+          "inputTokens": 32712,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 6531,
+          "inputTokens": 33109,
+          "outputTokens": 387,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 4541,
+          "inputTokens": 33654,
+          "outputTokens": 145,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_patch"
+          ]
+        },
+        {
+          "ms": 7500,
+          "inputTokens": 33889,
+          "outputTokens": 477,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 4306,
+          "inputTokens": 34491,
+          "outputTokens": 226,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2760,
+          "inputTokens": 34758,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 3601,
+          "inputTokens": 35479,
+          "outputTokens": 171,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2941,
+          "inputTokens": 35704,
+          "outputTokens": 42,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 3,
+        "word_document_edit": 5,
+        "word_document_patch": 1
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. To create paragraphs, one insertText whose text contains \"\\n\" between paragraphs also works, in one operation. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+        },
+        {
+          "name": "word_document_patch",
+          "message": "Projection line 1 cannot be rewritten across a non-text atom NOTHING was applied. The patch is all or nothing, so the document is unchanged and no earlier hunk in this patch landed either. Re-project the story, then send every edit again."
+        },
+        {
+          "name": "word_document_edit",
+          "message": "insertShape could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+        }
+      ],
+      "tokens": {
+        "input": 338244,
+        "output": 1984
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_013qjXDYLgPhYqTaH1485pqX",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_013qjXDYLgPhYqTaH1485pqX",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01MoYMHM2ChSzEhQYv8SmNVs",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01MoYMHM2ChSzEhQYv8SmNVs",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}",
+              "result": "{\"revision\":\"1\",\"status\":\"submitted\",\"operations\":[\"insertChart\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_016RFWJaFriUwiVTSRB7yGA2",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_016RFWJaFriUwiVTSRB7yGA2",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"1\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01CjiaDxe3Js5Uwt6sCnNvZc",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"splitParagraph\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:3\",\"offset\":0}}]}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01CjiaDxe3Js5Uwt6sCnNvZc",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"splitParagraph\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:3\",\"offset\":0},\"suggest\":true}]}",
+              "error": "splitParagraph could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. To create paragraphs, one insertText whose text contains \"\\n\" between paragraphs also works, in one operation. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01Fu88zJX4FMi9txaPXp4Bp8",
+              "name": "word_document_patch",
+              "input": "{\"revision\":\"1\",\"story\":\"body\",\"mode\":\"text\",\"edits\":[{\"startLine\":1,\"endLine\":1,\"newText\":\"\\n\\n\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01Fu88zJX4FMi9txaPXp4Bp8",
+              "name": "word_document_patch",
+              "sent": "{\"revision\":\"1\",\"story\":\"body\",\"mode\":\"text\",\"edits\":[{\"startLine\":1,\"endLine\":1,\"newText\":\"\\n\\n\"}],\"suggest\":true}",
+              "error": "Projection line 1 cannot be rewritten across a non-text atom NOTHING was applied. The patch is all or nothing, so the document is unchanged and no earlier hunk in this patch landed either. Re-project the story, then send every edit again."
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01UihUJdttEqmTGiNTts92bk",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:3\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01UihUJdttEqmTGiNTts92bk",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:3\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"}]}",
+              "error": "insertShape could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01Bx5unhJZ9sLqQZmR1GKKiP",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p/><w:p/>\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01Bx5unhJZ9sLqQZmR1GKKiP",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p/><w:p/>\"}]}",
+              "result": "{\"revision\":\"2\",\"status\":\"submitted\",\"operations\":[\"pasteBlocks\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 8,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01H54HNBupdgtD61EHyhkEXJ",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 8,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01H54HNBupdgtD61EHyhkEXJ",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"2\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:41\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:42\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:43\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:44\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 9,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01ETbZbnBVshYCAKzdFmXCSw",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:42\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:44\",\"mathText\":\"x = (-b ± √(b^2 - 4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 9,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01ETbZbnBVshYCAKzdFmXCSw",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:42\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:44\",\"mathText\":\"x = (-b ± √(b^2 - 4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"4\",\"status\":\"submitted\",\"operations\":[\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 10,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, a \"Draft — internal only\" text box below it, and the quadratic formula as a display equation.",
+          "calls": []
+        }
+      ]
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 32559,
+      "rounds": 7,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3913,
+          "inputTokens": 32079,
+          "outputTokens": 142,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 8720,
+          "inputTokens": 32414,
+          "outputTokens": 612,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2445,
+          "inputTokens": 33076,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 5744,
+          "inputTokens": 33473,
+          "outputTokens": 370,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2557,
+          "inputTokens": 33884,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 4324,
+          "inputTokens": 34605,
+          "outputTokens": 169,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 4843,
+          "inputTokens": 34828,
+          "outputTokens": 49,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 3,
+        "word_document_edit": 3
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 234359,
+        "output": 1488
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01ECit9RgaMP8EHExgDRQUPR",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01ECit9RgaMP8EHExgDRQUPR",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01Rv34eRtayktzRHZKRw3gQs",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01Rv34eRtayktzRHZKRw3gQs",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}",
+              "result": "{\"revision\":\"1\",\"status\":\"submitted\",\"operations\":[\"insertChart\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_013vsjQtBzsXkNoZamkwWuxc",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_013vsjQtBzsXkNoZamkwWuxc",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"1\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_0195B2D9Mr8zLmKEVtGPYTSt",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p><w:r><w:t></w:t></w:r></w:p><w:p><w:r><w:t></w:t></w:r></w:p>\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_0195B2D9Mr8zLmKEVtGPYTSt",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p><w:r><w:t></w:t></w:r></w:p><w:p><w:r><w:t></w:t></w:r></w:p>\"}]}",
+              "result": "{\"revision\":\"2\",\"status\":\"submitted\",\"operations\":[\"pasteBlocks\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01FXoT43rbntjnehtbKFVhWU",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01FXoT43rbntjnehtbKFVhWU",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"2\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:27\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:28\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:29\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:30\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01NXuQ8KEQYEW2WygTNJBnzc",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:28\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:30\",\"mathText\":\"x = (-b ± √(b^2-4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01NXuQ8KEQYEW2WygTNJBnzc",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:28\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:30\",\"mathText\":\"x = (-b ± √(b^2-4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"4\",\"status\":\"submitted\",\"operations\":[\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, a \"Draft — internal only\" text box, and the quadratic formula as a display equation, each in its own paragraph.",
+          "calls": []
+        }
+      ]
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 15310,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3973,
+          "inputTokens": 32079,
+          "outputTokens": 116,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 9114,
+          "inputTokens": 32388,
+          "outputTokens": 632,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2220,
+          "inputTokens": 33098,
+          "outputTokens": 37,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 97565,
+        "output": 785
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_012E5NkHmiYG9NdccV5P4C8K",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_012E5NkHmiYG9NdccV5P4C8K",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01G5J2K978aNzdWzWsxhcPHa",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01G5J2K978aNzdWzWsxhcPHa",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"3\",\"status\":\"submitted\",\"operations\":[\"insertChart\",\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, a \"Draft — internal only\" text box, and the quadratic formula equation.",
+          "calls": []
+        }
+      ]
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 57582,
+      "rounds": 9,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 4553,
+          "inputTokens": 32079,
+          "outputTokens": 116,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 12555,
+          "inputTokens": 32388,
+          "outputTokens": 657,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2354,
+          "inputTokens": 33095,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 6960,
+          "inputTokens": 33492,
+          "outputTokens": 424,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 13993,
+          "inputTokens": 34074,
+          "outputTokens": 1002,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 9144,
+          "inputTokens": 35201,
+          "outputTokens": 526,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2664,
+          "inputTokens": 35768,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 3125,
+          "inputTokens": 36489,
+          "outputTokens": 171,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2199,
+          "inputTokens": 36714,
+          "outputTokens": 42,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 3,
+        "word_document_edit": 5
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. To create paragraphs, one insertText whose text contains \"\\n\" between paragraphs also works, in one operation. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+        },
+        {
+          "name": "word_document_edit",
+          "message": "insertShape could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+        }
+      ],
+      "tokens": {
+        "input": 309300,
+        "output": 3084
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_018uJWb7DJEp2F58B6SAouvc",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_018uJWb7DJEp2F58B6SAouvc",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01C6XDM2n41PzY8mYuAMJQ8i",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01C6XDM2n41PzY8mYuAMJQ8i",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}",
+              "result": "{\"revision\":\"1\",\"status\":\"submitted\",\"operations\":[\"insertChart\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01Ag7ZQGjyKHr2hBrpKA81WN",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01Ag7ZQGjyKHr2hBrpKA81WN",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"1\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01Tga8d6dd5eB2ais7jfWwPw",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"splitParagraph\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:3\",\"offset\":0}}]}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01Tga8d6dd5eB2ais7jfWwPw",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"splitParagraph\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:3\",\"offset\":0},\"suggest\":true}]}",
+              "error": "splitParagraph could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. To create paragraphs, one insertText whose text contains \"\\n\" between paragraphs also works, in one operation. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01Hv5SYHj6MRUBovD7LkHetB",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:3\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01Hv5SYHj6MRUBovD7LkHetB",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:3\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"}]}",
+              "error": "insertShape could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01HDWNRKiVxuZ5q6u6t94b85",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p><w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p>\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01HDWNRKiVxuZ5q6u6t94b85",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p><w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p>\"}]}",
+              "result": "{\"revision\":\"2\",\"status\":\"submitted\",\"operations\":[\"pasteBlocks\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01X7Dktue4WuUmv8mzHRR1Es",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01X7Dktue4WuUmv8mzHRR1Es",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"2\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:41\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:42\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:43\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:44\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 8,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01FwoU2S4y4zvpPp6B5RwMX5",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:42\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:44\",\"mathText\":\"x = (-b ± √(b^2 - 4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 8,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01FwoU2S4y4zvpPp6B5RwMX5",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:42\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:44\",\"mathText\":\"x = (-b ± √(b^2 - 4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"4\",\"status\":\"submitted\",\"operations\":[\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 9,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, a \"Draft — internal only\" text box below it, and the quadratic formula as a display equation.",
+          "calls": []
+        }
+      ]
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 11777,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3617,
+          "inputTokens": 32079,
+          "outputTokens": 107,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 5600,
+          "inputTokens": 32379,
+          "outputTokens": 371,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2551,
+          "inputTokens": 32828,
+          "outputTokens": 37,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 97286,
+        "output": 515
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01FvfTV6yiaci2MY911Gho32",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01FvfTV6yiaci2MY911Gho32",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01G51tw84Ksy6JjrpEy4JTVr",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x = (-b ± √(b^2 - 4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01G51tw84Ksy6JjrpEy4JTVr",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x = (-b ± √(b^2 - 4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"3\",\"status\":\"submitted\",\"operations\":[\"insertChart\",\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, the \"Draft — internal only\" text box, and the quadratic formula equation.",
+          "calls": []
+        }
+      ]
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 33110,
+      "rounds": 7,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 4319,
+          "inputTokens": 32079,
+          "outputTokens": 175,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 7644,
+          "inputTokens": 32447,
+          "outputTokens": 528,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2148,
+          "inputTokens": 33025,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 9260,
+          "inputTokens": 33422,
+          "outputTokens": 489,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 3221,
+          "inputTokens": 33952,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 3649,
+          "inputTokens": 34673,
+          "outputTokens": 168,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2851,
+          "inputTokens": 34895,
+          "outputTokens": 49,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 3,
+        "word_document_edit": 3
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 234493,
+        "output": 1555
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_018yRYBjR6nMRMEoVUHCzrKh",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_018yRYBjR6nMRMEoVUHCzrKh",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01JmVby37dDnRv2m3LYVGq5H",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01JmVby37dDnRv2m3LYVGq5H",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}",
+              "result": "{\"revision\":\"1\",\"status\":\"submitted\",\"operations\":[\"insertChart\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01SD1swvUekEsysgvQRzkrnr",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01SD1swvUekEsysgvQRzkrnr",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"1\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_014gjeP3HbexRzyzZUTvBTje",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p/><w:p/>\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_014gjeP3HbexRzyzZUTvBTje",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p/><w:p/>\"}]}",
+              "result": "{\"revision\":\"2\",\"status\":\"submitted\",\"operations\":[\"pasteBlocks\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01Bv8a8tAT8fAbSDtypyf3tM",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01Bv8a8tAT8fAbSDtypyf3tM",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"2\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:27\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:28\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:29\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:30\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01AcHeFNe5dYzP3jHn4dBB7S",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:28\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:30\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01AcHeFNe5dYzP3jHn4dBB7S",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:28\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:30\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"4\",\"status\":\"submitted\",\"operations\":[\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, a \"Draft — internal only\" text box, and the quadratic formula as a display equation, each in its own paragraph.",
+          "calls": []
+        }
+      ]
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 14924,
+      "rounds": 3,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3590,
+          "inputTokens": 32079,
+          "outputTokens": 101,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 8992,
+          "inputTokens": 32373,
+          "outputTokens": 622,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2337,
+          "inputTokens": 33073,
+          "outputTokens": 37,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 1,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 97525,
+        "output": 760
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01N8VaPpbjYwvVKeG4C5ENiS",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01N8VaPpbjYwvVKeG4C5ENiS",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01ELRBCAa48dKoH6xTu6D5oc",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01ELRBCAa48dKoH6xTu6D5oc",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"3\",\"status\":\"submitted\",\"operations\":[\"insertChart\",\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, the \"Draft — internal only\" text box, and the quadratic formula equation.",
+          "calls": []
+        }
+      ]
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 34216,
+      "rounds": 7,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 4536,
+          "inputTokens": 32079,
+          "outputTokens": 119,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 11046,
+          "inputTokens": 32391,
+          "outputTokens": 643,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2946,
+          "inputTokens": 33084,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 8313,
+          "inputTokens": 33481,
+          "outputTokens": 504,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2200,
+          "inputTokens": 34026,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 2827,
+          "inputTokens": 34747,
+          "outputTokens": 168,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2331,
+          "inputTokens": 34969,
+          "outputTokens": 49,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 3,
+        "word_document_edit": 3
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 234777,
+        "output": 1629
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01T4JLpcYwts9ecc1e3x9mTX",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01T4JLpcYwts9ecc1e3x9mTX",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01TQAvxnoHFDckDeYb7y2fsE",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01TQAvxnoHFDckDeYb7y2fsE",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}",
+              "result": "{\"revision\":\"1\",\"status\":\"submitted\",\"operations\":[\"insertChart\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01Ev3BE9WySwtJGDs1i7p5dA",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01Ev3BE9WySwtJGDs1i7p5dA",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"1\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_018bE8dPxyRuYB3D7XY36EV5",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p><w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p>\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_018bE8dPxyRuYB3D7XY36EV5",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p><w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p>\"}]}",
+              "result": "{\"revision\":\"2\",\"status\":\"submitted\",\"operations\":[\"pasteBlocks\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_018mjXxJEAmJvgT1sVx1EPqP",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_018mjXxJEAmJvgT1sVx1EPqP",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"2\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:27\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:28\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:29\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:30\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01Dt1HRjAVPz54TqTd3EQJPB",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:28\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:30\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01Dt1HRjAVPz54TqTd3EQJPB",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:28\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:30\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"4\",\"status\":\"submitted\",\"operations\":[\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, a \"Draft — internal only\" text box, and the quadratic formula as a display equation, each in its own paragraph.",
+          "calls": []
+        }
+      ]
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 41549,
+      "rounds": 9,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 3859,
+          "inputTokens": 32079,
+          "outputTokens": 124,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 6516,
+          "inputTokens": 32396,
+          "outputTokens": 446,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2606,
+          "inputTokens": 32920,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 10797,
+          "inputTokens": 33666,
+          "outputTokens": 758,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 3133,
+          "inputTokens": 34470,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 6244,
+          "inputTokens": 34867,
+          "outputTokens": 382,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2562,
+          "inputTokens": 35290,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 3394,
+          "inputTokens": 36011,
+          "outputTokens": 169,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2399,
+          "inputTokens": 36234,
+          "outputTokens": 49,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 4,
+        "word_document_edit": 4
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 307933,
+        "output": 2147
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_019hwPRgZoRFAvz9QZwfs7jG",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_019hwPRgZoRFAvz9QZwfs7jG",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_016GmY9QqW36RrVbjevzatbx",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x = (-b ± √(b^2-4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_016GmY9QqW36RrVbjevzatbx",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x = (-b ± √(b^2-4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"3\",\"status\":\"submitted\",\"operations\":[\"insertChart\",\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01Dh2KWjj1QHup2pCZV6UzBb",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01Dh2KWjj1QHup2pCZV6UzBb",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"3\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"x = ((-b ± root((b^(2)-4ac))))/((2a))\",\"textRange\":{\"start\":0,\"end\":37,\"total\":37},\"runs\":[{\"ref\":\"view:3:run:1\",\"editable\":false,\"paragraphStart\":0,\"paragraphEnd\":37,\"wireLength\":37,\"text\":\"x = ((-b ± root((b^(2)-4ac))))/((2a))\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:block:1:0:0\",\"editRef\":\"block:1\",\"type\":\"math\",\"label\":\"x = ((-b ± root((b^(2)-4ac))))/((2a))\"}]},{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":37,\"paragraphEnd\":37,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:27\",\"editable\":true,\"paragraphStart\":37,\"paragraphEnd\":37,\"wireLength\":21,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:27:0\",\"editRef\":\"object:27:0\",\"type\":\"anchored-textbox\",\"label\":\"Draft — internal only\"}]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":37,\"paragraphEnd\":37,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01Qh6FzHv43jLNYDSCJr78oi",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"3\",\"operations\":[{\"kind\":\"deleteMath\",\"blockRef\":\"block:1\",\"mathIndex\":0},{\"kind\":\"removeDrawing\",\"objectRef\":\"object:27:0\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01Qh6FzHv43jLNYDSCJr78oi",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"3\",\"operations\":[{\"kind\":\"deleteMath\",\"blockRef\":\"block:1\",\"mathIndex\":0},{\"kind\":\"removeDrawing\",\"objectRef\":\"object:27:0\"}]}",
+              "result": "{\"revision\":\"5\",\"status\":\"submitted\",\"operations\":[\"deleteMath\",\"removeDrawing\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_011V2BWamEMwAtKe8XWarY8o",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_011V2BWamEMwAtKe8XWarY8o",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"5\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_011iz3vr3iFdZ2ZfiMVE1moc",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"5\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p><w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p>\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_011iz3vr3iFdZ2ZfiMVE1moc",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"5\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p><w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p>\"}]}",
+              "result": "{\"revision\":\"6\",\"status\":\"submitted\",\"operations\":[\"pasteBlocks\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01GnJprfL15xcAV8ShGkVtrZ",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01GnJprfL15xcAV8ShGkVtrZ",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"6\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:63\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:64\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:65\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:66\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 8,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_011d9xh61ekA4VveGiR9Re6x",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"6\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:64\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:66\",\"mathText\":\"x = (-b ± √(b^2-4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 8,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_011d9xh61ekA4VveGiR9Re6x",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"6\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:64\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:66\",\"mathText\":\"x = (-b ± √(b^2-4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"8\",\"status\":\"submitted\",\"operations\":[\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 9,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, a \"Draft — internal only\" text box below it, and the quadratic formula as a display equation in its own paragraph.",
+          "calls": []
+        }
+      ]
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 15921,
+      "rounds": 4,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 4383,
+          "inputTokens": 32079,
+          "outputTokens": 97,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 6780,
+          "inputTokens": 32369,
+          "outputTokens": 449,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2538,
+          "inputTokens": 32896,
+          "outputTokens": 53,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 2213,
+          "inputTokens": 33239,
+          "outputTokens": 40,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 2,
+        "word_document_edit": 1
+      },
+      "toolErrors": [],
+      "tokens": {
+        "input": 130583,
+        "output": 639
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01NEieZ9DKDrHwoz7cB9gLTy",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01NEieZ9DKDrHwoz7cB9gLTy",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01Y8CjRAviMFpZM1EFVHFZeT",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01Y8CjRAviMFpZM1EFVHFZeT",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}},{\"kind\":\"insertShape\",\"runRef\":\"run:2\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:2\",\"mathText\":\"x=(-b±√(b^2-4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"3\",\"status\":\"submitted\",\"operations\":[\"insertChart\",\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_013ZVssJBSXM4Y5uXKeJY5Hd",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"overview\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_013ZVssJBSXM4Y5uXKeJY5Hd",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"overview\"}",
+              "result": "{\"revision\":\"3\",\"sections\":1,\"mirrorMargins\":false,\"sectionLayouts\":[{\"index\":0,\"page\":{\"width\":816,\"height\":1056},\"margins\":{\"top\":96,\"right\":96,\"bottom\":96,\"left\":96},\"headerDistance\":48,\"footerDistance\":48,\"gutter\":0,\"columns\":{\"count\":1,\"space\":48},\"titlePage\":false}],\"stories\":[{\"id\":\"body\",\"kind\":\"body\",\"blocks\":1},{\"id\":\"textbox:object:27:0:text\",\"kind\":\"textbox\",\"blocks\":1}],\"blocks\":{\"paragraphs\":1,\"tables\":0},\"characters\":33,\"comments\":0,\"components\":{\"math\":1,\"text\":2,\"anchor\":1,\"drawing\":1},\"objectCounts\":{\"math\":1,\"anchored-textbox\":1,\"chart\":1},\"outline\":[]}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "assistant",
+          "text": "All three are in: the Revenue column chart, the \"Draft — internal only\" text box, and the quadratic formula equation.",
+          "calls": []
+        }
+      ]
+    },
+    {
+      "task": "object-insert",
+      "model": "claude-opus-5",
+      "pass": true,
+      "wallMs": 42128,
+      "rounds": 8,
+      "stopReason": "end_turn",
+      "apiCalls": [
+        {
+          "ms": 4167,
+          "inputTokens": 32079,
+          "outputTokens": 123,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 9689,
+          "inputTokens": 32395,
+          "outputTokens": 620,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2581,
+          "inputTokens": 33065,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 8534,
+          "inputTokens": 33462,
+          "outputTokens": 562,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 7629,
+          "inputTokens": 34182,
+          "outputTokens": 529,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2211,
+          "inputTokens": 34752,
+          "outputTokens": 73,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_inspect"
+          ]
+        },
+        {
+          "ms": 5019,
+          "inputTokens": 35473,
+          "outputTokens": 169,
+          "stopReason": "tool_use",
+          "tools": [
+            "word_document_edit"
+          ]
+        },
+        {
+          "ms": 2281,
+          "inputTokens": 35696,
+          "outputTokens": 49,
+          "stopReason": "end_turn",
+          "tools": []
+        }
+      ],
+      "toolCalls": {
+        "word_document_inspect": 3,
+        "word_document_edit": 4
+      },
+      "toolErrors": [
+        {
+          "name": "word_document_edit",
+          "message": "splitParagraph could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. To create paragraphs, one insertText whose text contains \"\\n\" between paragraphs also works, in one operation. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+        }
+      ],
+      "tokens": {
+        "input": 271104,
+        "output": 2198
+      },
+      "savedValid": true,
+      "failures": [],
+      "transcript": [
+        {
+          "round": 0,
+          "role": "user",
+          "text": "<document story=\"body\" mode=\"text\" revision=\"0\">\n1: \n</document>\n\nAdd a column chart of quarterly revenue (Q1: 10, Q2: 12, Q3: 9, Q4: 15) titled Revenue, then a text box that says Draft — internal only, then the quadratic formula as a display equation."
+        },
+        {
+          "round": 1,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_013ZzCoJLU8tq7dZHcUnSxqz",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 1,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_013ZzCoJLU8tq7dZHcUnSxqz",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"0\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01HPDNcnzsMu7vHQ55nFno5Y",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}"
+            }
+          ]
+        },
+        {
+          "round": 2,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01HPDNcnzsMu7vHQ55nFno5Y",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"0\",\"operations\":[{\"kind\":\"insertChart\",\"runRef\":\"run:2\",\"chart\":{\"type\":\"column\",\"title\":\"Revenue\",\"categories\":[\"Q1\",\"Q2\",\"Q3\",\"Q4\"],\"series\":[{\"name\":\"Revenue\",\"values\":[10,12,9,15]}]}}]}",
+              "result": "{\"revision\":\"1\",\"status\":\"submitted\",\"operations\":[\"insertChart\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_017mMiNQ16j5o5a37Hmw7kzv",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 3,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_017mMiNQ16j5o5a37Hmw7kzv",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"1\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_018BFQU9BKdVBpo8ep3oZqjg",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"splitParagraph\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:3\",\"offset\":0}}]}"
+            }
+          ]
+        },
+        {
+          "round": 4,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_018BFQU9BKdVBpo8ep3oZqjg",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"splitParagraph\",\"at\":{\"blockRef\":\"block:1\",\"runRef\":\"run:3\",\"offset\":0},\"suggest\":true}]}",
+              "error": "splitParagraph could not apply to the referenced document state. A reference or offset is likely stale: an earlier operation in this transaction can restructure the runs it touched. To create paragraphs, one insertText whose text contains \"\\n\" between paragraphs also works, in one operation. NOTHING was applied. The transaction is all or nothing, so the document is unchanged and no earlier operation in this transaction landed either. Re-inspect the document, then send every operation again."
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01CVMxhEj5JKSgjqRySxsP6L",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p><w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p>\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 5,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01CVMxhEj5JKSgjqRySxsP6L",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"1\",\"operations\":[{\"kind\":\"pasteBlocks\",\"afterBlockRef\":\"block:1\",\"blocksXml\":\"<w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p><w:p><w:r><w:t xml:space=\\\"preserve\\\"></w:t></w:r></w:p>\"}]}",
+              "result": "{\"revision\":\"2\",\"status\":\"submitted\",\"operations\":[\"pasteBlocks\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_01JxEXRw1pU7j7ZVqoc8qHsV",
+              "name": "word_document_inspect",
+              "input": "{\"kind\":\"read\",\"story\":\"body\"}"
+            }
+          ]
+        },
+        {
+          "round": 6,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_01JxEXRw1pU7j7ZVqoc8qHsV",
+              "name": "word_document_inspect",
+              "sent": "{\"kind\":\"read\",\"story\":\"body\"}",
+              "result": "{\"revision\":\"2\",\"story\":\"body\",\"blocks\":[{\"type\":\"paragraph\",\"ref\":\"block:1\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:2\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]},{\"ref\":\"run:3\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[{\"ref\":\"object:3:0\",\"editRef\":\"object:3:0\",\"type\":\"chart\",\"label\":\"Revenue\"}]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:29\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:30\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]},{\"type\":\"paragraph\",\"ref\":\"block:31\",\"editable\":true,\"story\":\"body\",\"text\":\"\",\"textRange\":{\"start\":0,\"end\":0,\"total\":0},\"runs\":[{\"ref\":\"run:32\",\"editable\":true,\"paragraphStart\":0,\"paragraphEnd\":0,\"wireLength\":0,\"text\":\"\",\"formatting\":{\"font\":\"Aptos\",\"fontHAnsi\":\"Aptos\",\"size\":14.666666666666666},\"components\":[]}],\"bookmarks\":[]}],\"truncated\":false}"
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "assistant",
+          "text": "",
+          "calls": [
+            {
+              "id": "toolu_019LGdbtYYYRpAqLDsJbnQJk",
+              "name": "word_document_edit",
+              "input": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:30\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:32\",\"mathText\":\"x = (-b ± √(b^2-4ac))/(2a)\"}]}"
+            }
+          ]
+        },
+        {
+          "round": 7,
+          "role": "tool_results",
+          "results": [
+            {
+              "id": "toolu_019LGdbtYYYRpAqLDsJbnQJk",
+              "name": "word_document_edit",
+              "sent": "{\"revision\":\"2\",\"operations\":[{\"kind\":\"insertShape\",\"runRef\":\"run:30\",\"preset\":\"textBox\",\"text\":\"Draft — internal only\"},{\"kind\":\"insertMath\",\"runRef\":\"run:32\",\"mathText\":\"x = (-b ± √(b^2-4ac))/(2a)\"}]}",
+              "result": "{\"revision\":\"4\",\"status\":\"submitted\",\"operations\":[\"insertShape\",\"insertMath\"],\"connection\":\"local\"}"
+            }
+          ]
+        },
+        {
+          "round": 8,
+          "role": "assistant",
+          "text": "Added the Revenue column chart, a \"Draft — internal only\" text box, and the quadratic formula as a display equation, each in its own paragraph.",
+          "calls": []
+        }
+      ]
+    }
+  ]
+}

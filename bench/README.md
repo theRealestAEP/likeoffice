@@ -61,6 +61,14 @@ The filler fixture is authored in-process from
   validity. Each API call also records `tools`: the tool names the model asked
   for that round, in order. A slow run is only diagnosable if that sequence
   survives in the JSON.
+- The same file holds `transcript`: the whole conversation, round by round —
+  the first user message, what the model said, every tool call with the input
+  the tool actually ran (the harness injects `suggest`, so this is not always
+  what the model wrote), and every result or error it got back. Tool names
+  alone cannot tell you why a run inserted a second chart; the inputs and the
+  results can. Values longer than 20,000 characters are clipped with a note
+  giving the length. This is what made the duplicate-chart section below
+  possible.
 - `history.jsonl`: one line per task per run (`ts`, `task`, `model`, `ms`,
   `rounds`, tokens, `pass`) for trend tracking.
 
@@ -253,9 +261,13 @@ was never opaque: after one `insertChart` a `kind: "read"` returns
 
 and `kind: "overview"` reports `"objectCounts": { "chart": 1 }`. The arm B run
 that failed with 2 chart parts had already called `read` twice. It could see
-the chart it had made, name it, and address it, and it inserted a second one
-anyway. Object opacity in the projection is real, but it is not what duplicates
-the chart here.
+the chart it had made, name it, and address it. Object opacity in the
+projection is real, but it is not what duplicates the chart here.
+
+That much holds. The sentence this paragraph originally ended on — "and it
+inserted a second one anyway" — does not: the model deletes the first chart
+before inserting the replacement, and the duplicate is a package part the
+delete failed to release. See "The duplicate chart part" below.
 
 Spelling the object out in text mode is still the right projection contract:
 `￼` names neither what the object is nor how to reach it. It needs a task that
@@ -263,6 +275,119 @@ can see it. Either give `object-insert` a fixture that already holds an object,
 so the change reaches the `<document>` tag of every request, or add a task
 whose ask forces a re-projection. Until then the one-line change stays
 unmerged, with these numbers as the record of why.
+
+### The duplicate chart part: found, and it was never the model (2026-08-12)
+
+`object-insert` finished with 2 chart parts about once every 24 runs. The two
+sections above blamed the model twice — first on projection opacity, then, when
+that was disproved, on the model inserting a second chart while able to see the
+first. Both were wrong. **The model only ever created one chart the document
+kept. The engine left the deleted chart's part in the package.**
+
+The harness now records the whole transcript, so a failing run can be read
+instead of guessed at. Two failing runs out of 48 were captured, and their
+traces are the same trace:
+
+```
+R1  inspect read                    -> revision 0, one empty paragraph
+R2  edit [insertChart @run:2]       -> OK, revision 1        <- chart1.xml
+R3  inspect read                    -> revision 1
+R4  edit [splitParagraph @run:3]    -> ERROR, could not apply
+R5  edit [insertText @run:3]        -> ERROR, could not apply
+R6  project                         -> text is the single atom "￼"
+R7  patch                           -> ERROR, line 1 column 1 is not editable
+R8  edit [insertShape @run:3]       -> ERROR, could not apply
+R9  edit [removeDrawing, insertText]-> OK, revision 4        <- chart deleted
+R10 inspect read                    -> revision 4
+R11 edit [insertChart, insertShape, insertMath] -> OK, revision 7  <- chart2.xml
+```
+
+The model put the chart in the document's only paragraph, then could not create
+the paragraphs it needed for the text box and the equation, because that
+paragraph now held an object. So it backed out: **`removeDrawing`**, rebuild the
+paragraph structure, then insert all three objects into paragraphs of their own.
+That is good agent behaviour, and `document.xml` ends with exactly one chart.
+The saved package ends with two chart parts, and the assertion counts parts.
+
+**The mechanism, with a probe.** `removeDrawingRun`
+(`packages/core/src/edit/editor.ts`) splices the `w:drawing` out of the XML tree
+and touches nothing else. A chart is five artifacts, and the other four survive.
+No model in the loop:
+
+| After | `word/charts/*` parts | `<c:chart>` in document.xml |
+| --- | --- | --- |
+| `insertChart` | `chart1.xml` | 1 |
+| `removeDrawing` | `chart1.xml` | 0 |
+| `insertChart` again | `chart1.xml`, `chart2.xml` | 1 |
+
+The document rel in `word/_rels/document.xml.rels`, both `[Content_Types].xml`
+overrides, `word/charts/_rels/chart1.xml.rels`, and the embedded workbook
+`word/embeddings/Microsoft_Excel_Worksheet1.xlsx` all leak with the part.
+
+Two candidates were probed and cleared first, so neither is the cause: a
+replayed identical `insertChart` against the stale revision the model observed
+is rejected, because the anchor paragraph's fingerprint changed; and a
+transaction that throws after its `insertChart` leaves **no** orphan part, so
+the rollback really is clean, package included.
+
+**The fix, in the engine.** `DocxDocument.buildPackageFiles` now leaves out
+chart parts that the document body no longer references
+(`dropOrphanChartParts`, `packages/core/src/docx.ts`). Relationship ids are
+scoped to the part owning the rels file, so reading the body is a complete
+check; headers, footers, and notes carry their own rels and are untouched.
+
+The release happens at save time rather than when the drawing goes, because
+`EditHistory` restores a deleted drawing's XML — `r:id` and all — from a
+snapshot that models package parts but models no relationship state. Dropping
+the relationship early would make undo produce a chart pointing at nothing. The
+live tree keeps everything, only the written bytes lose the orphans, and the
+existing `saveJournal` restores the two trees the pass touches so a save stays
+byte-neutral. `packages/core/test/edit.test.ts` covers insert/delete/insert and
+the plain insert that must keep its part.
+
+**No model A/B was owed, and one would have measured nothing.** The change is
+not a tool-surface change: no schema, no prompt, and no tool result differs, so
+the two arms send byte-identical requests on every task, on every round, by
+construction. It runs inside `save()`, after the model loop has already ended.
+This is the third time this file has had to record that an `object-insert` A/B
+would compare two arms that cannot differ.
+
+So the arms were compared where they *can* differ — in the saved bytes, with no
+model in the loop. `parity-save.mjs` saves five documents through the engine
+build without the change and the build with it, and prints a digest of each:
+
+| Saved document | without the fix | with the fix |
+| --- | --- | --- |
+| blank | `cce0ef59d79dd95f` | `cce0ef59d79dd95f` |
+| filler (the `rewrite` fixture) | `730494ed8a003b06` | `730494ed8a003b06` |
+| footer-page fixture | `14730362110c26c4` | `14730362110c26c4` |
+| chart inserted and kept | `195ae1550d4a4635` | `195ae1550d4a4635` |
+| chart inserted and deleted | `3c9d8c8251856198` | **`cce0ef59d79dd95f`** |
+
+Four of the five are byte-identical, so `rewrite` and every other text task are
+untouched by construction rather than by measurement. The fifth is the bug, and
+with the fix it saves to the same bytes as the blank document it started from:
+deleting the chart now really does undo inserting it.
+
+The model-in-the-loop runs agree, for what a noisy sample is worth:
+
+| | completed runs | 2-chart-part failures | rounds median (range) |
+| --- | --- | --- | --- |
+| before | 48 | **2** | 3 (3-13) |
+| after | 44 | **0** | 3 (3-13) |
+
+The post-fix batch was 48 invocations; 4 aborted mid-run on an API 400
+(`credit balance is too low`) and are excluded rather than counted as passes.
+The digest table, not these counts, is what proves the fix — at 1 failure in 24,
+44 clean runs are consistent with the corruption being gone and unlikely
+otherwise, but they could not settle it alone.
+
+**What is still true and still unfixed.** Rounds R4-R8 of that trace are a real
+usability problem: a chart inserted into a document's only paragraph blocks
+every way the model has of adding a sibling paragraph, and the model needs five
+failed calls to discover it. Fixing the leak stops the corruption; it does not
+make that run fast. The opaque `￼` at R6 is the same atom the section above
+measured and left unshipped.
 
 ## Notes
 
