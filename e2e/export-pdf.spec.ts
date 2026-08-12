@@ -48,10 +48,17 @@ async function exportPdf(app: ElectronApplication, pdfPath: string): Promise<str
 }
 
 async function closeApp(app: ElectronApplication): Promise<void> {
-  await app.evaluate(({ BrowserWindow }) => {
-    for (const w of BrowserWindow.getAllWindows()) w.destroy();
-  });
-  await app.close();
+  // Destroy rather than close: the document is dirty, and closing it would
+  // block on the native save dialog. Destroying the LAST window makes the app
+  // quit, which kills this very evaluate's reply — the process is gone before
+  // the promise resolves. That is the intended outcome, so neither call's
+  // rejection means anything about the test.
+  await app
+    .evaluate(({ BrowserWindow }) => {
+      for (const w of BrowserWindow.getAllWindows()) w.destroy();
+    })
+    .catch(() => {});
+  await app.close().catch(() => {});
 }
 
 test("export the document as a PDF", async () => {
