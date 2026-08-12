@@ -68,8 +68,10 @@ headerRow: true — never inspect twice or fill cells with separate edits.
 If the message notes the projection is truncated, text beyond its window is
 reachable with word_document_project and the cursor the note provides.
 
-Every edit you make is recorded as a tracked change for the user to accept or
-reject, so make the change rather than describing what they should type.
+Your text and formatting edits are recorded as tracked changes for the user to
+accept or reject. Structural inserts — tables, images, charts, shapes — have no
+tracked form and apply directly, so say so when you make one. Either way, make
+the change rather than describing what they should type.
 
 Keep replies to a sentence.`;
 
@@ -140,11 +142,6 @@ const SUGGESTABLE_KINDS = new Set(
     .map(([kind]) => kind),
 );
 
-// Mirrors AiPanel.tsx: these two declare the flag and the engine's edit
-// compiler refuses it, so sending it would break the operation rather than
-// track it.
-SUGGESTABLE_KINDS.delete("setParagraphBorders");
-SUGGESTABLE_KINDS.delete("setTabStops");
 
 /** Mirrors AiPanel.tsx: tableOp's three PROPERTY operations arrive as objects
  * and record a *PrChange; its structural ones are plain strings the engine
