@@ -43,14 +43,18 @@ test("the shortcuts sheet lists both the menu's keys and the editor's own", asyn
     await expect(win.locator('[data-dxw-help-shortcut="Clear formatting"] kbd')).toHaveText("⌘\\");
 
     // The menu's keys carry its own labels and grouping, formatted the way the
-    // engine's rows are, so the two halves read as one sheet. Nested submenus
-    // are walked too: Format > Styles > Heading 1 is ⌥⌘1.
-    await expect(win.locator('[data-dxw-help-shortcut="Save As…"] kbd')).toHaveText("⇧⌘S");
-    await expect(win.locator('[data-dxw-help-shortcut="Print…"] kbd')).toHaveText("⌘P");
+    // engine's rows are, so the two halves read as one sheet.
+    //
+    // Anchor on keys the MENU OWNS ALONE. The sheet drops a menu row whose
+    // combo the editor's own table already prints — the menu binds ⌘B and the
+    // headings on purpose, so those rows (and the whole "Format menu" section
+    // with them) belong to the editor's half. The engine's own test owns that
+    // assertion; the nested-submenu walk is pinned in menu-shortcuts-unit.
     await expect(
-      win.locator("section", { has: win.locator("h3", { hasText: "Format menu" }) })
-        .locator('[data-dxw-help-shortcut="Heading 1"] kbd'),
-    ).toHaveText("⌥⌘1");
+      win.locator("section", { has: win.locator("h3", { hasText: "File menu" }) })
+        .locator('[data-dxw-help-shortcut="Save As…"] kbd'),
+    ).toHaveText("⇧⌘S");
+    await expect(win.locator('[data-dxw-help-shortcut="Print…"] kbd')).toHaveText("⌘P");
   } finally {
     // Destroy the windows first: a graceful quit with the sheet still open
     // takes ~35s and leaves an orphan when the body throws. See review-tab.

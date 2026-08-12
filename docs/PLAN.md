@@ -2,6 +2,8 @@
 
 Read [current-state.md](current-state.md) first. It records what the
 foundation already does and where the real gaps are.
+[known-issues.md](known-issues.md) records the problems that are understood
+and deliberately not fixed here, so nobody investigates them twice.
 
 ## Vision
 
