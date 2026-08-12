@@ -259,6 +259,8 @@
   color: var(--app-muted);
 }
 
+/* The library runs to a dozen entries with a description apiece, so the menu
+ * scrolls rather than growing past the panel. */
 .ai-profile-menu {
   position: absolute;
   top: calc(100% - 2px);
@@ -270,11 +272,14 @@
   border-radius: 8px;
   box-shadow: var(--app-shadow);
   padding: 4px;
+  max-height: min(64vh, 460px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .ai-profile-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 4px;
   width: 100%;
   border: none;
@@ -300,6 +305,21 @@
   flex: none;
   width: 14px;
   text-align: center;
+}
+
+.ai-profile-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ai-profile-note {
+  display: block;
+  padding-left: 20px;
+  margin-top: 1px;
+  font: 11px system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--app-muted);
 }
 
 .ai-profile-menu-rule {
@@ -699,7 +719,7 @@
 /* ---- AI profiles dialog ---- */
 
 .dialog-wide {
-  width: 690px;
+  width: 748px;
 }
 
 .dialog-lede {
@@ -711,18 +731,23 @@
 
 .profiles-layout {
   display: grid;
-  grid-template-columns: 244px 1fr;
+  grid-template-columns: 272px 1fr;
   gap: 16px;
   align-items: start;
 }
 
-.profiles-list {
+.profiles-list-pane {
   border: 1px solid var(--app-border);
   border-radius: 8px;
-  padding: 4px;
   background: var(--app-bg);
-  max-height: 340px;
+  overflow: hidden;
+}
+
+.profiles-list {
+  padding: 4px;
+  max-height: 336px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .profiles-row {
@@ -777,8 +802,29 @@
   flex-direction: column;
   align-items: flex-start;
   border-top: 1px solid var(--app-border);
-  margin-top: 4px;
-  padding-top: 4px;
+  padding: 4px 8px 6px;
+}
+
+/* A built-in's own line about what it does, and — where it applies a named
+ * authority's method — the note on the source. Both are read-only: only the
+ * app writes them. */
+.profiles-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 10px 0 12px;
+  color: var(--app-muted);
+}
+
+.profiles-description {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.profiles-disclaimer {
+  font-size: 11px;
+  line-height: 1.45;
+  font-style: italic;
 }
 
 .profiles-editor {

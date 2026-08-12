@@ -99,7 +99,7 @@ export function AiProfileHeader({ profiles }: { profiles: ProfilesHandle }) {
           <ProfileMenuItem
             active={profiles.state.activeId === ""}
             profile={null}
-            hint="The assistant's default voice."
+            description="The assistant's default voice."
             onClick={() => void choose("")}
           />
           {profiles.state.profiles.map((p) => (
@@ -107,7 +107,7 @@ export function AiProfileHeader({ profiles }: { profiles: ProfilesHandle }) {
               key={p.id}
               active={p.id === profiles.state.activeId}
               profile={p}
-              hint={p.instructions}
+              description={p.description}
               onClick={() => void choose(p.id)}
             />
           ))}
@@ -133,15 +133,17 @@ export function AiProfileHeader({ profiles }: { profiles: ProfilesHandle }) {
   );
 }
 
+/** Thirteen built-ins named for the method they apply, so the menu carries
+ * each one's description under its name rather than hiding it in a tooltip. */
 function ProfileMenuItem({
   active,
   profile,
-  hint,
+  description,
   onClick,
 }: {
   active: boolean;
   profile: Profile | null;
-  hint: string;
+  description: string;
   onClick: () => void;
 }) {
   return (
@@ -149,13 +151,16 @@ function ProfileMenuItem({
       className={`ai-profile-item${active ? " active" : ""}`}
       role="menuitemradio"
       aria-checked={active}
-      title={hint}
+      title={profile?.instructions || description}
       onClick={onClick}
     >
       <span className="ai-profile-check" aria-hidden="true">
         {active ? "✓" : ""}
       </span>
-      <ProfileLabel profile={profile} />
+      <span className="ai-profile-item-body">
+        <ProfileLabel profile={profile} />
+        {description !== "" && <span className="ai-profile-note">{description}</span>}
+      </span>
     </button>
   );
 }
@@ -273,20 +278,25 @@ function ProfilesDialog({
         </p>
 
         <div className="profiles-layout">
-          <div className="profiles-list" data-testid="profiles-list">
-            {list.map((p) => (
-              <button
-                key={p.id}
-                className={`profiles-row${p.id === selectedId ? " selected" : ""}`}
-                onClick={() => void select(p.id)}
-              >
-                <span className="profiles-row-emoji" aria-hidden="true">
-                  {p.emoji}
-                </span>
-                <span className="profiles-row-name">{p.name}</span>
-                {p.builtIn && <span className="profiles-tag">Built-in</span>}
-              </button>
-            ))}
+          {/* The library is long enough to scroll, so the actions sit outside
+              the scroller and stay reachable from any row. */}
+          <div className="profiles-list-pane">
+            <div className="profiles-list" data-testid="profiles-list">
+              {list.map((p) => (
+                <button
+                  key={p.id}
+                  className={`profiles-row${p.id === selectedId ? " selected" : ""}`}
+                  title={p.name}
+                  onClick={() => void select(p.id)}
+                >
+                  <span className="profiles-row-emoji" aria-hidden="true">
+                    {p.emoji}
+                  </span>
+                  <span className="profiles-row-name">{p.name}</span>
+                  {p.builtIn && <span className="profiles-tag">Built-in</span>}
+                </button>
+              ))}
+            </div>
             <div className="profiles-list-actions">
               <button
                 className="btn-link"
@@ -339,6 +349,21 @@ function ProfilesDialog({
                     />
                   </div>
                 </div>
+
+                {(selected.description !== "" || selected.disclaimer !== "") && (
+                  <div className="profiles-notes">
+                    {selected.description !== "" && (
+                      <span className="profiles-description" data-testid="profile-description">
+                        {selected.description}
+                      </span>
+                    )}
+                    {selected.disclaimer !== "" && (
+                      <span className="profiles-disclaimer" data-testid="profile-disclaimer">
+                        {selected.disclaimer}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <label className="field-label">Instructions</label>
                 <textarea

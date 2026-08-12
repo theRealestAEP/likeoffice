@@ -24,7 +24,24 @@ async function seedKey(userData: string): Promise<void> {
   );
 }
 
-test("the profile picker ships the built-ins and remembers the choice", async () => {
+/** Every built-in the app ships, in menu order. */
+const BUILT_INS = [
+  "Critical reviewer",
+  "Copyedit only",
+  "Garner legal review",
+  "Plain-language public writing",
+  "Strunk & White concision",
+  "Zinsser nonfiction",
+  "Chicago editorial pass",
+  "AP style news",
+  "Minto pyramid brief",
+  "IMRaD academic",
+  "Technical documentation",
+  "Grant proposal",
+  "Narrative craft",
+];
+
+test("the profile picker ships the built-in library and remembers the choice", async () => {
   const userData = await mkdtemp(path.join(tmpdir(), "likeoffice-userdata-"));
 
   const first = await launch(userData);
@@ -33,10 +50,13 @@ test("the profile picker ships the built-ins and remembers the choice", async ()
 
   await button.click();
   const menu = first.win.getByTestId("ai-profile-menu");
-  await expect(menu).toContainText("Critical reviewer");
-  await expect(menu).toContainText("Plain-language editor");
-  await expect(menu).toContainText("Academic tightening");
-  await expect(menu).toContainText("Narrative editor");
+  // "No profile" plus the library.
+  await expect(menu.getByRole("menuitemradio")).toHaveCount(BUILT_INS.length + 1);
+  for (const name of BUILT_INS) await expect(menu).toContainText(name);
+
+  // The picker line stays one description per row; the disclaimer lives in
+  // the manage dialog, where the profile itself is on show.
+  await expect(menu).toContainText("Plain-English legal editing");
 
   await menu.getByRole("menuitemradio", { name: "Critical reviewer" }).click();
   await expect(button).toContainText("Critical reviewer");
@@ -56,12 +76,27 @@ test("profiles round-trip through create, edit and delete", async () => {
   await win.getByTestId("ai-profile-manage").click();
   const dialog = win.getByTestId("profiles-dialog");
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByTestId("profiles-list").locator(".profiles-row")).toHaveCount(4);
+  const rows = dialog.getByTestId("profiles-list").locator(".profiles-row");
+  await expect(rows).toHaveCount(BUILT_INS.length);
 
   // A built-in is read-only; the editor says so.
   await dialog.locator(".profiles-row", { hasText: "Critical reviewer" }).click();
   await expect(dialog.getByTestId("profile-instructions")).toHaveAttribute("readonly", "");
   await expect(dialog).toContainText("Duplicate it to make changes.");
+
+  // A profile named for a person shows the method it applies and the
+  // disclaimer, and the actions stay reachable below the scrolling list.
+  await dialog.locator(".profiles-row", { hasText: "Garner legal review" }).click();
+  await expect(dialog.getByTestId("profile-description")).toContainText(
+    "Plain-English legal editing",
+  );
+  await expect(dialog.getByTestId("profile-disclaimer")).toContainText(
+    "LikeOffice is not affiliated with or endorsed by Bryan Garner.",
+  );
+  await expect(dialog.getByTestId("profile-instructions")).toHaveValue(
+    /Legal Writing in Plain English/,
+  );
+  await expect(dialog.getByTestId("profiles-new")).toBeVisible();
 
   await dialog.getByTestId("profiles-new").click();
   await dialog.getByTestId("profile-name").fill("Test voice");
@@ -82,28 +117,30 @@ test("profiles round-trip through create, edit and delete", async () => {
   // A duplicate is editable, and a delete removes only the one row.
   await dialog.getByTestId("profile-duplicate").click();
   await expect(dialog.getByTestId("profile-name")).toHaveValue("Test voice copy");
-  await expect(dialog.getByTestId("profiles-list").locator(".profiles-row")).toHaveCount(6);
+  await expect(rows).toHaveCount(BUILT_INS.length + 2);
   await dialog.getByTestId("profile-delete").click();
-  await expect(dialog.getByTestId("profiles-list").locator(".profiles-row")).toHaveCount(5);
+  await expect(rows).toHaveCount(BUILT_INS.length + 1);
 
   await dialog.locator(".profiles-row", { hasText: "Test voice" }).click();
   await dialog.getByTestId("profile-delete").click();
-  await expect(dialog.getByTestId("profiles-list").locator(".profiles-row")).toHaveCount(4);
+  await expect(rows).toHaveCount(BUILT_INS.length);
   await win.getByRole("button", { name: "Done" }).click();
   await expect(win.getByTestId("ai-profile-button")).toContainText("No profile");
 
   // Deleting a built-in hides it; restoring brings it back.
   await win.getByTestId("ai-profile-button").click();
   await win.getByTestId("ai-profile-manage").click();
-  await dialog.locator(".profiles-row", { hasText: "Academic tightening" }).click();
+  await dialog.locator(".profiles-row", { hasText: "IMRaD academic" }).click();
   await dialog.getByTestId("profile-delete").click();
-  await expect(dialog.getByTestId("profiles-list").locator(".profiles-row")).toHaveCount(3);
+  await expect(rows).toHaveCount(BUILT_INS.length - 1);
   await dialog.getByRole("button", { name: "Restore built-ins" }).click();
-  await expect(dialog.getByTestId("profiles-list").locator(".profiles-row")).toHaveCount(4);
+  await expect(rows).toHaveCount(BUILT_INS.length);
 
   await app.close();
 });
 
+// The longest, most opinionated built-in: if the contract survives this one
+// intact, it survives any of them.
 test("the active profile reaches the model on top of the base contract", async () => {
   const dir = await mkdtemp(path.join(tmpdir(), "likeoffice-"));
   const userData = await mkdtemp(path.join(tmpdir(), "likeoffice-userdata-"));
@@ -119,7 +156,7 @@ test("the active profile reaches the model on top of the base contract", async (
   await win.getByTestId("ai-profile-button").click();
   await win
     .getByTestId("ai-profile-menu")
-    .getByRole("menuitemradio", { name: "Critical reviewer" })
+    .getByRole("menuitemradio", { name: "Garner legal review" })
     .click();
 
   await win.getByTestId("ai-input").fill("Tighten the opening");
@@ -136,9 +173,9 @@ test("the active profile reaches the model on top of the base contract", async (
   expect(system).toContain("word_document_patch");
   // The profile is appended as its own delimited, content-only section.
   expect(system).toContain(
-    'The user has selected the "Critical reviewer" profile. Apply its guidance to the CONTENT you write, without changing how you use the tools:',
+    'The user has selected the "Garner legal review" profile. Apply its guidance to the CONTENT you write, without changing how you use the tools:',
   );
-  expect(system).toContain("demanding reviewer");
+  expect(system).toContain("Legal Writing in Plain English");
   expect(system.indexOf("Keep replies to a sentence.")).toBeLessThan(
     system.indexOf("The user has selected"),
   );

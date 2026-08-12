@@ -66,3 +66,91 @@ test("a live model's formatting change is recorded as a tracked revision", async
   });
   await app.close();
 });
+
+/** The words of the body, with every tag stripped. */
+function bodyWords(xml: string): string[] {
+  return xml
+    .replace(/<w:delText[^>]*>[\s\S]*?<\/w:delText>/g, "")
+    .replace(/<[^>]+>/g, "")
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w !== "");
+}
+
+/**
+ * A profile is content-only by construction, but the strongest one in the
+ * library is the one worth proving on a live model: Garner's method tells it
+ * to rewrite hard, and it must still reach the document through the one tool
+ * the contract names, not through prose in the transcript.
+ */
+test("the Garner profile tightens a wordy paragraph through word_document_patch", async () => {
+  test.setTimeout(300000);
+  const dir = await mkdtemp(path.join(tmpdir(), "likeoffice-"));
+  const userData = await mkdtemp(path.join(tmpdir(), "likeoffice-userdata-"));
+  const docPath = path.join(dir, "live-garner.docx");
+  await copyFile(path.join(APP_DIR, "resources/blank.docx"), docPath);
+  await writeFile(
+    path.join(userData, "settings.json"),
+    JSON.stringify({ provider: "anthropic-api", model: "claude-opus-5" }),
+  );
+
+  const app = await electron.launch({
+    args: [APP_DIR, docPath],
+    env: { ...process.env, LIKEOFFICE_USER_DATA: userData },
+  });
+  const win = await app.firstWindow();
+  await expect(win.locator(".dxw-page").first()).toBeAttached({ timeout: 30000 });
+
+  const wordy =
+    "Pursuant to the provisions of Section 4.2 hereof, and notwithstanding " +
+    "anything to the contrary contained herein, it should be noted that the " +
+    "Contractor shall be required to make a determination as to whether or not " +
+    "the aforementioned deliverables are in compliance with the specifications " +
+    "set forth in Exhibit A, and in the event that a determination is made that " +
+    "such deliverables are not in compliance, the Contractor shall be obligated " +
+    "to provide notification to the Client within a period of ten (10) days.";
+  const before = wordy.split(/\s+/).length;
+
+  await win.locator(".dxw-page").first().click();
+  await win.keyboard.type(wordy);
+  await expect(win.locator(".dxw-page").first()).toContainText("Exhibit A");
+
+  await win.getByTestId("ai-toggle").click();
+  await win.getByTestId("ai-profile-button").click();
+  await win
+    .getByTestId("ai-profile-menu")
+    .getByRole("menuitemradio", { name: "Garner legal review" })
+    .click();
+
+  await win.getByTestId("ai-input").fill("Tighten this paragraph.");
+  await win.getByTestId("ai-input").press("Enter");
+  await expect(win.getByTestId("ai-suggested")).toContainText("suggested change", {
+    timeout: 240000,
+  });
+
+  // The tool contract held: the rewrite came through the text patch tool.
+  await expect(win.getByTestId("ai-transcript")).toContainText("word_document_patch");
+
+  await win.getByRole("button", { name: "Accept all" }).click();
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send("menu", "save");
+  });
+  await expect(win).not.toHaveTitle(/•/, { timeout: 15000 });
+
+  const xml = execFileSync("unzip", ["-p", docPath, "word/document.xml"], {
+    encoding: "utf8",
+    maxBuffer: 32 * 1024 * 1024,
+  });
+  const after = bodyWords(xml);
+  console.log(`BEFORE (${before} words): ${wordy}`);
+  console.log(`AFTER (${after.length} words): ${after.join(" ")}`);
+  // Garner's method is a cutting method: the paragraph comes back materially
+  // shorter, and Exhibit A survives as the term of art it is.
+  expect(after.length).toBeLessThan(before * 0.8);
+  expect(after.join(" ")).toContain("Exhibit A");
+
+  await app.evaluate(({ BrowserWindow }) => {
+    for (const w of BrowserWindow.getAllWindows()) w.destroy();
+  });
+  await app.close();
+});

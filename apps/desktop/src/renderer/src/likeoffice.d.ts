@@ -25,6 +25,11 @@ interface Profile {
   id: string;
   name: string;
   emoji: string;
+  /** One line for the picker. */
+  description: string;
+  /** The manage dialog's note on the source a built-in applies, and on the
+   * app's lack of affiliation with it. "" where it names nobody. */
+  disclaimer: string;
   instructions: string;
   createdAt: string;
   updatedAt: string;

@@ -25,6 +25,8 @@ export interface Profile {
   id: string;
   name: string;
   emoji: string;
+  description: string;
+  disclaimer: string;
   instructions: string;
   createdAt: string;
   updatedAt: string;
