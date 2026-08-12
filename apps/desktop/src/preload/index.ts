@@ -21,6 +21,21 @@ export interface SettingsView {
 
 export type SpellMenuAction = { type: "replace"; text: string } | { type: "add-word" };
 
+export interface Profile {
+  id: string;
+  name: string;
+  emoji: string;
+  instructions: string;
+  createdAt: string;
+  updatedAt: string;
+  builtIn: boolean;
+}
+
+export interface ProfilesState {
+  profiles: Profile[];
+  activeId: string;
+}
+
 const api = {
   getSettings: (): Promise<SettingsView> => ipcRenderer.invoke("settings:get"),
   setSettings: (
@@ -30,6 +45,31 @@ const api = {
     spellLanguage: string,
   ): Promise<SettingsView> =>
     ipcRenderer.invoke("settings:set", apiKey, model, provider, spellLanguage),
+  getProfiles: (): Promise<ProfilesState> => ipcRenderer.invoke("profiles:list"),
+  createProfile: (name: string, emoji: string, instructions: string): Promise<ProfilesState> =>
+    ipcRenderer.invoke("profiles:create", name, emoji, instructions),
+  updateProfile: (
+    id: string,
+    name: string,
+    emoji: string,
+    instructions: string,
+  ): Promise<ProfilesState> =>
+    ipcRenderer.invoke("profiles:update", id, name, emoji, instructions),
+  deleteProfile: (id: string): Promise<ProfilesState> =>
+    ipcRenderer.invoke("profiles:delete", id),
+  duplicateProfile: (id: string): Promise<ProfilesState> =>
+    ipcRenderer.invoke("profiles:duplicate", id),
+  setActiveProfile: (id: string): Promise<ProfilesState> =>
+    ipcRenderer.invoke("profiles:set-active", id),
+  restoreBuiltInProfiles: (): Promise<ProfilesState> =>
+    ipcRenderer.invoke("profiles:restore-built-ins"),
+  onProfilesChanged: (cb: () => void): (() => void) => {
+    const listener = () => cb();
+    ipcRenderer.on("profiles:changed", listener);
+    return () => {
+      ipcRenderer.removeListener("profiles:changed", listener);
+    };
+  },
   spellCheck: (words: string[]): Promise<string[]> => ipcRenderer.invoke("spell:check", words),
   spellSuggest: (word: string): Promise<string[]> => ipcRenderer.invoke("spell:suggest", word),
   spellAddWord: (word: string): Promise<void> => ipcRenderer.invoke("spell:add-word", word),

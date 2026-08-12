@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { AgentDocument } from "@wordinweb/agent";
 import type { DocxViewApi } from "wordinweb";
+import { AiProfileHeader, composeSystemPrompt, useProfiles } from "./AiProfiles";
 
 const MAX_ROUNDS = 30;
 
@@ -170,6 +171,9 @@ export function AiPanel({
   // are one per user message and otherwise stateless.
   const agentLog = useRef<{ role: "user" | "assistant"; text: string }[]>([]);
 
+  // The active AI profile, appended to SYSTEM_PROMPT below for every provider.
+  const profiles = useProfiles();
+
   const subscription = settings.provider !== "anthropic-api";
   const ready = subscription || settings.hasKey;
 
@@ -278,7 +282,7 @@ export function AiPanel({
     try {
       const reply = await window.likeoffice.runAgent({
         sessionId,
-        system: SYSTEM_PROMPT,
+        system: composeSystemPrompt(SYSTEM_PROMPT, profiles.active),
         prompt,
         tools: definitions,
       });
@@ -317,7 +321,7 @@ export function AiPanel({
         setStreamText(null);
         const reply = await window.likeoffice.sendModelMessage({
           requestId: activeRequest.current,
-          system: SYSTEM_PROMPT,
+          system: composeSystemPrompt(SYSTEM_PROMPT, profiles.active),
           messages: history.current,
           tools: definitions,
         });
@@ -373,6 +377,7 @@ export function AiPanel({
 
   return (
     <div className="ai-panel">
+      <AiProfileHeader profiles={profiles} />
       <div
         className="ai-transcript"
         ref={scrollRef}

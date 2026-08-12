@@ -186,6 +186,133 @@
   color: var(--app-fg);
 }
 
+/* ---- AI profile picker: the panel's header strip ---- */
+
+.ai-header {
+  position: relative;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.ai-header-label {
+  font: 600 11px system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--app-muted);
+}
+
+.ai-profile-button {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  background: var(--app-surface);
+  color: var(--app-fg);
+  font: 600 12.5px system-ui, sans-serif;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+}
+
+.ai-profile-button:hover {
+  background: var(--app-hover);
+}
+
+.ai-profile-button:focus-visible {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 1px;
+}
+
+.ai-profile-button[aria-expanded="true"] {
+  border-color: var(--app-accent);
+  color: var(--app-accent);
+}
+
+.ai-profile-name {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Emoji glyph widths differ per icon, so the slot is fixed rather than
+ * leaning on a space between the icon and the name. */
+.ai-profile-emoji {
+  display: inline-block;
+  width: 17px;
+  margin-right: 3px;
+}
+
+.ai-profile-button svg {
+  width: 9px;
+  height: 9px;
+  flex: none;
+  color: var(--app-muted);
+}
+
+.ai-profile-menu {
+  position: absolute;
+  top: calc(100% - 2px);
+  left: 10px;
+  right: 10px;
+  z-index: 60;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  box-shadow: var(--app-shadow);
+  padding: 4px;
+}
+
+.ai-profile-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--app-fg);
+  font: 12.5px system-ui, sans-serif;
+  text-align: left;
+  padding: 5px 6px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.ai-profile-item:hover {
+  background: var(--app-hover);
+}
+
+.ai-profile-item.active {
+  color: var(--app-accent);
+  font-weight: 600;
+}
+
+.ai-profile-check {
+  flex: none;
+  width: 14px;
+  text-align: center;
+}
+
+.ai-profile-menu-rule {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--app-border);
+}
+
+.ai-profile-manage {
+  padding-left: 24px;
+  color: var(--app-muted);
+}
+
 .ai-transcript {
   flex: 1;
   min-height: 0;
@@ -564,6 +691,146 @@
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 8px;
   margin-top: 6px;
+}
+
+/* ---- AI profiles dialog ---- */
+
+.dialog-wide {
+  width: 690px;
+}
+
+.dialog-lede {
+  margin: -10px 0 16px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--app-muted);
+}
+
+.profiles-layout {
+  display: grid;
+  grid-template-columns: 244px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.profiles-list {
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  padding: 4px;
+  background: var(--app-bg);
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.profiles-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--app-fg);
+  font: 12.5px system-ui, sans-serif;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.profiles-row:hover {
+  background: var(--app-hover);
+}
+
+.profiles-row.selected {
+  background: var(--app-tab-active);
+  color: var(--app-accent);
+  font-weight: 600;
+}
+
+.profiles-row-emoji {
+  flex: none;
+  width: 16px;
+  text-align: center;
+}
+
+.profiles-row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profiles-tag {
+  flex: none;
+  font: 500 9.5px system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--app-muted);
+}
+
+.profiles-list-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border-top: 1px solid var(--app-border);
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.profiles-editor {
+  min-width: 0;
+}
+
+.profiles-name-row {
+  display: flex;
+  gap: 10px;
+}
+
+.profiles-name-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.profiles-emoji-input {
+  width: 58px;
+  text-align: center;
+}
+
+.profiles-instructions {
+  height: 190px;
+  resize: none;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.profiles-editor-foot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.profiles-count {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.profiles-empty {
+  color: var(--app-muted);
+  font-size: 12.5px;
+  padding: 24px 4px;
+}
+
+.profiles-autosave {
+  flex: 1;
+  margin: 0;
+}
+
+.field-input[readonly] {
+  background: var(--app-hover);
+  color: var(--app-muted);
 }

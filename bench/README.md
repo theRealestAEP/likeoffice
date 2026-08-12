@@ -57,3 +57,8 @@ The filler fixture is authored in-process from
   point is to track agent editing capability and speed over time.
 - Keep the mirrored constants (system prompt, `MAX_ROUNDS`, suggest
   injection, request shape) in sync with the app when it changes.
+- The app also ships AI profiles: named prompt presets the user can select,
+  appended to the system prompt as a content-only section (see
+  `apps/desktop/src/renderer/src/AiProfiles.tsx`). The bench runs on the base
+  prompt with no profile, so numbers stay comparable across runs. Add a
+  profile here only as a deliberate, separately tracked experiment.

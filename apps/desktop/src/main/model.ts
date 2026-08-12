@@ -87,6 +87,9 @@ function validateRequestShape(request: ModelRequest): string | null {
 
 ipcMain.handle("model:message", async (event, request: ModelRequest): Promise<ModelReply> => {
   if (process.env.LIKEOFFICE_FAKE_MODEL) {
+    // e2e seam: the last system prompt the panel composed, readable from a
+    // Playwright app.evaluate. Only the fake path records it.
+    (globalThis as { __likeofficeLastSystem?: string }).__likeofficeLastSystem = request.system;
     const shapeError = validateRequestShape(request);
     if (shapeError) return { error: `400 (fake): ${shapeError}` };
     return fakeReply(request.messages);

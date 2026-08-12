@@ -21,6 +21,22 @@ interface SettingsView {
 
 type SpellMenuAction = { type: "replace"; text: string } | { type: "add-word" };
 
+interface Profile {
+  id: string;
+  name: string;
+  emoji: string;
+  instructions: string;
+  createdAt: string;
+  updatedAt: string;
+  builtIn: boolean;
+}
+
+interface ProfilesState {
+  profiles: Profile[];
+  /** "" means no profile: the base system prompt alone. */
+  activeId: string;
+}
+
 interface CliStatus {
   installed: boolean;
   version?: string;
@@ -114,6 +130,19 @@ interface LikeOfficeBridge {
     provider: Provider,
     spellLanguage: string,
   ): Promise<SettingsView>;
+  getProfiles(): Promise<ProfilesState>;
+  createProfile(name: string, emoji: string, instructions: string): Promise<ProfilesState>;
+  updateProfile(
+    id: string,
+    name: string,
+    emoji: string,
+    instructions: string,
+  ): Promise<ProfilesState>;
+  deleteProfile(id: string): Promise<ProfilesState>;
+  duplicateProfile(id: string): Promise<ProfilesState>;
+  setActiveProfile(id: string): Promise<ProfilesState>;
+  restoreBuiltInProfiles(): Promise<ProfilesState>;
+  onProfilesChanged(cb: () => void): () => void;
   spellCheck(words: string[]): Promise<string[]>;
   spellSuggest(word: string): Promise<string[]>;
   spellAddWord(word: string): Promise<void>;
