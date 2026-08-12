@@ -8,7 +8,7 @@
  * become visible.
  */
 import { app } from "electron";
-import { access, readFile, writeFile } from "node:fs/promises";
+import { access, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const MAX_ENTRIES = 10;
@@ -33,8 +33,22 @@ async function prune(list: string[]): Promise<string[]> {
   return list.filter((_, i) => keep[i]);
 }
 
+/**
+ * Write to a temporary file and rename over the target, the same way the
+ * document and PDF writers do (main/index.ts).
+ *
+ * `writeFile` truncates before it writes, so anything reading the file in
+ * between sees zero bytes — and both readers here are `JSON.parse`, which
+ * answers a truncated read with "Unexpected end of JSON input" rather than an
+ * empty list. `rename` is atomic within a filesystem, so a reader sees either
+ * the old list or the new one and never a half-written file. It also means a
+ * crash mid-write cannot leave the MRU corrupt.
+ */
 async function persist(): Promise<void> {
-  await writeFile(recentFile(), JSON.stringify(entries, null, 2));
+  const target = recentFile();
+  const tmp = `${target}.tmp-${process.pid}`;
+  await writeFile(tmp, JSON.stringify(entries, null, 2));
+  await rename(tmp, target);
 }
 
 /** The list as the menu should show it. Synchronous: the menu builds from it. */
