@@ -24,17 +24,21 @@ async function seedKey(userData: string): Promise<void> {
   );
 }
 
-/** Every built-in the app ships, in menu order. */
+/** Every built-in the app lists out of the box, in menu order. */
 const BUILT_INS = [
   "Critical reviewer",
   "Copyedit only",
   "Garner legal review",
-  "Plain-language public writing",
   "Strunk & White concision",
+  "Minto pyramid brief",
+];
+
+/** The rest of the shipped library, off the picker until the user adds it. */
+const EXTRAS = [
+  "Plain-language public writing",
   "Zinsser nonfiction",
   "Chicago editorial pass",
   "AP style news",
-  "Minto pyramid brief",
   "IMRaD academic",
   "Technical documentation",
   "Grant proposal",
@@ -50,9 +54,10 @@ test("the profile picker ships the built-in library and remembers the choice", a
 
   await button.click();
   const menu = first.win.getByTestId("ai-profile-menu");
-  // "No profile" plus the library.
+  // "No profile" plus the five the app lists; the extras stay out of it.
   await expect(menu.getByRole("menuitemradio")).toHaveCount(BUILT_INS.length + 1);
   for (const name of BUILT_INS) await expect(menu).toContainText(name);
+  for (const name of EXTRAS) await expect(menu).not.toContainText(name);
 
   // The picker line stays one description per row; the disclaimer lives in
   // the manage dialog, where the profile itself is on show.
@@ -130,13 +135,65 @@ test("profiles round-trip through create, edit and delete", async () => {
   // Deleting a built-in hides it; restoring brings it back.
   await win.getByTestId("ai-profile-button").click();
   await win.getByTestId("ai-profile-manage").click();
-  await dialog.locator(".profiles-row", { hasText: "IMRaD academic" }).click();
+  await dialog.locator(".profiles-row", { hasText: "Minto pyramid brief" }).click();
   await dialog.getByTestId("profile-delete").click();
   await expect(rows).toHaveCount(BUILT_INS.length - 1);
   await dialog.getByRole("button", { name: "Restore built-ins" }).click();
   await expect(rows).toHaveCount(BUILT_INS.length);
 
   await app.close();
+});
+
+test("the library the picker leaves out is one click away, and stays whole", async () => {
+  const userData = await mkdtemp(path.join(tmpdir(), "likeoffice-userdata-"));
+  const { app, win } = await launch(userData);
+
+  await win.getByTestId("ai-profile-button").click();
+  await win.getByTestId("ai-profile-manage").click();
+  const dialog = win.getByTestId("profiles-dialog");
+  const rows = dialog.getByTestId("profiles-list").locator(".profiles-row");
+
+  // Every profile the app no longer lists is still shipped, under one button.
+  await dialog.getByTestId("profiles-add-more").click();
+  const library = dialog.getByTestId("profiles-extras");
+  for (const name of EXTRAS) await expect(library).toContainText(name);
+
+  // Adding one puts it on the list, selects it, and carries its own text —
+  // disclaimer included — into the editor.
+  await library.getByRole("button", { name: /Chicago editorial pass/ }).click();
+  await expect(rows).toHaveCount(BUILT_INS.length + 1);
+  await expect(dialog.getByTestId("profile-name")).toHaveValue("Chicago editorial pass");
+  await expect(dialog.getByTestId("profile-disclaimer")).toContainText(
+    "not affiliated with or endorsed by the University of Chicago Press",
+  );
+  await expect(dialog.getByTestId("profile-instructions")).toHaveValue(
+    /The Chicago Manual of Style publishes/,
+  );
+
+  await win.getByRole("button", { name: "Done" }).click();
+  await expect(win.getByTestId("ai-profile-button")).toContainText("Chicago editorial pass");
+  await win.getByTestId("ai-profile-button").click();
+  await expect(win.getByTestId("ai-profile-menu")).toContainText("Chicago editorial pass");
+
+  // The choice survives a relaunch, and deleting the profile only returns it
+  // to the library it came from.
+  await app.close();
+  const second = await launch(userData);
+  await expect(second.win.getByTestId("ai-profile-button")).toContainText(
+    "Chicago editorial pass",
+  );
+  await second.win.getByTestId("ai-profile-button").click();
+  await second.win.getByTestId("ai-profile-manage").click();
+  const dialog2 = second.win.getByTestId("profiles-dialog");
+  await dialog2.locator(".profiles-row", { hasText: "Chicago editorial pass" }).click();
+  await dialog2.getByTestId("profile-delete").click();
+  await expect(dialog2.getByTestId("profiles-list").locator(".profiles-row")).toHaveCount(
+    BUILT_INS.length,
+  );
+  await dialog2.getByTestId("profiles-add-more").click();
+  await expect(dialog2.getByTestId("profiles-extras")).toContainText("Chicago editorial pass");
+
+  await second.app.close();
 });
 
 // The longest, most opinionated built-in: if the contract survives this one

@@ -43,10 +43,20 @@ interface Profile {
   builtIn: boolean;
 }
 
+/** A profile the app ships but keeps off the picker until the user adds it. */
+interface ExtraProfile {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+}
+
 interface ProfilesState {
   profiles: Profile[];
   /** "" means no profile: the base system prompt alone. */
   activeId: string;
+  /** The shipped extras the user has not added yet. */
+  extras: ExtraProfile[];
 }
 
 interface CliStatus {
@@ -154,6 +164,7 @@ interface LikeOfficeBridge {
     emoji: string,
     instructions: string,
   ): Promise<ProfilesState>;
+  addExtraProfile(id: string): Promise<ProfilesState>;
   deleteProfile(id: string): Promise<ProfilesState>;
   duplicateProfile(id: string): Promise<ProfilesState>;
   setActiveProfile(id: string): Promise<ProfilesState>;

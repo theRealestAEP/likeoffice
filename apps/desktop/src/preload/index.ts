@@ -40,9 +40,17 @@ export interface Profile {
   builtIn: boolean;
 }
 
+export interface ExtraProfile {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+}
+
 export interface ProfilesState {
   profiles: Profile[];
   activeId: string;
+  extras: ExtraProfile[];
 }
 
 const api = {
@@ -64,6 +72,8 @@ const api = {
     instructions: string,
   ): Promise<ProfilesState> =>
     ipcRenderer.invoke("profiles:update", id, name, emoji, instructions),
+  addExtraProfile: (id: string): Promise<ProfilesState> =>
+    ipcRenderer.invoke("profiles:add-extra", id),
   deleteProfile: (id: string): Promise<ProfilesState> =>
     ipcRenderer.invoke("profiles:delete", id),
   duplicateProfile: (id: string): Promise<ProfilesState> =>

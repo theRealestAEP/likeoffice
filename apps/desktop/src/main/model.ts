@@ -29,8 +29,14 @@ function firstAsk(messages: Anthropic.MessageParam[]): string {
  * formatRun when the ask says "bold" — the two halves of the panel's promise
  * that every edit arrives as a tracked change. */
 function fakeReply(messages: Anthropic.MessageParam[]): ModelReply {
-  const round = messages.filter((m) => m.role === "assistant").length;
-  const bold = /bold/i.test(firstAsk(messages));
+  // Rounds count within the current turn, not the whole conversation: a fresh
+  // ask arrives as a plain string, while tool results arrive as blocks. The
+  // second message of a conversation therefore inspects and edits like the
+  // first, instead of falling straight through to the closing sentence.
+  const asks = messages.map((m) => m.role === "user" && typeof m.content === "string");
+  const turn = messages.slice(Math.max(asks.lastIndexOf(true), 0));
+  const round = turn.filter((m) => m.role === "assistant").length;
+  const bold = /bold/i.test(firstAsk(turn));
   if (round === 0) {
     return {
       content: [

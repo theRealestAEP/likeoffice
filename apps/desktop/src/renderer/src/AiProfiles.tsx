@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 /** Mirrors MAX_INSTRUCTIONS in main/profiles.ts, which truncates past it. */
 const MAX_INSTRUCTIONS = 4000;
 
-const EMPTY: ProfilesState = { profiles: [], activeId: "" };
+const EMPTY: ProfilesState = { profiles: [], activeId: "", extras: [] };
 
 /** Fold the active profile into the panel's system prompt. The base contract
  * comes first and is never edited: the profile is appended as its own
@@ -133,8 +133,8 @@ export function AiProfileHeader({ profiles }: { profiles: ProfilesHandle }) {
   );
 }
 
-/** Thirteen built-ins named for the method they apply, so the menu carries
- * each one's description under its name rather than hiding it in a tooltip. */
+/** Each profile is named for the method it applies, so the menu carries its
+ * description under its name rather than hiding it in a tooltip. */
 function ProfileMenuItem({
   active,
   profile,
@@ -195,6 +195,8 @@ function ProfilesDialog({
   const [selectedId, setSelectedId] = useState(
     profiles.state.activeId || (list[0]?.id ?? ""),
   );
+  // Whether the library of profiles the app ships but does not list is open.
+  const [adding, setAdding] = useState(false);
   const selected = list.find((p) => p.id === selectedId) ?? null;
   const [draft, setDraft] = useState<Draft | null>(selected ? draftOf(selected) : null);
 
@@ -297,6 +299,32 @@ function ProfilesDialog({
                 </button>
               ))}
             </div>
+            {/* The rest of the shipped library. Adding one puts it on the
+                picker and selects it; deleting it returns it to this list. */}
+            {adding && (
+              <div className="profiles-extras" data-testid="profiles-extras">
+                <span className="profiles-extras-head">Click one to add it to your list</span>
+                {profiles.state.extras.map((extra) => (
+                  <button
+                    key={extra.id}
+                    className="profiles-extra"
+                    title={extra.description}
+                    onClick={() => {
+                      setAdding(false);
+                      void act(() => window.likeoffice.addExtraProfile(extra.id), true);
+                    }}
+                  >
+                    <span className="profiles-row-emoji" aria-hidden="true">
+                      {extra.emoji}
+                    </span>
+                    <span className="profiles-extra-body">
+                      <span className="profiles-extra-name">{extra.name}</span>
+                      <span className="profiles-extra-note">{extra.description}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="profiles-list-actions">
               <button
                 className="btn-link"
@@ -311,6 +339,16 @@ function ProfilesDialog({
               >
                 + New profile
               </button>
+              {profiles.state.extras.length > 0 && (
+                <button
+                  className="btn-link"
+                  onClick={() => setAdding((v) => !v)}
+                  title="Profiles the app ships but does not list"
+                  data-testid="profiles-add-more"
+                >
+                  {adding ? "Hide the library" : "Add more profiles…"}
+                </button>
+              )}
               <button
                 className="btn-link muted"
                 onClick={() => void act(() => window.likeoffice.restoreBuiltInProfiles(), false)}

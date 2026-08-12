@@ -47,6 +47,56 @@ interface Entry {
   text: string;
 }
 
+/** What the panel says while it waits for the model. */
+const THINKING = "Thinking…";
+
+/** The edit operations worth naming on their own line. Everything else the
+ * edit tool carries reads as an edit, which is what it is. */
+const EDIT_ACTIVITY: Record<string, string> = {
+  insertText: "Editing the text…",
+  deleteText: "Editing the text…",
+  formatRun: "Formatting…",
+  formatParagraph: "Formatting…",
+  formatRange: "Formatting…",
+  insertTable: "Inserting a table…",
+  tableOp: "Editing a table…",
+  insertImage: "Inserting an image…",
+  insertChart: "Inserting a chart…",
+  insertSmartArt: "Inserting a diagram…",
+  insertShape: "Inserting a shape…",
+  insertMath: "Inserting an equation…",
+  insertFootnote: "Adding a footnote…",
+  commentRun: "Adding a comment…",
+};
+
+/** The line the panel shows while a tool runs. It reports only what the panel
+ * has seen: the tool the model asked for, and — for a document edit — the
+ * kind of its first operation. Anything else reads as plain work. */
+export function activityLabel(name: string, input: unknown): string {
+  switch (name) {
+    case "word_document_project":
+    case "word_document_inspect":
+      return "Reading the document…";
+    case "word_document_asset":
+      return "Looking at an image…";
+    case "word_document_capabilities":
+      return "Checking what it can edit…";
+    case "word_document_patch":
+      return "Editing the text…";
+    case "word_document_compose":
+      return "Writing new content…";
+    case "word_document_save":
+      return "Saving…";
+    case "word_document_edit": {
+      const operations = (input as { operations?: unknown } | null)?.operations;
+      const first = Array.isArray(operations) ? (operations[0] as { kind?: string }) : undefined;
+      return EDIT_ACTIVITY[first?.kind ?? ""] ?? "Editing the document…";
+    }
+    default:
+      return "Working…";
+  }
+}
+
 /** The window a projection covers, plus what patches need to address it. */
 interface ProjectionWindow {
   revision: string;
@@ -184,6 +234,9 @@ export function AiPanel({
   const [entries, setEntries] = useState<Entry[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  // What the panel is doing right now: waiting on the model, or running the
+  // tool it names. The live text takes over once the model streams tokens.
+  const [activity, setActivity] = useState(THINKING);
   const [suggested, setSuggested] = useState<number | null>(null);
   // Model text as it streams in, shown live and replaced by the final reply.
   // Null whenever no delta has arrived for the in-flight request.
@@ -211,12 +264,23 @@ export function AiPanel({
   useEffect(() => {
     const el = scrollRef.current;
     if (el && stickRef.current) el.scrollTop = el.scrollHeight;
-  }, [entries, busy, suggested, streamText]);
+  }, [entries, busy, suggested, streamText, activity]);
 
   const add = (entry: Entry) => setEntries((list) => [...list, entry]);
 
+  /** Show a state, and wait for the panel to paint it. The engine's tools run
+   * as one long synchronous block on this thread, so without the frame the
+   * label would only reach the screen after the work it names had finished. */
+  const showActivity = async (label: string) => {
+    setActivity(label);
+    await new Promise((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(resolve)),
+    );
+  };
+
   const run = async (text: string) => {
     setBusy(true);
+    setActivity(THINKING);
     setSuggested(null);
     add({ role: "user", text });
 
@@ -251,6 +315,7 @@ export function AiPanel({
     add({ role: "tool", text: name });
     const tool = tools.find((t) => t.name === name);
     if (!tool) return { content: `Unknown tool ${name}`, isError: true };
+    await showActivity(activityLabel(name, input));
     try {
       const output = await tool.execute(withSuggestions(name, input));
       if (EDITING_TOOLS.has(name)) edited.current = true;
@@ -260,6 +325,9 @@ export function AiPanel({
         content: error instanceof Error ? error.message : String(error),
         isError: true,
       };
+    } finally {
+      // The result goes straight back to the model, so the wait resumes.
+      setActivity(THINKING);
     }
   };
 
@@ -280,7 +348,11 @@ export function AiPanel({
       .map((e) => `${e.role === "user" ? "User" : "Assistant"}: ${e.text}`)
       .join("\n");
     const ask = context === "" ? text : `Earlier conversation:\n${context}\n\nUser: ${text}`;
+    // The panel reads the document itself before it asks anything, and on a
+    // long document that read is the first thing the user waits on.
+    await showActivity(activityLabel("word_document_project", null));
     const prompt = await projectionMessage(tools, ask);
+    setActivity(THINKING);
     agentLog.current.push({ role: "user", text });
 
     const sessionId = crypto.randomUUID();
@@ -328,7 +400,10 @@ export function AiPanel({
       input_schema: t.inputSchema,
     }));
 
+    // As in the agent path: the up-front read is a wait the user can see.
+    await showActivity(activityLabel("word_document_project", null));
     history.current.push({ role: "user", content: await projectionMessage(tools, text) });
+    setActivity(THINKING);
 
     const activeRequest = { current: "" };
     const unsubscribe = window.likeoffice.onModelDelta(({ requestId, text: delta }) => {
@@ -435,10 +510,9 @@ export function AiPanel({
           </p>
         )}
         {busy && streamText === null && (
-          <div className="ai-busy" role="status" aria-label="Working">
-            <span />
-            <span />
-            <span />
+          <div className="ai-busy" role="status" data-testid="ai-activity">
+            <span className="ai-busy-dot" aria-hidden="true" />
+            {activity}
           </div>
         )}
         {suggested !== null && (

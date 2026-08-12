@@ -346,6 +346,14 @@
   gap: 8px;
 }
 
+/* A long transcript must not squeeze what is already in it. Flex children
+ * shrink by default, and a tool pill hides its overflow — which zeroes its
+ * automatic minimum height — so once the column overflowed, the pills flattened
+ * and clipped their own text. Every entry keeps its intrinsic height instead. */
+.ai-transcript > * {
+  flex: none;
+}
+
 .ai-entry {
   margin: 0;
   min-width: 0;
@@ -397,27 +405,25 @@
   line-height: 1.5;
 }
 
-/* Busy indicator: three quiet pulsing dots. */
+/* Busy line: one pulsing dot and the name of what the panel is doing. */
 .ai-busy {
   display: flex;
-  gap: 4px;
+  align-items: baseline;
+  gap: 7px;
+  max-width: 100%;
   padding: 4px 2px;
+  color: var(--app-muted);
+  font-size: 12.5px;
 }
 
-.ai-busy span {
+.ai-busy-dot {
+  flex: none;
+  align-self: center;
   width: 5px;
   height: 5px;
   border-radius: 50%;
   background: var(--app-muted);
   animation: ai-pulse 1.2s ease-in-out infinite;
-}
-
-.ai-busy span:nth-child(2) {
-  animation-delay: 0.15s;
-}
-
-.ai-busy span:nth-child(3) {
-  animation-delay: 0.3s;
 }
 
 @keyframes ai-pulse {
@@ -432,7 +438,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ai-busy span {
+  .ai-busy-dot {
     animation: none;
     opacity: 0.6;
   }
@@ -803,6 +809,61 @@
   align-items: flex-start;
   border-top: 1px solid var(--app-border);
   padding: 4px 8px 6px;
+}
+
+/* The shipped profiles that are not on the picker, each with the line that
+ * says what it is for. Scrolls, so the actions below stay reachable. */
+.profiles-extras {
+  border-top: 1px solid var(--app-border);
+  padding: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.profiles-extras-head {
+  display: block;
+  padding: 3px 8px 5px;
+  font: 600 10px system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--app-muted);
+}
+
+.profiles-extra {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--app-fg);
+  text-align: left;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.profiles-extra:hover {
+  background: var(--app-hover);
+}
+
+.profiles-extra-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.profiles-extra-name {
+  display: block;
+  font: 12.5px system-ui, sans-serif;
+}
+
+.profiles-extra-note {
+  display: block;
+  margin-top: 1px;
+  font: 11px system-ui, sans-serif;
+  line-height: 1.35;
+  color: var(--app-muted);
 }
 
 /* A built-in's own line about what it does, and — where it applies a named
