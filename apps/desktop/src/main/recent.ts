@@ -63,9 +63,12 @@ export async function addRecent(filePath: string): Promise<void> {
   await persist();
 }
 
-/** The "Clear Menu" item. */
-export async function clearRecent(): Promise<void> {
+/** The "Clear Menu" item. Deliberately not async: the list is empty the
+ * moment this returns, so a caller can rebuild the menu immediately and let
+ * the returned promise carry the disk write. Awaiting it before rebuilding
+ * leaves the cleared entries on screen until the file lands. */
+export function clearRecent(): Promise<void> {
   app.clearRecentDocuments();
   entries = [];
-  await persist();
+  return persist();
 }

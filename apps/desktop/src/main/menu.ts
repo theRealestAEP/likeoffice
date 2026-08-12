@@ -73,7 +73,9 @@ function recentSubmenu(): MenuItemConstructorOptions[] {
     {
       label: "Clear Menu",
       click: () => {
-        void clearRecent().then(rebuildMenu);
+        const persisted = clearRecent();
+        rebuildMenu();
+        void persisted;
       },
     },
   ];
