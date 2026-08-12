@@ -34,6 +34,13 @@ from 3 to 14 rounds on an unchanged build. See "Run-to-run variance" below.
 | `full` | every `$ref` expanded again — byte for byte the payload the engine sent before that change |
 | `menu` | the tiered-union experiment: create-side operations inline, adjust-side ones named in one open branch |
 
+**`defs` and `full` are the same payload against an engine build that does not
+hoist**, because there is no `$ref` left to expand — and the hoist lives on the
+engine's unmerged `lean-tool-schemas` branch, not on its default one. Point
+`bench/node_modules/@wordinweb/agent` at a build that has it before running
+that A/B, and check the "tool payload N chars" line the summary prints: if both
+arms print the same number, the experiment is measuring nothing.
+
 `--cache` mirrors `model.ts`'s prompt-cache breakpoints (`cache_control` on the
 system prompt and the last tool). It is off by default, because the recorded
 history is uncached and because the cached and uncached cost of a change are
