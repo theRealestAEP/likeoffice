@@ -51,8 +51,17 @@ State: sweep script was being placed into the app repo when clipped.
   gallery.
 - **Quick Parts scope note** — document-scoped blocks shipped; template-level
   (Building Blocks.dotx) galleries out of scope.
-- **Security follow-up (early flag, never confirmed done)** — rotate the
-  leaked Cloudflare tunnel credential in wordinweb `examples/anon-share/.env`.
+- **Security follow-up — RETIRED 2026-08-12, false alarm.** The flagged
+  Cloudflare tunnel credential was never committed, never pushed, and appears
+  in no repository's history: the `.gitignore` rule covering it was committed
+  four hours before the file was created. The flag also had the path wrong —
+  the file lives in the `wordinweb` clone, not `wordinweb-likeoffice`. Verified
+  six ways locally plus GitHub's tree/contents API on both public branches;
+  sibling sweep across all four repos found no tracked secrets. No rotation and
+  no history rewrite needed. Evidence: scratchpad/secret-exposure.md.
+  What IS worth doing, and is not remediation: **secret scanning is disabled on
+  the wordinweb repo**. Enabling it with push protection on both public repos is
+  a durable backstop for exactly the case the ignore rule caught here.
 
 ### Deliberate scope-outs (recorded in docs/tool-depth-matrix.md)
 
