@@ -34,14 +34,14 @@ from 3 to 14 rounds on an unchanged build. See "Run-to-run variance" below.
 | `full` | every `$ref` expanded again — byte for byte the payload the engine sent before that change |
 | `menu` | the tiered-union experiment: create-side operations inline, adjust-side ones named in one open branch |
 
-**`defs` and `full` are the same payload against an engine build that does not
-hoist**, because there is no `$ref` left to expand — and the hoist lives on the
-engine's unmerged `lean-schemas-v2` branch, not on its default one. Point
-`bench/node_modules/@wordinweb/agent` at a build that has it before running
-that A/B, and check the "tool payload N chars" line the summary prints: if both
-arms print the same number, the experiment is measuring nothing. The number to
-expect is 61,343 for `full` and 54,191 for `defs`;
-`node bench/tool-payload.mjs` prints both without spending anything, and
+The hoist lives on the engine's unmerged `lean-schemas-v2` branch, not on its
+default one, so `bench/node_modules/@wordinweb/agent` has to point at a build
+that has it — against a build that does not, the harness fails to import at
+all, and `defs` and `full` would be the same payload anyway because there is no
+`$ref` left to expand. Check the "tool payload N chars" line the summary
+prints: if both arms print the same number, the experiment is measuring
+nothing. The numbers to expect are 61,343 for `full` and 54,191 for `defs`;
+`node bench/tool-payload.mjs` prints every arm without spending anything, and
 `--tokens` adds a live `count_tokens` per arm.
 
 `--cache` mirrors `model.ts`'s prompt-cache breakpoints (`cache_control` on the
@@ -731,6 +731,30 @@ files are `ab3task-full-first`, `oi-full-first`, `oi-defs-first` and
 `aa-full-full`, stamped 2026-08-12T10-00-22Z through 10-17-41Z. Those runs
 predate the harness recording a batch, so their batch names were written into
 the results files afterwards, from the four run logs.
+
+**The subscription path, which the bench cannot reach.** Everything above goes
+through the Messages API. The app has a second path: with the
+`claude-subscription` provider, `apps/desktop/src/main/agent.ts` hands the raw
+engine schemas to an in-process MCP server and runs the turn through the Claude
+Agent SDK on the user's Claude Code login. Nothing between the engine and the
+SDK was known to preserve a `$ref`, and no test covered it.
+
+`e2e/live-claude-subscription.spec.ts` now does, against an app built on this
+engine branch. The first test rewords text and asserts a tracked change; that
+one goes through `word_document_patch`, whose schema holds no `$ref`, so it
+only proves the session survives a tool list in which 45 `$defs` and 138
+`$ref`s were registered. The second asks for bold, which is `formatRun`:
+`blockRef` and `runRef` written out in full, and `patch` as
+`{"$ref":"#/$defs/patch"}`. The model wrote a valid one and the bold landed on
+the run holding the text. Both pass. So `$defs` survives the bridge and the
+model fills a referenced shape through it.
+
+One thing that surfaced there and is **not** a schema problem: the panel
+applies an AI formatting change untracked. `withSuggestions` in `AiPanel.tsx`
+injects `suggest` for `insertText` and `splitParagraph` only, so a `formatRun`
+lands straight in the document. The engine supports the tracked form — a probe
+with `suggest: true` writes `w:rPrChange` — so this is the panel's rule and
+worth its own look.
 
 ### Prompt caching pays for most of this already
 
