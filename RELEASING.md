@@ -86,7 +86,14 @@ download starts with that binary — not with the app code, which is a few MB.
 ### Architecture
 
 macOS artifacts must be built on a runner of their own architecture, and CI
-does this with two matrix legs (`macos-latest` for arm64, `macos-13` for x64).
+does this with two matrix legs: `macos-latest` (Apple silicon, macOS 26 arm64)
+and `macos-15-intel` (x86_64).
+
+Not `macos-13` — that label is retired. GitHub names `macos-15-intel` the
+**last x86_64 Actions image**, available until **August 2027**. After that
+there is no GitHub-hosted way to build an Intel mac artifact, and the Intel
+download will have to come from a self-hosted runner, a cross-build with the
+right optional dependency installed by hand, or be dropped.
 
 The reason is `@anthropic-ai/claude-agent-sdk`, which ships its executable in
 eight platform-specific `optionalDependencies`. npm installs only the one

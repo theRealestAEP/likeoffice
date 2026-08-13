@@ -46,7 +46,10 @@ jobs:
           - os: macos-latest
             args: --mac --arm64
             arch: arm64
-          - os: macos-13
+          # macos-15-intel, NOT macos-13: that label is retired, and GitHub
+          # names macos-15-intel the last x86_64 Actions image, available until
+          # August 2027. macos-latest is Apple silicon (macOS 26 arm64).
+          - os: macos-15-intel
             args: --mac --x64
             arch: x64
           - os: ubuntu-latest
