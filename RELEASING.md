@@ -186,6 +186,31 @@ something was the handler the first row had concluded did not exist. The
 anomaly was the cheapest signal in the whole investigation and it was nearly
 argued away twice.
 
+### When a defect will not reproduce, suspect the document first
+
+The sections above are about a measurement that lies. This one is about a
+measurement that is honest, repeatable, and about the WRONG FILE.
+
+#160 — the toolbar's Bold swallowing every second click — was chased on
+`contract.docx` first. It toggled correctly on every click, twice in a row,
+with the bug fully present in the build. That document's apply happens to
+settle synchronously, so the stale read the defect depends on never happens.
+Two clean runs, and the honest report from them would have been "cannot
+reproduce".
+
+It reproduces immediately on `wild2-med-phase23-protocol.docx`, where the
+engine takes ~100ms to catch up. Same code, same gesture, opposite answer.
+
+> A defect that does not reproduce is a fact about the DOCUMENT you tried,
+> until you have tried a document that differs in the dimension the mechanism
+> depends on.
+
+So when a report will not reproduce: use the fixture the report names before
+any other, and if you must substitute, say which document you actually used
+and why. "Could not reproduce on my fixture" is a useful sentence; "could not
+reproduce" is not. Size, table depth, and anything that pushes the engine off
+its synchronous path are the dimensions that have mattered here.
+
 ### Pin the engine before you tag
 
 `release.yml` reads `.engine-ref` at the repo root: one line, a full 40-character engine commit sha. The tagged build then checks the engine out at exactly that commit, so the release can be rebuilt byte-for-byte later.
