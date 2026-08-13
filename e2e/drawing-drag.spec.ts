@@ -23,7 +23,10 @@ import path from "node:path";
 import { crc32 } from "node:zlib";
 
 const APP_DIR = path.join(__dirname, "../apps/desktop");
-const SEL = "[data-dxw-image-format], [data-dxw-model3d]";
+// Pictures render as <img>; DrawingML shapes render as paths with a
+// transparent drawingHit overlay, and it is the overlay that carries the
+// position and the interaction. One union so the same helpers drive both.
+const SEL = "[data-dxw-image-format], [data-dxw-model3d], [data-dxw-drawing]";
 const enc = (s: string) => new TextEncoder().encode(s);
 
 /**
@@ -85,35 +88,63 @@ const PHONE_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">' +
   '<path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.2.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1l-2.3 2.2z" fill="#1f6feb"/></svg>';
 
+type Art = "raster" | "svg" | "shape" | "behind";
+
 /**
- * A document with two floating pictures, wrapNone ("in front of text") — the
- * arrangement the user described. `svg` adds an asvg:svgBlip extension, which
- * is what Word's Insert > Icons writes and the likeliest shape of the
- * "phone vector image" in the report.
+ * A document with two floating drawings, wrapNone ("in front of text") — the
+ * arrangement the user described.
+ *
+ * The three kinds are three different INTERACTION paths, not three looks:
+ *
+ *  - `raster` and `svg` render as an <img> and are resolved through the
+ *    `images` bindings and `target.tagName === "IMG"`. `svg` adds an
+ *    asvg:svgBlip extension, which is what Word's Insert > Icons writes.
+ *  - `shape` is DrawingML (`wps:wsp`) and renders as paths with a transparent
+ *    `drawingHit` OVERLAY on top, resolved through the `drawings` bindings
+ *    instead. A plain picture emits no such overlay, so this is a wholly
+ *    separate route to selection and dragging — and the likelier shape of the
+ *    "phone vector" in report 1, which is still unreproduced.
  */
-function floatingPicturesDocx(svg: boolean): Buffer {
+function floatingPicturesDocx(art: Art): Buffer {
+  const svg = art === "svg";
+  const behind = art === "behind";
   const blip = svg
     ? '<a:blip r:embed="rId1"><a:extLst><a:ext uri="{96DAC541-7B7A-43D3-8B79-37D633B846F1}">' +
       '<asvg:svgBlip xmlns:asvg="http://schemas.microsoft.com/office/drawing/2016/SVG/main" r:embed="rId2"/>' +
       "</a:ext></a:extLst></a:blip>"
     : '<a:blip r:embed="rId1"/>';
+
+  const shapeBody = (id: number) =>
+    '<a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">' +
+    '<wps:wsp xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">' +
+    `<wps:cNvPr id="${id}" name="Phone ${id}"/><wps:cNvSpPr/>` +
+    '<wps:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></a:xfrm>' +
+    '<a:prstGeom prst="roundRect"><a:avLst/></a:prstGeom>' +
+    '<a:solidFill><a:srgbClr val="1F6FEB"/></a:solidFill>' +
+    '<a:ln w="12700"><a:solidFill><a:srgbClr val="0B3D91"/></a:solidFill></a:ln></wps:spPr>' +
+    '<wps:bodyPr rot="0" anchor="ctr"/></wps:wsp></a:graphicData>';
+
+  const pictureBody = (id: number) =>
+    '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+    '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+    `<pic:nvPicPr><pic:cNvPr id="${id}" name="Picture ${id}"/><pic:cNvPicPr/></pic:nvPicPr>` +
+    `<pic:blipFill>${blip}<a:stretch><a:fillRect/></a:stretch></pic:blipFill>` +
+    '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></a:xfrm>' +
+    '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>' +
+    "</pic:pic></a:graphicData>";
+
   const anchor = (id: number, xEmu: number) =>
     `<w:r><w:drawing><wp:anchor distT="0" distB="0" distL="0" distR="0" simplePos="0" relativeHeight="${
       251658240 + id
-    }" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1">` +
+    }" behindDoc="${behind ? 1 : 0}" locked="0" layoutInCell="1" allowOverlap="1">` +
     '<wp:simplePos x="0" y="0"/>' +
     `<wp:positionH relativeFrom="column"><wp:posOffset>${xEmu}</wp:posOffset></wp:positionH>` +
     '<wp:positionV relativeFrom="paragraph"><wp:posOffset>457200</wp:posOffset></wp:positionV>' +
     '<wp:extent cx="914400" cy="914400"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:wrapNone/>' +
     `<wp:docPr id="${id}" name="Picture ${id}"/><wp:cNvGraphicFramePr/>` +
     '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">' +
-    '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
-    '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
-    `<pic:nvPicPr><pic:cNvPr id="${id}" name="Picture ${id}"/><pic:cNvPicPr/></pic:nvPicPr>` +
-    `<pic:blipFill>${blip}<a:stretch><a:fillRect/></a:stretch></pic:blipFill>` +
-    '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></a:xfrm>' +
-    "<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom></pic:spPr>" +
-    "</pic:pic></a:graphicData></a:graphic></wp:anchor></w:drawing></w:r>";
+    (art === "shape" ? shapeBody(id) : pictureBody(id)) +
+    "</a:graphic></wp:anchor></w:drawing></w:r>";
 
   const body =
     "<w:p><w:r><w:t>Drag test.</w:t></w:r></w:p>" +
@@ -213,11 +244,45 @@ async function dragBy(win: Page, from: { x: number; y: number }, dx: number, dy:
   await win.waitForTimeout(600);
 }
 
-for (const svg of [false, true]) {
-  const label = svg ? "an SVG icon (Insert > Icons)" : "a raster picture";
+const ART: { kind: Art; label: string }[] = [
+  { kind: "raster", label: "a raster picture" },
+  { kind: "svg", label: "an SVG icon (Insert > Icons)" },
+  { kind: "shape", label: "a DrawingML shape (the drawingHit path)" },
+  // Behind text: the editor cannot resolve these from the event target at
+  // all — the text layer paints above them — so it hit-tests by POINT
+  // instead (editor.ts, the `b.item.behind` branch). A third route.
+  { kind: "behind", label: "a picture behind the text (point hit-testing)" },
+];
+
+for (const { kind, label } of ART) {
   test(`${label} moves on the SECOND drag as well as the first`, async () => {
-    const { app, win } = await open(floatingPicturesDocx(svg), "drag.docx");
+    const { app, win } = await open(floatingPicturesDocx(kind), "drag.docx");
     try {
+      // Prove this case exercises the path it claims to. A test that quietly
+      // matched a different element would pass and mean nothing.
+      const paths = await win.evaluate(() => ({
+        drawingHits: document.querySelectorAll("[data-dxw-drawing]").length,
+        imgs: document.querySelectorAll("img[data-dxw-image-format]").length,
+        firstMatch: (document.querySelector(
+          "[data-dxw-image-format], [data-dxw-model3d], [data-dxw-drawing]",
+        ) as HTMLElement | null)?.tagName ?? null,
+      }));
+      if (kind === "shape") {
+        expect(paths.drawingHits, "the shape emits a drawingHit overlay").toBeGreaterThan(0);
+        expect(paths.imgs, "and no <img> — so this is NOT the picture path").toBe(0);
+      } else {
+        expect(paths.imgs, "a picture renders as an <img>").toBeGreaterThan(0);
+        expect(paths.drawingHits, "and emits no drawingHit overlay").toBe(0);
+      }
+      if (kind === "behind") {
+        // Otherwise this case is just the raster case again under a new name.
+        const z = await win.evaluate(
+          (sel) => getComputedStyle(document.querySelector<HTMLElement>(sel as string)!).zIndex,
+          SEL,
+        );
+        expect(Number(z), "it really is painted behind the text layer").toBeLessThan(0);
+      }
+
       const before = await left(win, 0);
 
       const p1 = await grabPoint(win, 0);
