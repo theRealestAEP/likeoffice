@@ -48,6 +48,7 @@ visible in a diff, and none of them survives one measurement.
 | `appearance: textfield` read back as applied | Chrome ignores it; the spinner arrows still painted |
 | A CSS rule set `border-color` on focus | An inline `border` shorthand outranked it, so it never applied |
 | A focus ring was drawn in the theme's own blue | At 1.15:1 against the field it was a ring nobody could see |
+| The harness dispatched the event to the element | Real hit-testing never targets a `pointer-events: none` element, so the test could not fail |
 
 So before calling any of these done:
 
@@ -58,6 +59,25 @@ So before calling any of these done:
 
 The cheapest of these checks took about ninety seconds. Each one stood between
 a change that reads as finished and a change that works.
+
+#### The last row is about our tests, not our code
+
+`element.dispatchEvent(...)` makes that element the event target **whatever
+its `pointer-events` are**. So a test that dispatches to the node it expects
+to win cannot observe a hit-testing failure — the class of bug where the
+right handler exists and the browser never routes anything to it.
+
+That is not one bug's footnote. **Every test we have that dispatches events
+directly is blind to that entire class.** It is how a 3D model shipped that
+could be neither selected nor rotated while its unit tests stayed green:
+they dispatched to the `<model-viewer>` that a real press can never reach.
+
+When a change touches what the browser can hit — `pointer-events`, overlays,
+z-order, element replacement — drive it with **real input** (Playwright's
+mouse) or at least `elementFromPoint`, and never with `dispatchEvent` on the
+node you expect to win. And make the test use the control **twice**: a
+gesture that works once and then dies passes every single-use test.
+`e2e/drawing-drag.spec.ts` is the worked example of both.
 
 ### Pin the engine before you tag
 
