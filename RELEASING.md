@@ -105,6 +105,39 @@ node you expect to win. And make the test use the control **twice**: a
 gesture that works once and then dies passes every single-use test.
 `e2e/drawing-drag.spec.ts` is the worked example of both.
 
+### Name what your cheap check would miss
+
+A different failure, and it deserves its own name. The section above is about
+a change that reports success and does nothing. This one is about asking a
+question that is ALMOST the right question, and believing the answer.
+
+Five in a single session, from more than one person:
+
+| The question asked | The question that mattered |
+| --- | --- |
+| Does the FILENAME mention a 3D model? | Does the PACKAGE contain one? |
+| Does the package contain vector MEDIA? | Does the document contain vector SHAPES? A DrawingML shape has no media part at all |
+| What does the DOM say is on this page? | What does the XML say? `[data-dxw-image-format]` cannot match a shape |
+| Is it a shape or a picture? | Is it INLINE or ANCHORED? That is what selects the code path |
+| Can this object be dragged? | What is this object's MOVE AFFORDANCE? The 3D model has a dedicated button |
+
+Each cost real time. The first sent us hunting a fixture that was already in
+hand; the last had four of us chasing a drag that was never the supported
+gesture, while the actual control sat on the object's own selection overlay.
+
+The pattern is the point, not the tally. A proxy question is always **cheaper**
+than the real one, always **nearly** right, and always answers **confidently** —
+which is exactly why it does not feel like a guess.
+
+> Before trusting a cheap check, name what it would MISS.
+> If you cannot name that, you have not understood what you are measuring.
+
+Applied: "no media parts" misses shapes, so it cannot answer "has vector art".
+"Not in the DOM" misses anything the selector cannot match, so it cannot answer
+"what is on the page". "It does not drag" misses dedicated controls, so it
+cannot answer "can this be moved". In each case the honest next step was one
+command — read the package, read the XML, look at what the UI offers.
+
 ### Pin the engine before you tag
 
 `release.yml` reads `.engine-ref` at the repo root: one line, a full 40-character engine commit sha. The tagged build then checks the engine out at exactly that commit, so the release can be rebuilt byte-for-byte later.
