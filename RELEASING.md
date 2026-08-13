@@ -9,6 +9,31 @@
 
 The workflow clones `theRealestAEP/wordinweb` as a sibling directory and builds it first. The app's `file:` dependencies resolve into that clone, which mirrors the local development layout.
 
+### How to smoke-test the draft
+
+Test the artifact you are about to publish, not a local build of the same
+commit. Both defects found while cutting 0.1.0 — a bundle macOS called
+"damaged", and an Intel build carrying an arm64 helper — existed only in the
+packaged output. A green build proves neither.
+
+Download the `.dmg` from the draft, mount it, copy the app out, and check:
+
+```bash
+codesign --verify --deep --strict LikeOffice.app   # must pass, adhoc is fine
+file LikeOffice.app/Contents/MacOS/LikeOffice      # must match the artifact's arch
+find LikeOffice.app -name claude -exec file {} \;  # must match it too
+```
+
+Then open a document, type, and save, and confirm the saved file is a valid
+zip whose `document.xml` holds the typed text.
+
+Drive that with **Playwright**, pointing `executablePath` at the copied binary
+and sending menu actions through `app.evaluate` from the main process — the
+same way `e2e/` already works. It takes about a second. Do NOT drive it with
+AppleScript: `activate` loses to whatever app holds focus, a binary launched
+outside LaunchServices cannot be activated by name, and `System Events` reports
+zero windows for a perfectly healthy app. All three wasted time during 0.1.0.
+
 ### Pin the engine before you tag
 
 `release.yml` reads `.engine-ref` at the repo root: one line, a full 40-character engine commit sha. The tagged build then checks the engine out at exactly that commit, so the release can be rebuilt byte-for-byte later.
