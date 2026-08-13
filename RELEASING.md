@@ -34,6 +34,31 @@ AppleScript: `activate` loses to whatever app holds focus, a binary launched
 outside LaunchServices cannot be activated by name, and `System Events` reports
 zero windows for a perfectly healthy app. All three wasted time during 0.1.0.
 
+### Verify the effect, not the mechanism
+
+Every defect that survived a review this far had the same shape: the
+**mechanism** was correct and the **effect** was absent. None of them is
+visible in a diff, and none of them survives one measurement.
+
+| The mechanism looked right | The effect was absent |
+| --- | --- |
+| The bundle carried a signature | It sealed a bundle that had since been rewritten, so macOS called it "damaged" |
+| `electron-builder --mac --arm64` named an arch | A config `arch:` list overrode the flag and built x64 too |
+| `npm install` fetched the agent binary | It fetched the one for the BUILD host, so the Intel dmg carried an arm64 helper |
+| `appearance: textfield` read back as applied | Chrome ignores it; the spinner arrows still painted |
+| A CSS rule set `border-color` on focus | An inline `border` shorthand outranked it, so it never applied |
+| A focus ring was drawn in the theme's own blue | At 1.15:1 against the field it was a ring nobody could see |
+
+So before calling any of these done:
+
+1. Measure the thing the user experiences, not the thing you set.
+2. Compare against a control — the same page without the change, side by side.
+3. Prefer a number to an impression. Contrast ratios and `file` output do not
+   flatter you; a screenshot at a glance does.
+
+The cheapest of these checks took about ninety seconds. Each one stood between
+a change that reads as finished and a change that works.
+
 ### Pin the engine before you tag
 
 `release.yml` reads `.engine-ref` at the repo root: one line, a full 40-character engine commit sha. The tagged build then checks the engine out at exactly that commit, so the release can be rebuilt byte-for-byte later.
