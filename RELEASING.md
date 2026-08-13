@@ -46,3 +46,17 @@ Windows:
 - `CSC_LINK` / `CSC_KEY_PASSWORD` with an Authenticode `.p12` also work here. Cloud HSM signing (Azure Trusted Signing, etc.) needs its own config; see the electron-builder code-signing docs.
 
 Linux builds need no signature.
+
+### The current decision: unsigned
+
+Releases are unsigned for now. Signing is a follow-up, not a rejected idea.
+The reasoning: a certificate costs money each year, and the project does not
+yet know whether people want the app. The workflow already passes the signing
+secrets through when they exist, so turning signing on later means adding the
+secrets and setting `notarize: true`. No code has to change.
+
+Two costs come with that choice. Users see a warning on first launch, on macOS
+and on Windows both — the README tells them what the warning says and what to
+do. And macOS auto-update can CHECK for a new version but cannot install it,
+because `electron-updater` only installs into a signed app. Mac users must
+therefore download each new version by hand until signing is enabled.
