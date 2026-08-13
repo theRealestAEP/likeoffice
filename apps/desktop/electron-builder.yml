@@ -34,11 +34,14 @@ fileAssociations:
 
 mac:
   category: public.app-category.productivity
+  # No `arch:` here ON PURPOSE. Pinning it in config OVERRIDES the CLI flag, so
+  # `electron-builder --mac --arm64` still tried to build x64 as well. Each arch
+  # must be built on a runner of that arch (#142), which means the caller
+  # chooses: CI passes --arm64 / --x64, and a local `npm run dist:mac` builds
+  # for this machine.
   target:
-    - target: dmg
-      arch: [arm64, x64]
-    - target: zip
-      arch: [arm64, x64]
+    - dmg
+    - zip
   # Unsigned by default. Set CSC_LINK / CSC_KEY_PASSWORD to sign; see RELEASING.md.
   notarize: false
 

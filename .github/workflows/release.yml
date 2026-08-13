@@ -18,8 +18,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # macOS builds on a runner of its OWN architecture. npm installs the
+          # optional dependency matching the build host, and electron-builder
+          # packs whatever is in node_modules regardless of --arch, so one
+          # runner cannot honestly produce both (#142): building x64 on Apple
+          # silicon shipped an Intel dmg carrying an arm64 `claude` binary.
           - os: macos-latest
-            args: --mac
+            args: --mac --arm64
+            arch: arm64
+          - os: macos-13
+            args: --mac --x64
+            arch: x64
           - os: ubuntu-latest
             args: --linux
           - os: windows-latest

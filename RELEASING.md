@@ -7,13 +7,42 @@
 3. The `Release` workflow (`.github/workflows/release.yml`) builds installers on macOS, Windows, and Linux. It uploads them to a **draft** GitHub Release.
 4. Download and smoke-test the installers, then publish the draft. Auto-update only sees published releases.
 
-The workflow clones `theRealestAEP/wordinweb` at branch `likeoffice` as a sibling directory and builds it first. The app's `file:` dependencies resolve into that clone, which mirrors the local development layout.
+The workflow clones `theRealestAEP/wordinweb` as a sibling directory and builds it first. The app's `file:` dependencies resolve into that clone, which mirrors the local development layout.
+
+### Pin the engine before you tag
+
+`release.yml` reads `.engine-ref` at the repo root: one line, a full 40-character engine commit sha. The tagged build then checks the engine out at exactly that commit, so the release can be rebuilt byte-for-byte later.
+
+With no such file the build falls back to the tip of `wordinweb@likeoffice`, prints a `::warning::` saying the release is **not reproducible**, and records the resolved sha in the job summary. Nothing breaks, but the tag no longer identifies what was built.
+
+The order for a release is therefore:
+
+1. Push the engine commits to `theRealestAEP/wordinweb` branch `likeoffice`.
+2. Write that engine sha into `.engine-ref` here and commit it.
+3. Bump the version, tag, push the tag.
+
+Step 1 comes first because CI clones the engine from GitHub: an engine commit that is only local will not be in the build.
+
+## Two release channels
+
+| Channel | Trigger | Tag | Marked |
+| --- | --- | --- | --- |
+| Stable | pushing a `v*` tag | `v<version>` | draft, published by hand |
+| Main builds | every push to `main` | `nightly`, replaced in place | prerelease |
+
+`main-build.yml` keeps exactly one rolling prerelease so the releases page does not accumulate one entry per commit. It skips doc-only pushes and cancels superseded runs.
+
+The two channels cannot cross. With a stable version installed, `electron-updater` sets `allowPrerelease = false` and resolves updates through GitHub's `/releases/latest`, which excludes prereleases, then reads the channel file from under that tag — so a nightly is never offered to someone running a release. Each channel's `latest*.yml` lives under its own tag and they never meet.
 
 ## Local builds
 
-- `npm run dist:mac` — dmg + zip for arm64 and x64 (run on macOS)
+- `npm run dist:mac` — dmg + zip for **this machine's architecture** (run on macOS)
 - `npm run dist:win` — NSIS installer (run on Windows)
 - `npm run dist:linux` — AppImage + deb (run on Linux)
+
+A local mac build produces one architecture on purpose. Pass `--arm64` or
+`--x64` to `electron-builder` to choose, but note that building an arch on a
+host of a different arch **fails the build** — see Architecture below.
 
 Output lands in `apps/desktop/release/`. Local builds never publish (`--publish never`).
 
@@ -21,9 +50,75 @@ The engine must be built first: run `npm run build` in the sibling `wordinweb-li
 
 ## Packaging model
 
-The installers ship the electron-vite output (`apps/desktop/out/`), `resources/`, and the runtime dependencies of the main process (`@anthropic-ai/sdk`, `electron-updater`). The renderer bundle is self-contained: Vite inlines the engine packages (`wordinweb`, `@wordinweb/agent`), so they sit in `devDependencies` and never reach the asar. `.docx` files are registered for open-with on all three platforms.
+The installers ship the electron-vite output (`apps/desktop/out/`), `resources/`, and the runtime dependencies of the main process. The `files` allowlist in `electron-builder.yml` names only `out/**` and `resources/**`, but electron-builder collects the production dependency tree separately, so all six runtime dependencies are packed:
+
+| Package | Why it is needed at runtime |
+| --- | --- |
+| `@anthropic-ai/sdk` | Anthropic API calls |
+| `@anthropic-ai/claude-agent-sdk` | Claude subscription provider |
+| `@modelcontextprotocol/sdk` | MCP server for the agent tools |
+| `electron-updater` | Check for Updates… |
+| `nspell` | Spell checking |
+| `papaparse` | CSV parsing for mail merge |
+
+The renderer bundle is self-contained: Vite inlines the engine packages (`wordinweb`, `@wordinweb/agent`), so they sit in `devDependencies` and never reach the asar. `.docx` files are registered for open-with on all three platforms.
 
 The app icon is a generated placeholder at `apps/desktop/build/icon.png`. electron-builder derives the icns/ico variants from it. Replace the png to change the icon.
+
+### Download size
+
+Measured for 0.0.1, in decimal MB — what Finder and the GitHub download page show:
+
+| Artifact | Size |
+| --- | --- |
+| `LikeOffice-<version>-arm64.dmg` | 184.7 MB |
+| `LikeOffice-<version>-arm64-mac.zip` | 186.0 MB |
+| `LikeOffice-<version>.dmg` (Intel) | 191.0 MB |
+| `LikeOffice-<version>-mac.zip` (Intel) | 192.3 MB |
+| Installed `LikeOffice.app` | 555 MB |
+
+**277 MB of that 555 MB installed bundle is a single file**: the `claude`
+native executable inside `@anthropic-ai/claude-agent-sdk-<platform>`, unpacked
+beside the asar because executables cannot run from inside one. Electron's own
+framework accounts for most of the rest. Any serious attempt to shrink the
+download starts with that binary — not with the app code, which is a few MB.
+
+### Architecture
+
+macOS artifacts must be built on a runner of their own architecture, and CI
+does this with two matrix legs (`macos-latest` for arm64, `macos-13` for x64).
+
+The reason is `@anthropic-ai/claude-agent-sdk`, which ships its executable in
+eight platform-specific `optionalDependencies`. npm installs only the one
+matching the **build host**, and electron-builder packs whatever is in
+`node_modules` regardless of the `--arch` it was given. Building both arches on
+one Apple Silicon machine therefore produced an Intel dmg carrying an **arm64**
+binary: the app opened, and every agent feature was dead on an Intel Mac.
+
+`build/verify-arch.cjs` runs from the `afterPack` hook and fails the build if
+any Mach-O in the bundle is the wrong CPU. It runs before any dmg exists, so a
+mismatched build cannot be produced, let alone published.
+
+For the same reason `mac.target` in `electron-builder.yml` carries **no**
+`arch:` list: pinning it there overrides the CLI flag, so `--mac --arm64` would
+still try to build x64 as well.
+
+### Ad-hoc signing (macOS)
+
+`build/after-pack.cjs` ad-hoc signs the mac bundle and fails the build if the
+seal does not verify. This is not optional cosmetics. electron-builder rewrites
+the bundle after unpacking Electron and then, with no Developer ID, skips
+signing entirely — leaving Electron's own linker signature over a bundle that
+no longer matches it (`Identifier=Electron`, `Sealed Resources=none`, no
+`Contents/_CodeSignature`). macOS reads that as **corrupt**, not unsigned, and
+a downloaded copy shows:
+
+> "LikeOffice" is damaged and can't be opened. You should move it to the Trash.
+
+That dialog has no override, so Control-click > Open cannot rescue it. With the
+ad-hoc signature the same download shows the ordinary unidentified-developer
+refusal, which the user can get past. A real Developer ID signature replaces
+the ad-hoc one: `afterPack` runs before electron-builder's own signing step.
 
 ## Auto-update
 

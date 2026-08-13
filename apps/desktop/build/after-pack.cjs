@@ -29,9 +29,17 @@
 const { execFileSync } = require("node:child_process");
 const { readdirSync } = require("node:fs");
 const { join } = require("node:path");
+const { Arch } = require("builder-util");
+const { verifyArch } = require("./verify-arch.cjs");
 
 module.exports = async function afterPack(context) {
   if (context.electronPlatformName !== "darwin") return;
+
+  // Refuse a bundle carrying a native payload for another CPU (#142). Here,
+  // rather than as a workflow step, because afterPack runs before any dmg or
+  // zip exists — a workflow check after `--publish always` would already have
+  // uploaded the bad artifact before failing.
+  verifyArch(Arch[context.arch], context.appOutDir);
 
   const app = readdirSync(context.appOutDir).find((f) => f.endsWith(".app"));
   if (!app) throw new Error(`afterPack: no .app found in ${context.appOutDir}`);

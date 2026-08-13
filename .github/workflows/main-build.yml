@@ -1,19 +1,22 @@
 name: Main build
 
-# Every push to main builds all three platforms and replaces ONE rolling
+# Every push to main builds all four targets and replaces ONE rolling
 # prerelease, tagged `nightly`. Not a release per commit: hundreds of
 # accumulated releases is its own mess, and there is only ever one "latest
 # build from main" to download.
 #
 # Two channels, no shared state. The stable channel is release.yml, driven by
-# `v*` tags. electron-updater keeps them apart on its own, and this is verified
-# rather than assumed — see the note on the publish job below.
+# `v*` tags. electron-updater keeps them apart on its own: with a stable
+# version installed it sets allowPrerelease=false and resolves the update
+# through GitHub's /releases/latest, which excludes prereleases, then reads the
+# channel file from under THAT tag. Verified in the installed provider source,
+# not assumed.
 
 on:
   push:
     branches:
       - main
-    # Three platform builds is real CI time; a README typo should not spend it.
+    # Four platform builds is real CI time; a README typo should not spend it.
     paths-ignore:
       - "**.md"
       - "docs/**"
@@ -22,7 +25,7 @@ on:
   # Buildable by hand when a doc-only push did need binaries after all.
   workflow_dispatch:
 
-# A burst of pushes should not queue six full matrix builds.
+# A burst of pushes should not queue several full matrix builds.
 concurrency:
   group: main-build
   cancel-in-progress: true
@@ -36,8 +39,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # macOS builds on a runner of its OWN architecture. npm installs the
+          # optional dependency matching the build host, and electron-builder
+          # packs whatever is in node_modules regardless of --arch, so one
+          # runner cannot honestly produce both (#142).
           - os: macos-latest
-            args: --mac
+            args: --mac --arm64
+            arch: arm64
+          - os: macos-13
+            args: --mac --x64
+            arch: x64
           - os: ubuntu-latest
             args: --linux
           - os: windows-latest
@@ -54,10 +65,9 @@ jobs:
       # (apps/desktop -> ../../../wordinweb-likeoffice/packages/*).
       #
       # A nightly deliberately tracks the engine BRANCH TIP: "the latest build
-      # from main" means the latest of both halves. That does make a given app
+      # from main" means the latest of both halves. That makes a given app
       # commit non-reproducible across days, which is why the engine commit is
-      # recorded on the release itself (see the publish job). The stable v*
-      # path must NOT work this way — it pins; see release.yml.
+      # recorded on the release itself. The stable v* path pins instead.
       - uses: actions/checkout@v4
         with:
           repository: theRealestAEP/wordinweb
@@ -87,8 +97,9 @@ jobs:
       - name: Build installers
         working-directory: likeoffice/apps/desktop
         env:
-          # Unsigned for now. The stable workflow passes signing secrets when
-          # they exist; nightlies stay unsigned either way.
+          # Nightlies are always unsigned. The afterPack hook still ad-hoc
+          # signs the mac bundle and FAILS the build if the seal does not
+          # verify — without it macOS calls the download "damaged".
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: |
           npm run build
@@ -107,7 +118,10 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: main-${{ matrix.os }}
+          # Per-leg names: the two mac legs both produce latest-mac.yml, and a
+          # flat merge would silently keep one of them. They are merged
+          # deliberately in the publish job instead.
+          name: main-${{ matrix.os }}-${{ matrix.arch || 'default' }}
           path: staged/*
           if-no-files-found: error
           retention-days: 7
@@ -116,9 +130,9 @@ jobs:
       engine_sha: ${{ steps.engine.outputs.sha }}
 
   publish:
-    # One job replaces the release, AFTER all three platforms are in hand.
-    # Three matrix jobs each deleting and recreating the same release would
-    # race and leave a partial set behind.
+    # One job replaces the release, AFTER every platform is in hand. Several
+    # matrix jobs each deleting and recreating the same release would race and
+    # leave a partial set behind.
     needs: build
     if: always() && needs.build.result == 'success'
     runs-on: ubuntu-latest
@@ -127,13 +141,49 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # NOT merge-multiple: the per-leg directories are what make the
+      # latest-mac.yml collision visible instead of silent.
       - uses: actions/download-artifact@v4
         with:
-          path: dist
-          merge-multiple: true
+          path: legs
+
+      - name: Collect the artifacts, merging the two mac update feeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          # Everything except latest-mac.yml flattens with no conflict: each
+          # leg produces differently named installers.
+          find legs -type f ! -name latest-mac.yml -exec cp {} dist/ \;
+          mapfile -t MAC_YML < <(find legs -type f -name latest-mac.yml | sort)
+          echo "mac update feeds found: ${#MAC_YML[@]}"
+          if [ "${#MAC_YML[@]}" -gt 0 ]; then
+            pip install --quiet pyyaml
+            python3 - "${MAC_YML[@]}" <<'PY'
+          import sys, yaml
+          # Each per-arch build writes a feed listing only ITS OWN files. Keeping
+          # one would offer Intel users the arm64 download (and vice versa), so
+          # the file lists are concatenated back into the single feed that a
+          # both-arches-on-one-runner build used to produce.
+          docs = [yaml.safe_load(open(p)) for p in sys.argv[1:]]
+          merged = dict(docs[0])
+          seen, files = set(), []
+          for d in docs:
+              for f in d.get("files", []):
+                  if f["url"] not in seen:
+                      seen.add(f["url"])
+                      files.append(f)
+          merged["files"] = files
+          with open("dist/latest-mac.yml", "w") as fh:
+              yaml.safe_dump(merged, fh, sort_keys=False)
+          print(f"merged {len(sys.argv)-1} feeds -> {len(files)} files")
+          for f in files:
+              print("  ", f["url"])
+          PY
+          fi
+          ls -la dist
 
       - name: Summarise the artifacts
-        id: notes
         shell: bash
         run: |
           {
