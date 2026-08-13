@@ -120,6 +120,7 @@ Five in a single session, from more than one person:
 | What does the DOM say is on this page? | What does the XML say? `[data-dxw-image-format]` cannot match a shape |
 | Is it a shape or a picture? | Is it INLINE or ANCHORED? That is what selects the code path |
 | Can this object be dragged? | What is this object's MOVE AFFORDANCE? The 3D model has a dedicated button |
+| Does grep find references to this attribute? | Does anything DO this? The table handle's reveal code was right there, working off the grip bindings rather than the attribute name I searched for |
 
 Each cost real time. The first sent us hunting a fixture that was already in
 hand; the last had four of us chasing a drag that was never the supported
@@ -132,11 +133,58 @@ which is exactly why it does not feel like a guess.
 > Before trusting a cheap check, name what it would MISS.
 > If you cannot name that, you have not understood what you are measuring.
 
+The grep row is worth reading twice, because a search returning nothing feels
+like proof rather than a proxy. It is not: it answers "is this STRING present",
+never "does this BEHAVIOUR exist". Code reaches things by holding a reference
+as easily as by naming them, and the second kind is invisible to the search
+that found the first.
+
 Applied: "no media parts" misses shapes, so it cannot answer "has vector art".
 "Not in the DOM" misses anything the selector cannot match, so it cannot answer
 "what is on the page". "It does not drag" misses dedicated controls, so it
 cannot answer "can this be moved". In each case the honest next step was one
 command — read the package, read the XML, look at what the UI offers.
+
+### Make sure your harness can see the thing it is testing
+
+A third failure, and the one that costs the most per hour, because it points
+at the product instead of at itself.
+
+The two sections above are about a change that does nothing and a question that
+is nearly right. This one is about a MEASUREMENT THAT CANNOT SUCCEED. A probe
+with a broken observer reports "unreachable", "did not fire", "still zero" —
+in exactly the words a real defect would use, with none of the hesitancy.
+
+Four of these in one investigation of the table move handle, every one a
+confident false negative:
+
+| What the probe reported | What was actually wrong with the probe |
+| --- | --- |
+| "Nothing ever reveals this handle" | `grep` for the data attribute; the reveal code addressed it through the grip bindings |
+| "A real press never reaches the grip" | The spy was armed AFTER the press it was meant to observe |
+| "Hovering the table does nothing" | Layout px added straight to a client rect, so the pointer went somewhere else |
+| "The handle is unreachable" | The measurement point was below the fold, where `elementFromPoint` returns null and everything reads unreachable |
+
+Three of those four would have been filed as product defects. One of them was:
+a fix went into a working tree on the strength of the first row before the
+handler it contradicted turned up.
+
+So, for any probe that drives a pointer:
+
+> A POINTER PROBE MUST ASSERT ITS OWN PRECONDITIONS before it believes any
+> answer — the point is inside the viewport, something is actually under it,
+> and the observer was armed before the event fired.
+
+And the tell that caught it, which generalises past pointers:
+
+> A NUMBER THE MECHANISM YOU BELIEVE IS RUNNING COULD NOT PRODUCE means stop
+> and re-derive, not explain away.
+
+Here that number was an opacity of 1 on an element with no matching CSS rule.
+A stylesheet cannot do that, so something imperative was setting it — and that
+something was the handler the first row had concluded did not exist. The
+anomaly was the cheapest signal in the whole investigation and it was nearly
+argued away twice.
 
 ### Pin the engine before you tag
 
