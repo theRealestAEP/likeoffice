@@ -100,6 +100,9 @@ jobs:
 
       - name: Build and publish installers to a draft release
         working-directory: likeoffice/apps/desktop
+        # bash on every platform: the Windows runner defaults to PowerShell,
+        # which cannot parse the POSIX test below and fails before building.
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Code signing is optional: with these secrets unset the builds
