@@ -49,6 +49,7 @@ visible in a diff, and none of them survives one measurement.
 | A CSS rule set `border-color` on focus | An inline `border` shorthand outranked it, so it never applied |
 | A focus ring was drawn in the theme's own blue | At 1.15:1 against the field it was a ring nobody could see |
 | The harness dispatched the event to the element | Real hit-testing never targets a `pointer-events: none` element, so the test could not fail |
+| Every popover's rect was measured in a browser and sat inside the window | A rewrite script had matched the STYLE BLOCK, not the tag, so five panels never got their `ref` — and a rect assertion cannot see a height that was never measured |
 
 So before calling any of these done:
 
@@ -59,6 +60,31 @@ So before calling any of these done:
 
 The cheapest of these checks took about ninety seconds. Each one stood between
 a change that reads as finished and a change that works.
+
+#### Measuring the right effect is not the same as measuring enough of them
+
+The last row is a sharper version of the rule, and it cost a shipped defect to
+learn. The measurement was real, taken in a real browser, and correct: those
+panels' right edges genuinely were inside the window. But the horizontal clamp
+came from a `width` passed in code, while the flip and the height cap came from
+a height read off the panel's `ref` — and the five panels with no `ref` had no
+height at all. One effect was right, a second effect was dead, and the first
+could not reveal the second. It surfaced only when Escape had to hand focus
+back, because that is the first behaviour that genuinely needs the `ref`.
+
+So: **"verify the effect" assumes you know which effect to look at.** When a
+change has two consequences, measuring the obvious one is not evidence about
+the other.
+
+The mechanical half of this is worth stating on its own, because it generalises
+past this file:
+
+> A codemod-style edit must be checked by COUNTING the sites that took it, not
+> by sampling a few. Sampling five of twenty-nine call sites would have passed.
+> Re-grep for the shape you rewrote and assert the count is what you expect —
+> the sites a pattern silently skips are exactly the ones whose formatting made
+> them different, and different formatting is not correlated with being less
+> important.
 
 #### The last row is about our tests, not our code
 
