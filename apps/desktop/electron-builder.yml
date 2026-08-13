@@ -50,12 +50,25 @@ win:
     - nsis
 
 linux:
+  # electron-builder derives the executable name from package.json `name`,
+  # which is the scoped "@likeoffice/desktop"; it sanitizes to
+  # "@likeofficedesktop" and AppImage refuses the "@" outright, failing the
+  # build. macOS and Windows never hit this because they name the binary from
+  # productName. Set it explicitly for Linux only, so the verified mac bundle
+  # layout (Contents/MacOS/LikeOffice) is untouched.
+  executableName: likeoffice
   target:
     - AppImage
     - deb
   category: Office
   maintainer: LikeOffice contributors
   synopsis: High-fidelity .docx word processor
+
+deb:
+  # Default is "${name}_${version}_${arch}.${ext}", and ${name} is the scoped
+  # "@likeoffice/desktop" — so the artifact path gained a "/" and a "@". Name
+  # it from productName, as AppImage already does.
+  artifactName: ${productName}-${version}-${arch}.${ext}
 
 publish:
   provider: github
