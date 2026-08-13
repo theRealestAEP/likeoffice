@@ -1,0 +1,175 @@
+name: Main build
+
+# Every push to main builds all three platforms and replaces ONE rolling
+# prerelease, tagged `nightly`. Not a release per commit: hundreds of
+# accumulated releases is its own mess, and there is only ever one "latest
+# build from main" to download.
+#
+# Two channels, no shared state. The stable channel is release.yml, driven by
+# `v*` tags. electron-updater keeps them apart on its own, and this is verified
+# rather than assumed — see the note on the publish job below.
+
+on:
+  push:
+    branches:
+      - main
+    # Three platform builds is real CI time; a README typo should not spend it.
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".gitignore"
+      - "LICENSE"
+  # Buildable by hand when a doc-only push did need binaries after all.
+  workflow_dispatch:
+
+# A burst of pushes should not queue six full matrix builds.
+concurrency:
+  group: main-build
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            args: --mac
+          - os: ubuntu-latest
+            args: --linux
+          - os: windows-latest
+            args: --win
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: likeoffice
+
+      # The engine is a sibling repo linked via file: dependencies
+      # (apps/desktop -> ../../../wordinweb-likeoffice/packages/*).
+      #
+      # A nightly deliberately tracks the engine BRANCH TIP: "the latest build
+      # from main" means the latest of both halves. That does make a given app
+      # commit non-reproducible across days, which is why the engine commit is
+      # recorded on the release itself (see the publish job). The stable v*
+      # path must NOT work this way — it pins; see release.yml.
+      - uses: actions/checkout@v4
+        with:
+          repository: theRealestAEP/wordinweb
+          ref: likeoffice
+          path: wordinweb-likeoffice
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Record the engine commit
+        id: engine
+        shell: bash
+        working-directory: wordinweb-likeoffice
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Build the engine
+        working-directory: wordinweb-likeoffice
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Install the app
+        working-directory: likeoffice
+        run: npm install --no-audit --no-fund
+
+      - name: Build installers
+        working-directory: likeoffice/apps/desktop
+        env:
+          # Unsigned for now. The stable workflow passes signing secrets when
+          # they exist; nightlies stay unsigned either way.
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: |
+          npm run build
+          npx electron-builder ${{ matrix.args }} --publish never
+
+      - name: Stage the installers
+        shell: bash
+        run: |
+          mkdir -p staged
+          cd likeoffice/apps/desktop/release
+          # Only the files a user downloads, plus the updater metadata.
+          for f in *.dmg *.zip *.exe *.AppImage *.deb *.yml *.blockmap; do
+            [ -e "$f" ] && cp "$f" "$GITHUB_WORKSPACE/staged/" || true
+          done
+          ls -la "$GITHUB_WORKSPACE/staged"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: main-${{ matrix.os }}
+          path: staged/*
+          if-no-files-found: error
+          retention-days: 7
+
+    outputs:
+      engine_sha: ${{ steps.engine.outputs.sha }}
+
+  publish:
+    # One job replaces the release, AFTER all three platforms are in hand.
+    # Three matrix jobs each deleting and recreating the same release would
+    # race and leave a partial set behind.
+    needs: build
+    if: always() && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Summarise the artifacts
+        id: notes
+        shell: bash
+        run: |
+          {
+            echo "Automatic build of \`main\` at [\`${GITHUB_SHA:0:7}\`](https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA})."
+            echo
+            echo "Engine: \`${ENGINE_SHA:0:7}\` from \`theRealestAEP/wordinweb@likeoffice\`, its branch tip when this ran."
+            echo
+            echo "> [!WARNING]"
+            echo "> This is an untested build from the tip of \`main\`, not a release."
+            echo "> For a version that was smoke-tested, use the latest stable release."
+            echo "> These builds are unsigned — see the README for the first-launch step."
+            echo
+            echo "| File | Size |"
+            echo "| --- | --- |"
+            for f in dist/*; do
+              case "$f" in *.yml|*.blockmap) continue ;; esac
+              [ -f "$f" ] || continue
+              # Decimal MB, which is what Finder and the GitHub download page show.
+              printf '| `%s` | %s MB |\n' "$(basename "$f")" \
+                "$(awk -v b="$(wc -c < "$f")" 'BEGIN{printf "%.1f", b/1000000}')"
+            done
+          } > notes.md
+          cat notes.md
+        env:
+          ENGINE_SHA: ${{ needs.build.outputs.engine_sha }}
+
+      - name: Replace the rolling prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Delete the release AND its tag, so the recreated one points at this
+          # commit and no file from an older build survives underneath it.
+          gh release delete nightly --cleanup-tag --yes || true
+          gh release create nightly \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "Latest build from main (${GITHUB_SHA:0:7})" \
+            --notes-file notes.md \
+            dist/*

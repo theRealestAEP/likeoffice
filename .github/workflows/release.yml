@@ -35,15 +35,46 @@ jobs:
       # The engine is a sibling repo linked via file: dependencies
       # (apps/desktop -> ../../../wordinweb-likeoffice/packages/*), so it
       # must be cloned and built before the app installs.
+      #
+      # Cloned at the BRANCH here, then pinned below. A branch is a moving
+      # target: on its own it means the same app tag can build different
+      # binaries on different days, which is tolerable for a nightly and not
+      # for a release.
       - uses: actions/checkout@v4
         with:
           repository: theRealestAEP/wordinweb
           ref: likeoffice
           path: wordinweb-likeoffice
+          # Full history, so .engine-ref can name any commit, not just the tip.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      # Pin the engine for a TAGGED build.
+      #
+      # Write the engine commit into `.engine-ref` in this repo (one line, a
+      # full 40-char sha) and a tag rebuilds against exactly that engine,
+      # today or in a year. With no such file the build falls back to the
+      # branch tip and says so — which keeps this workflow working unchanged,
+      # but leaves the release unreproducible. Write the file before tagging.
+      - name: Pin the engine
+        id: engine
+        shell: bash
+        run: |
+          REF_FILE=likeoffice/.engine-ref
+          if [ -s "$REF_FILE" ]; then
+            PIN=$(tr -d '[:space:]' < "$REF_FILE")
+            git -C wordinweb-likeoffice checkout --quiet "$PIN"
+            PINNED="yes, from .engine-ref"
+          else
+            echo "::warning::No .engine-ref — building against the tip of wordinweb@likeoffice, so this release is NOT reproducible."
+            PINNED="NO — built against the branch tip"
+          fi
+          SHA=$(git -C wordinweb-likeoffice rev-parse HEAD)
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "Engine commit \`$SHA\` (pinned: $PINNED)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build the engine
         working-directory: wordinweb-likeoffice
