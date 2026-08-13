@@ -43,25 +43,45 @@ When a release is available, get the installer for your system:
 | Windows | `LikeOffice Setup <version>.exe` | See [First launch on Windows](#first-launch-on-windows) |
 | Linux | `LikeOffice-<version>.AppImage` or `.deb` | Make the AppImage executable before you run it |
 
-Each download is about 180-200 MB. An Electron app carries its own browser
-engine, which accounts for most of that size.
+Each download is about 185-195 MB, and the installed app is about 555 MB.
+Two things account for that size: an Electron app carries its own browser
+engine, and LikeOffice bundles the Claude command-line tool, which is 277 MB
+on its own.
 
 All builds are on the [Releases page](https://github.com/theRealestAEP/likeoffice/releases).
 
 ### First launch on macOS
 
 The macOS builds are not signed with an Apple Developer certificate. macOS
-therefore blocks the app the first time you open it. This is expected. The app
-is not damaged.
+therefore blocks the app the first time you open it. This dialog appears:
+
+> **"LikeOffice" Not Opened**
+> Apple could not verify "LikeOffice" is free of malware that may harm your
+> Mac or compromise your privacy.
+> \[Done]  \[Move to Trash]
+
+Select **Done**. Do not select Move to Trash.
 
 To open the app:
 
 1. Move `LikeOffice.app` to your Applications folder.
-2. Hold Control and click the app icon.
-3. Select **Open** from the menu.
-4. Select **Open** again in the dialog.
+2. Open the Terminal app.
+3. Run this command:
 
-macOS remembers this choice. Later launches need no extra steps.
+```bash
+xattr -d -r com.apple.quarantine /Applications/LikeOffice.app
+```
+
+4. Open the app as usual.
+
+The command removes the quarantine flag that macOS adds to every download. You
+run it once. Later launches need no extra steps.
+
+> [!NOTE]
+> On macOS 15 a Control-click on the app icon does **not** get past this
+> dialog, and neither does the Open Anyway button in System Settings in our
+> testing. The command above is the step we tested on the released build.
+> Signing the app removes this step completely, and it is planned.
 
 ### First launch on Windows
 
