@@ -188,8 +188,10 @@ argued away twice.
 
 ### When a defect will not reproduce, suspect the document first
 
-The sections above are about a measurement that lies. This one is about a
-measurement that is honest, repeatable, and about the WRONG FILE.
+The sections above are all about a check that answers wrongly. This one is
+different in kind: the check is perfect and the DEFECT IS ABSENT, because the
+document cannot exhibit it. Nothing is wrong with the measurement at all,
+which is why it is the hardest of the six to catch.
 
 #160 — the toolbar's Bold swallowing every second click — was chased on
 `contract.docx` first. It toggled correctly on every click, twice in a row,
@@ -207,9 +209,21 @@ engine takes ~100ms to catch up. Same code, same gesture, opposite answer.
 
 So when a report will not reproduce: use the fixture the report names before
 any other, and if you must substitute, say which document you actually used
-and why. "Could not reproduce on my fixture" is a useful sentence; "could not
-reproduce" is not. Size, table depth, and anything that pushes the engine off
-its synchronous path are the dimensions that have mattered here.
+and why. "Could not reproduce on `contract.docx`" is a useful sentence;
+"could not reproduce" is not. Size, table depth, and anything that pushes the
+engine off its synchronous path are the dimensions that have mattered here.
+
+#### The other half is how we WRITE tickets
+
+The only reason #160 survived is that its ticket named its fixture. That is
+luck unless it is a rule, so:
+
+> A defect report is incomplete until it names the document it was seen on.
+
+It costs one line to write and it is the difference between a reader
+reproducing in a minute and a reader closing the ticket in good faith. The
+same goes for a report that a defect is GONE: name what you re-tested on, or
+the next person cannot tell a fix from a fixture that never showed it.
 
 ### Pin the engine before you tag
 
