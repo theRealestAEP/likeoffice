@@ -44,17 +44,21 @@ jobs:
           # packs whatever is in node_modules regardless of --arch, so one
           # runner cannot honestly produce both (#142).
           - os: macos-latest
+            id: mac-arm64
             args: --mac --arm64
             arch: arm64
           # macos-15-intel, NOT macos-13: that label is retired, and GitHub
           # names macos-15-intel the last x86_64 Actions image, available until
           # August 2027. macos-latest is Apple silicon (macOS 26 arm64).
           - os: macos-15-intel
+            id: mac-x64
             args: --mac --x64
             arch: x64
           - os: ubuntu-latest
+            id: linux
             args: --linux
           - os: windows-latest
+            id: windows
             args: --win
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
@@ -123,8 +127,11 @@ jobs:
         with:
           # Per-leg names: the two mac legs both produce latest-mac.yml, and a
           # flat merge would silently keep one of them. They are merged
-          # deliberately in the publish job instead.
-          name: main-${{ matrix.os }}-${{ matrix.arch || 'default' }}
+          # deliberately in the publish job instead. An explicit `id` rather
+          # than `${{ matrix.arch || 'default' }}` — the linux and windows legs
+          # define no arch, and a name should not rest on how an undefined
+          # matrix key renders.
+          name: main-${{ matrix.id }}
           path: staged/*
           if-no-files-found: error
           retention-days: 7
@@ -158,32 +165,12 @@ jobs:
           # Everything except latest-mac.yml flattens with no conflict: each
           # leg produces differently named installers.
           find legs -type f ! -name latest-mac.yml -exec cp {} dist/ \;
-          mapfile -t MAC_YML < <(find legs -type f -name latest-mac.yml | sort)
-          echo "mac update feeds found: ${#MAC_YML[@]}"
-          if [ "${#MAC_YML[@]}" -gt 0 ]; then
-            pip install --quiet pyyaml
-            python3 - "${MAC_YML[@]}" <<'PY'
-          import sys, yaml
-          # Each per-arch build writes a feed listing only ITS OWN files. Keeping
-          # one would offer Intel users the arm64 download (and vice versa), so
-          # the file lists are concatenated back into the single feed that a
-          # both-arches-on-one-runner build used to produce.
-          docs = [yaml.safe_load(open(p)) for p in sys.argv[1:]]
-          merged = dict(docs[0])
-          seen, files = set(), []
-          for d in docs:
-              for f in d.get("files", []):
-                  if f["url"] not in seen:
-                      seen.add(f["url"])
-                      files.append(f)
-          merged["files"] = files
-          with open("dist/latest-mac.yml", "w") as fh:
-              yaml.safe_dump(merged, fh, sort_keys=False)
-          print(f"merged {len(sys.argv)-1} feeds -> {len(files)} files")
-          for f in files:
-              print("  ", f["url"])
-          PY
-          fi
+          # No pip install: ubuntu-latest marks the system Python externally
+          # managed (PEP 668), and the publish job is the worst place to find
+          # that out — the build legs have already spent their time. The script
+          # needs only the standard library, and finds the feeds itself so this
+          # step stays plain enough to run anywhere.
+          python3 scripts/merge-mac-feeds.py dist/latest-mac.yml legs
           ls -la dist
 
       - name: Summarise the artifacts

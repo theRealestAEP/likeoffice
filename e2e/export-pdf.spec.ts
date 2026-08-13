@@ -4,6 +4,13 @@ import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { extractText, getDocumentProxy } from "unpdf";
+import { installMathSumPrecise } from "./support/math-sum-precise.js";
+
+// unpdf bundles pdf.js, which calls Math.sumPrecise unguarded; no Node we run
+// on has it yet. Install it before any extraction so pdf.js takes its real
+// path instead of the caught-TypeError fallback. Test-only: the app ships no
+// PDF library.
+installMathSumPrecise();
 
 const APP_DIR = path.join(__dirname, "../apps/desktop");
 
