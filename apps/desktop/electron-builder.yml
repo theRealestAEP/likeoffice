@@ -20,6 +20,11 @@ files:
 
 npmRebuild: false
 
+# Ad-hoc sign the macOS bundle. Without this electron-builder ships Electron's
+# own linker signature over a bundle it has since rewritten, and macOS calls
+# the download "damaged" with no way past it. See build/after-pack.cjs.
+afterPack: build/after-pack.cjs
+
 fileAssociations:
   - ext: docx
     name: Word Document
