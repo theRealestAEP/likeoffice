@@ -111,6 +111,17 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
+          # An unset secret still DEFINES the variable, as empty. electron-builder
+          # reads an empty CSC_LINK as a certificate path, resolves it against the
+          # working directory, and dies with "<cwd> not a file" — which is what
+          # broke the first v0.1.0 tag while the nightly, which never sets these
+          # at all, built the same commit fine. Empty means absent, so remove them.
+          if [ -z "${CSC_LINK:-}" ]; then
+            unset CSC_LINK CSC_KEY_PASSWORD
+          fi
+          if [ -z "${APPLE_ID:-}" ]; then
+            unset APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID
+          fi
           npm run build
           npx electron-builder ${{ matrix.args }} --publish always
 
