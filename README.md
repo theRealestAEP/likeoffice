@@ -38,15 +38,15 @@ When a release is available, get the installer for your system:
 
 | System | File | Notes |
 | --- | --- | --- |
-| macOS (Apple silicon) | `LikeOffice-<version>-arm64.dmg` | See [First launch on macOS](#first-launch-on-macos) |
-| macOS (Intel) | `LikeOffice-<version>.dmg` | See [First launch on macOS](#first-launch-on-macos) |
-| Windows | `LikeOffice Setup <version>.exe` | See [First launch on Windows](#first-launch-on-windows) |
-| Linux | the `.AppImage` or `.deb` for your architecture | Make the AppImage executable before you run it |
+| macOS (Apple silicon) | `LikeOffice-<version>-arm64.dmg` | 183 MB — see [First launch on macOS](#first-launch-on-macos) |
+| macOS (Intel) | `LikeOffice-<version>.dmg` | 196 MB — see [First launch on macOS](#first-launch-on-macos) |
+| Windows | `LikeOffice.Setup.<version>.exe` | 150 MB — see [First launch on Windows](#first-launch-on-windows) |
+| Linux (AppImage) | `LikeOffice-<version>.AppImage` | 206 MB — make it executable before you run it |
+| Linux (Debian, Ubuntu) | `LikeOffice-<version>-amd64.deb` | 159 MB |
 
-Each download is about 185-195 MB, and the installed app is about 555 MB.
-Two things account for that size: an Electron app carries its own browser
-engine, and LikeOffice bundles the Claude command-line tool, which is 277 MB
-on its own.
+The installed app is about 555 MB. Two things account for that size: an
+Electron app carries its own browser engine, and LikeOffice bundles the Claude
+command-line tool, which is 277 MB on its own.
 
 All builds are on the [Releases page](https://github.com/theRealestAEP/likeoffice/releases).
 
