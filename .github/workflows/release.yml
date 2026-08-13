@@ -1,8 +1,16 @@
 name: Release
 
-# Tag a commit `v*` (e.g. v0.1.0) to build installers for all three
-# platforms and upload them to a draft GitHub Release. Publish the draft by
-# hand after a smoke test. See RELEASING.md.
+# Tag a commit `v*` (e.g. v0.1.0) to build installers for every platform and
+# collect them into ONE draft GitHub Release. A human smoke-tests the draft and
+# publishes it by hand. See RELEASING.md.
+#
+# Same shape as main-build.yml, and for the same reason: every leg builds with
+# `--publish never` and uploads artifacts, then a SINGLE publish job creates the
+# release. Letting each leg publish itself raced — four runners each tried to
+# create the v0.1.0 draft, two of them won, and the tag ended up with two
+# separate drafts holding 7 and 8 artifacts, neither complete. One publisher
+# also means the two macOS legs' update feeds get merged rather than one
+# overwriting the other (#144).
 
 on:
   push:
@@ -24,17 +32,19 @@ jobs:
           # runner cannot honestly produce both (#142): building x64 on Apple
           # silicon shipped an Intel dmg carrying an arm64 `claude` binary.
           - os: macos-latest
+            id: mac-arm64
             args: --mac --arm64
-            arch: arm64
           # macos-15-intel, NOT macos-13: that label is retired, and GitHub
           # names macos-15-intel the last x86_64 Actions image, available until
           # August 2027. macos-latest is Apple silicon (macOS 26 arm64).
           - os: macos-15-intel
+            id: mac-x64
             args: --mac --x64
-            arch: x64
           - os: ubuntu-latest
+            id: linux
             args: --linux
           - os: windows-latest
+            id: windows
             args: --win
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
@@ -98,13 +108,12 @@ jobs:
         working-directory: likeoffice
         run: npm install --no-audit --no-fund
 
-      - name: Build and publish installers to a draft release
+      - name: Build installers
         working-directory: likeoffice/apps/desktop
         # bash on every platform: the Windows runner defaults to PowerShell,
         # which cannot parse the POSIX test below and fails before building.
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Code signing is optional: with these secrets unset the builds
           # are unsigned. See RELEASING.md for how to enable signing.
           CSC_LINK: ${{ secrets.CSC_LINK }}
@@ -126,18 +135,104 @@ jobs:
             unset APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID
           fi
           npm run build
-          npx electron-builder ${{ matrix.args }} --publish always
+          npx electron-builder ${{ matrix.args }} --publish never
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+      - name: Stage the installers
+        shell: bash
+        run: |
+          mkdir -p staged
+          cd likeoffice/apps/desktop/release
+          # Only the files a user downloads, plus the updater metadata.
+          for f in *.dmg *.zip *.exe *.AppImage *.deb *.yml *.blockmap; do
+            [ -e "$f" ] && cp "$f" "$GITHUB_WORKSPACE/staged/" || true
+          done
+          ls -la "$GITHUB_WORKSPACE/staged"
+
+      - uses: actions/upload-artifact@v4
         with:
-          name: installers-${{ matrix.os }}
-          path: |
-            likeoffice/apps/desktop/release/*.dmg
-            likeoffice/apps/desktop/release/*.zip
-            likeoffice/apps/desktop/release/*.exe
-            likeoffice/apps/desktop/release/*.AppImage
-            likeoffice/apps/desktop/release/*.deb
-            likeoffice/apps/desktop/release/*.yml
-            likeoffice/apps/desktop/release/*.blockmap
+          # Per-leg names: the two mac legs both produce latest-mac.yml, and a
+          # flat merge would silently keep one of them. They are merged
+          # deliberately in the publish job instead.
+          name: release-${{ matrix.id }}
+          path: staged/*
           if-no-files-found: error
+          retention-days: 7
+
+    outputs:
+      engine_sha: ${{ steps.engine.outputs.sha }}
+
+  publish:
+    # ONE job creates the release, AFTER every platform is in hand. This is the
+    # whole point of the restructure: four legs publishing themselves produced
+    # two drafts for one tag, split 7 and 8 artifacts, neither complete.
+    needs: build
+    if: always() && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # NOT merge-multiple: the per-leg directories are what make the
+      # latest-mac.yml collision visible instead of silent.
+      - uses: actions/download-artifact@v4
+        with:
+          path: legs
+
+      - name: Collect the artifacts, merging the two mac update feeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          # Everything except latest-mac.yml flattens with no conflict: each
+          # leg produces differently named installers.
+          find legs -type f ! -name latest-mac.yml -exec cp {} dist/ \;
+          # No pip install: ubuntu-latest marks the system Python externally
+          # managed (PEP 668). The script needs only the standard library, and
+          # finds the feeds itself so this step stays plain enough to run
+          # anywhere.
+          python3 scripts/merge-mac-feeds.py dist/latest-mac.yml legs
+          ls -la dist
+
+      - name: Write the release notes
+        shell: bash
+        run: |
+          {
+            echo "## LikeOffice ${GITHUB_REF_NAME}"
+            echo
+            echo "Engine: \`${ENGINE_SHA:0:7}\` (\`theRealestAEP/wordinweb\`)."
+            echo
+            echo "> [!NOTE]"
+            echo "> These builds are unsigned. macOS and Windows both warn on first"
+            echo "> launch — see the README for the one-time step."
+            echo
+            echo "| File | Size |"
+            echo "| --- | --- |"
+            for f in dist/*; do
+              case "$f" in *.yml|*.blockmap) continue ;; esac
+              [ -f "$f" ] || continue
+              # Decimal MB, which is what the GitHub download page shows.
+              printf '| `%s` | %s MB |\n' "$(basename "$f")" \
+                "$(awk -v b="$(wc -c < "$f")" 'BEGIN{printf "%.1f", b/1000000}')"
+            done
+          } > notes.md
+          cat notes.md
+        env:
+          ENGINE_SHA: ${{ needs.build.outputs.engine_sha }}
+
+      - name: Create the draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # DRAFT on purpose: a human smoke-tests the installers and presses
+          # publish. Auto-update only ever sees published releases.
+          #
+          # No delete-then-create here, unlike the rolling nightly. If a
+          # release already exists for this tag the command fails, which is the
+          # correct outcome for a stable tag — clobbering a release someone may
+          # already have published is not something a re-run should do quietly.
+          gh release create "$GITHUB_REF_NAME" \
+            --draft \
+            --title "LikeOffice $GITHUB_REF_NAME" \
+            --notes-file notes.md \
+            dist/*
