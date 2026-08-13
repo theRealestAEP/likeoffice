@@ -41,7 +41,7 @@ When a release is available, get the installer for your system:
 | macOS (Apple silicon) | `LikeOffice-<version>-arm64.dmg` | See [First launch on macOS](#first-launch-on-macos) |
 | macOS (Intel) | `LikeOffice-<version>.dmg` | See [First launch on macOS](#first-launch-on-macos) |
 | Windows | `LikeOffice Setup <version>.exe` | See [First launch on Windows](#first-launch-on-windows) |
-| Linux | `LikeOffice-<version>.AppImage` or `.deb` | Make the AppImage executable before you run it |
+| Linux | the `.AppImage` or `.deb` for your architecture | Make the AppImage executable before you run it |
 
 Each download is about 185-195 MB, and the installed app is about 555 MB.
 Two things account for that size: an Electron app carries its own browser
