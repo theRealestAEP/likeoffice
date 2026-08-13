@@ -13,6 +13,19 @@ const APP_DIR = path.join(__dirname, "../apps/desktop");
  * transcript of forty-odd entries and measures what the user would see.
  */
 test("a long transcript keeps every entry its own size", async () => {
+  // This test is far and away the heaviest in the suite: it launches the app,
+  // then drives TEN sequential model round trips to build a forty-odd entry
+  // transcript, then measures layout twice at two panel widths. The suite's
+  // 60s default cannot hold that on a slow machine — and the test's own inner
+  // budgets say so, asking for up to 30s of launch plus 60s per ask, which is
+  // already more than the 60s total it was allowed. It fit only while every
+  // step happened to be fast; CI's Linux runner (~5x slower than a dev Mac
+  // here, 8.3s average per e2e test against ~1.5s) blew straight through it.
+  //
+  // The budget is the thing that was wrong, so the budget is what changes.
+  // Every assertion below is untouched, including the per-step timeouts.
+  test.setTimeout(180000);
+
   const dir = await mkdtemp(path.join(tmpdir(), "likeoffice-"));
   const userData = await mkdtemp(path.join(tmpdir(), "likeoffice-userdata-"));
   const docPath = path.join(dir, "transcript.docx");

@@ -25,6 +25,17 @@ async function openShortcutsSheet(win: Page): Promise<void> {
   await win.getByRole("tab", { name: "Shortcuts" }).click();
 }
 
+/**
+ * The sheet prints the accelerators of the platform it runs on: "⌘F" on Apple,
+ * "Ctrl+F" everywhere else (formatCombo in packages/core/src/edit/shortcuts.ts,
+ * driven by help.tsx's `apple` flag). Both are correct, so the expectation
+ * follows the platform rather than assuming a Mac — this test failed honestly
+ * on CI's Linux runner, where the sheet said "Ctrl+F" and the assertion
+ * demanded "⌘F".
+ */
+const APPLE = process.platform === "darwin";
+const combo = (mac: string, other: string): string => (APPLE ? mac : other);
+
 test("the shortcuts sheet lists both the menu's keys and the editor's own", async () => {
   const userData = await mkdtemp(path.join(tmpdir(), "likeoffice-userdata-"));
   const app = await electron.launch({
@@ -36,11 +47,11 @@ test("the shortcuts sheet lists both the menu's keys and the editor's own", asyn
     await openShortcutsSheet(win);
 
     // Menu-owned: the Edit menu binds ⌘F, so the engine never sees the keydown.
-    await expect(win.locator('[data-dxw-help-shortcut="Find…"] kbd')).toHaveText("⌘F");
+    await expect(win.locator('[data-dxw-help-shortcut="Find…"] kbd')).toHaveText(combo("⌘F", "Ctrl+F"));
     await expect(win.locator("h3", { hasText: "Edit menu" })).toBeVisible();
 
     // Engine-owned: no menu item binds ⌘\, so the editor's table still supplies it.
-    await expect(win.locator('[data-dxw-help-shortcut="Clear formatting"] kbd')).toHaveText("⌘\\");
+    await expect(win.locator('[data-dxw-help-shortcut="Clear formatting"] kbd')).toHaveText(combo("⌘\\", "Ctrl+\\"));
 
     // The menu's keys carry its own labels and grouping, formatted the way the
     // engine's rows are, so the two halves read as one sheet.
@@ -53,8 +64,8 @@ test("the shortcuts sheet lists both the menu's keys and the editor's own", asyn
     await expect(
       win.locator("section", { has: win.locator("h3", { hasText: "File menu" }) })
         .locator('[data-dxw-help-shortcut="Save As…"] kbd'),
-    ).toHaveText("⇧⌘S");
-    await expect(win.locator('[data-dxw-help-shortcut="Print…"] kbd')).toHaveText("⌘P");
+    ).toHaveText(combo("⇧⌘S", "Ctrl+Shift+S"));
+    await expect(win.locator('[data-dxw-help-shortcut="Print…"] kbd')).toHaveText(combo("⌘P", "Ctrl+P"));
   } finally {
     // Destroy the windows first: a graceful quit with the sheet still open
     // takes ~35s and leaves an orphan when the body throws. See review-tab.

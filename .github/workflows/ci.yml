@@ -51,3 +51,16 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y xvfb
           xvfb-run -a npx playwright test
+
+      # Playwright writes a DOM snapshot per failure (error-context.md). Without
+      # this they die with the runner, and a CI-only failure has to be guessed
+      # at from the console log — which is exactly what happened to the
+      # ai-transcript timeout.
+      - name: Upload the failure snapshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-failures
+          path: likeoffice/test-results/**
+          if-no-files-found: ignore
+          retention-days: 7
