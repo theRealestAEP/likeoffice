@@ -18,6 +18,7 @@
  */
 import { test, expect, _electron as electron, type Page } from "@playwright/test";
 import { copyFile, mkdtemp, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { crc32 } from "node:zlib";
@@ -28,6 +29,27 @@ const APP_DIR = path.join(__dirname, "../apps/desktop");
 // position and the interaction. One union so the same helpers drive both.
 const SEL = "[data-dxw-image-format], [data-dxw-model3d], [data-dxw-drawing]";
 const enc = (s: string) => new TextEncoder().encode(s);
+
+/**
+ * The parity corpus checkout, if this machine has one.
+ *
+ * Same candidate order the engine's corpus tests use: an explicit
+ * WORDINWEB_FIXTURES first, then the sibling checkout the repos are laid out in.
+ */
+function fixtureFromCorpus(name: string): string | null {
+  const roots = [
+    process.env.WORDINWEB_FIXTURES,
+    path.resolve(__dirname, "../../wordinweb-parity"),
+    path.resolve(__dirname, "../../../wordinweb-parity"),
+  ];
+  for (const root of roots) {
+    if (!root) continue;
+    const file = path.join(root, "parity", name);
+    if (existsSync(file)) return file;
+  }
+  return null;
+}
+
 
 /**
  * A minimal STORED (uncompressed) zip writer.
@@ -313,10 +335,17 @@ test("a 3D model selects from a real press, and rotates more than once", async (
   // d618708 made pointer-events:none. Real hit-testing then never produced a
   // target the lookup could match, so the model could not be selected and the
   // rotate puck did nothing. Both gestures, one lookup.
-  const FIXTURE = "/Users/alexpickett/Desktop/Projects/wordinweb-parity/parity/coverletter-anon.docx";
+  // A 3D model needs a real GLB part, which nothing here can synthesise the way
+  // zipStored builds the other fixtures, so this one document comes from the
+  // parity corpus. Located rather than hardcoded: it used to name an absolute
+  // path inside one checkout on one machine, which failed on every other and
+  // took CI red with it. The corpus file is untracked, so CI skips this and the
+  // 3D paths are covered on a developer machine that has the corpus.
+  const FIXTURE = fixtureFromCorpus("coverletter-anon.docx");
+  test.skip(!FIXTURE, "needs the wordinweb-parity corpus; set WORDINWEB_FIXTURES to it");
   const dir = await mkdtemp(path.join(tmpdir(), "likeoffice-3d-"));
   const docPath = path.join(dir, "model.docx");
-  await copyFile(FIXTURE, docPath);
+  await copyFile(FIXTURE!, docPath);
   const userData = await mkdtemp(path.join(tmpdir(), "likeoffice-userdata-"));
   const app = await electron.launch({
     args: [APP_DIR, docPath],

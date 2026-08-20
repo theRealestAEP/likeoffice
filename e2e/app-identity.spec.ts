@@ -30,9 +30,11 @@ test("the app is named LikeOffice, not Electron", async () => {
     // The window title carries it too.
     await expect(win).toHaveTitle(/LikeOffice$/);
 
-    // And the first app menu is ours, not the default one.
+    // And the first app menu is ours, not the default one. Only macOS HAS an
+    // application menu — on Windows and Linux the template starts at File, so
+    // asserting "LikeOffice" there tests the platform, not the app.
     const firstMenu = await app.evaluate(({ Menu }) => Menu.getApplicationMenu()?.items[0]?.label);
-    expect(firstMenu).toBe("LikeOffice");
+    expect(firstMenu).toBe(process.platform === "darwin" ? "LikeOffice" : "File");
   } finally {
     await app.close();
   }

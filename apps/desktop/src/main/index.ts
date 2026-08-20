@@ -71,12 +71,22 @@ function autosaveDir(): string {
   return path.join(app.getPath("userData"), "autosave");
 }
 
-/** Remember the mtime we just produced, so the watcher can tell our write from
- * someone else's. */
-async function noteOwnWrite(st: DocState): Promise<void> {
-  if (!st.path) return;
+/**
+ * Remember the mtime we just produced, so the watcher can tell our write from
+ * someone else's.
+ *
+ * Pass the TEMP file, before the rename that publishes it. `rename` does not
+ * touch the file's mtime, so the temp file's mtime IS the mtime the document
+ * will have. Recording it after the rename is a race the app loses on Linux,
+ * where inotify delivers the event before the next await resolves: the watcher
+ * then compares against the PREVIOUS mtime and reports the app's own autosave
+ * as somebody else's edit. macOS coalesces its events slowly enough to hide
+ * this, which is why it only ever showed up on a Linux runner.
+ */
+async function noteOwnWrite(st: DocState, from = st.path): Promise<void> {
+  if (!from) return;
   try {
-    st.ownMtimeMs = (await stat(st.path)).mtimeMs;
+    st.ownMtimeMs = (await stat(from)).mtimeMs;
   } catch {
     st.ownMtimeMs = 0;
   }
@@ -457,8 +467,8 @@ ipcMain.handle("document:autosave", async (e, bytes: Uint8Array): Promise<string
   // user's document used to be. Same tmp+rename the explicit save uses.
   const tmp = `${st.path}.autosave-tmp`;
   await writeFile(tmp, bytes);
+  await noteOwnWrite(st, tmp);
   await rename(tmp, st.path);
-  await noteOwnWrite(st);
   st.dirty = false;
   rebuildMenu();
   return new Date().toISOString();
@@ -494,13 +504,13 @@ ipcMain.handle(
 
     const tmp = `${target}.tmp-${process.pid}`;
     await writeFile(tmp, bytes);
+    await noteOwnWrite(st, tmp);
     await rename(tmp, target);
 
     st.path = target;
     st.dirty = false;
     st.recovered = false;
     st.seed = null;
-    await noteOwnWrite(st);
     // Save As points the window at a different file; the watch follows it.
     watchDocument(e.sender.id, st);
     win.setDocumentEdited(false);

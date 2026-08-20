@@ -310,6 +310,20 @@ export function AiPanel({
     if (el && stickRef.current) el.scrollTop = el.scrollHeight;
   }, [entries, busy, suggested, streamText, activity]);
 
+  // A RESIZE reflows the transcript without adding anything to it, so the
+  // effect above never runs and the pin quietly stops holding: a narrower panel
+  // wraps every entry taller, scrollHeight grows underneath the same scrollTop,
+  // and the newest entry slides out of sight while the user is looking at it.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      if (stickRef.current) el.scrollTop = el.scrollHeight;
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const add = (entry: Entry) => setEntries((list) => [...list, entry]);
 
   /** Show a state, and wait for the panel to paint it. The engine's tools run
