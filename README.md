@@ -30,25 +30,24 @@ Two things make it different from other Word-compatible editors:
 
 ## Download
 
-> [!NOTE]
-> No release is published yet. Until the first release, use
-> [Build from source](#build-from-source).
-
-When a release is available, get the installer for your system:
+Get the installer for your system from the
+[Releases page](https://github.com/theRealestAEP/likeoffice/releases/latest):
 
 | System | File | Notes |
 | --- | --- | --- |
-| macOS (Apple silicon) | `LikeOffice-<version>-arm64.dmg` | 183 MB — see [First launch on macOS](#first-launch-on-macos) |
+| macOS (Apple silicon) | `LikeOffice-<version>-arm64.dmg` | 184 MB — see [First launch on macOS](#first-launch-on-macos) |
 | macOS (Intel) | `LikeOffice-<version>.dmg` | 196 MB — see [First launch on macOS](#first-launch-on-macos) |
 | Windows | `LikeOffice.Setup.<version>.exe` | 150 MB — see [First launch on Windows](#first-launch-on-windows) |
-| Linux (AppImage) | `LikeOffice-<version>.AppImage` | 206 MB — make it executable before you run it |
+| Linux (AppImage) | `LikeOffice-<version>.AppImage` | 207 MB — make it executable before you run it |
 | Linux (Debian, Ubuntu) | `LikeOffice-<version>-amd64.deb` | 159 MB |
 
 The installed app is about 555 MB. Two things account for that size: an
 Electron app carries its own browser engine, and LikeOffice bundles the Claude
 command-line tool, which is 277 MB on its own.
 
-All builds are on the [Releases page](https://github.com/theRealestAEP/likeoffice/releases).
+Every build is on the [Releases page](https://github.com/theRealestAEP/likeoffice/releases).
+The `nightly` prerelease there tracks the tip of `main`; it is rebuilt on
+every push and is not a stable release.
 
 ### First launch on macOS
 
