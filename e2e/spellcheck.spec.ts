@@ -141,13 +141,13 @@ test("spellcheck honors the settings language override", async () => {
 
   // Turning spellcheck off in settings clears the marks.
   await win.evaluate(() =>
-    window.likeoffice.setSettings(null, "claude-opus-5", "anthropic-api", "off"),
+    window.likeoffice.setSettings({ spellLanguage: "off" }),
   );
   await expect(win.locator(".lo-squiggle")).toHaveCount(0, { timeout: 15000 });
 
   // And back on again re-marks the word.
   await win.evaluate(() =>
-    window.likeoffice.setSettings(null, "claude-opus-5", "anthropic-api", "en-US"),
+    window.likeoffice.setSettings({ spellLanguage: "en-US" }),
   );
   await expect(win.locator(".lo-squiggle")).toHaveCount(1, { timeout: 15000 });
 

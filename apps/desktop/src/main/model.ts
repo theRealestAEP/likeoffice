@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { ipcMain } from "electron";
-import { readSettings } from "./settings";
+import { sendOpenAiCompatible } from "./openai-compat";
+import { activeConfig, OPENAI_COMPATIBLE, PROVIDER_DEFAULTS, readSettings } from "./settings";
 
 export interface ModelRequest {
   /** Correlates streamed deltas with the invoke that produced them. */
@@ -111,12 +112,46 @@ ipcMain.handle("model:message", async (event, request: ModelRequest): Promise<Mo
     // e2e seam: the last system prompt the panel composed, readable from a
     // Playwright app.evaluate. Only the fake path records it.
     (globalThis as { __likeofficeLastSystem?: string }).__likeofficeLastSystem = request.system;
+    // …and the tool names it was offered, which is what Ask mode is about.
+    (globalThis as { __likeofficeLastTools?: string[] }).__likeofficeLastTools = request.tools.map(
+      (t) => t.name,
+    );
     const shapeError = validateRequestShape(request);
     if (shapeError) return { error: `400 (fake): ${shapeError}` };
     return fakeReply(request.messages);
   }
 
-  const { apiKey, model } = await readSettings();
+  const settings = await readSettings();
+  const config = activeConfig(settings);
+
+  // Every OpenAI-shaped provider goes out through one translated transport.
+  // Ollama is the exception on keys: a local server has nobody to authenticate.
+  if (OPENAI_COMPATIBLE.includes(config.id)) {
+    if (config.id !== "ollama" && !config.apiKey) {
+      return { error: `No API key configured for ${PROVIDER_DEFAULTS[config.id].label}. Open Settings to add one.` };
+    }
+    if (!config.baseUrl) {
+      return { error: `No base URL configured for ${PROVIDER_DEFAULTS[config.id].label}. Open Settings to add one.` };
+    }
+    if (!config.model) {
+      return { error: `No model chosen for ${PROVIDER_DEFAULTS[config.id].label}. Pick one in the AI panel or in Settings.` };
+    }
+    return sendOpenAiCompatible({
+      baseUrl: config.baseUrl,
+      apiKey: config.apiKey,
+      model: config.model,
+      system: request.system,
+      messages: request.messages,
+      tools: request.tools,
+      onText: (text) => {
+        if (!event.sender.isDestroyed()) {
+          event.sender.send("model:delta", { requestId: request.requestId, text });
+        }
+      },
+    });
+  }
+
+  const { apiKey, model } = config;
   if (!apiKey) return { error: "No API key configured. Open Settings to add one." };
 
   // Cache breakpoints on the system prompt and the last tool definition: both

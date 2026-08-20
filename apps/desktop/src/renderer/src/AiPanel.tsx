@@ -2,8 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { AGENT_EDIT_CAPABILITIES, type AgentDocument } from "@wordinweb/agent";
 import type { DocxViewApi } from "wordinweb";
 import { AiProfileHeader, composeSystemPrompt, useProfiles } from "./AiProfiles";
+import { Dropdown } from "./Dropdown";
 
 const MAX_ROUNDS = 30;
+
+/** The author stamped on every tracked change the panel makes, and the filter
+ * its accept/reject buttons resolve by. One constant so the two can never
+ * disagree — a mismatch would make the buttons no-ops. */
+const AI_AUTHOR = "AI";
 
 const SYSTEM_PROMPT = `You edit the Word document the user has open in LikeOffice.
 
@@ -41,6 +47,30 @@ const EDITING_TOOLS = new Set([
   "word_document_patch",
   "word_document_compose",
 ]);
+
+/**
+ * ASK MODE: answer, do not change.
+ *
+ * The tools are not merely discouraged in the prompt — they are NOT SENT. A
+ * prompt that says "please don't edit" is a request; withholding the tool is
+ * the only version a user can rely on, and it also means a prompt-injected
+ * instruction inside the document or a fetched page has nothing to call.
+ *
+ * Reading and the web stay available, which is the whole point: "what does
+ * this contract actually commit me to?" is a question, not an edit.
+ */
+const WRITING_TOOLS = new Set([
+  "word_document_edit",
+  "word_document_patch",
+  "word_document_compose",
+  "word_document_save",
+]);
+
+const ASK_PROMPT = `You are in ASK MODE. Answer questions about the document the
+user has open. You have NO editing tools in this mode and must not claim to have
+changed anything. If the user asks for a change, say what you would change and
+where — quoting the lines — and tell them to switch the panel to Edit to have it
+made.`;
 
 interface Entry {
   role: "user" | "assistant" | "tool" | "error";
@@ -87,6 +117,10 @@ export function activityLabel(name: string, input: unknown): string {
       return "Writing new content…";
     case "word_document_save":
       return "Saving…";
+    case "web_search":
+      return "Searching the web…";
+    case "web_fetch":
+      return "Reading a page…";
     case "word_document_edit": {
       const operations = (input as { operations?: unknown } | null)?.operations;
       const first = Array.isArray(operations) ? (operations[0] as { kind?: string }) : undefined;
@@ -223,15 +257,21 @@ export function AiPanel({
   api,
   settings,
   onOpenSettings,
+  onSettingsChanged,
   onEdited,
 }: {
   agentDoc: AgentDocument;
   api: DocxViewApi;
   settings: SettingsView;
   onOpenSettings: () => void;
+  /** The model picker writes settings from inside the panel; the app owns the
+   * state, so the new view goes back up rather than being held twice. */
+  onSettingsChanged: (next: SettingsView) => void;
   onEdited: () => void;
 }) {
   const [entries, setEntries] = useState<Entry[]>([]);
+  /** "edit" makes changes; "ask" answers without them. */
+  const [mode, setMode] = useState<"edit" | "ask">("edit");
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   // What the panel is doing right now: waiting on the model, or running the
@@ -249,8 +289,12 @@ export function AiPanel({
   // The active AI profile, appended to SYSTEM_PROMPT below for every provider.
   const profiles = useProfiles();
 
-  const subscription = settings.provider !== "anthropic-api";
-  const ready = subscription || settings.hasKey;
+  // The two CLI-driven providers run an agent session in the main process; the
+  // rest are called directly and need a key of their own. Ollama is the
+  // exception — a server on this machine has nobody to authenticate.
+  const subscription =
+    settings.provider === "claude-subscription" || settings.provider === "codex-subscription";
+  const ready = subscription || settings.provider === "ollama" || settings.hasKey;
 
   // Closing the panel cancels any in-flight subscription agent run.
   useEffect(() => {
@@ -286,7 +330,8 @@ export function AiPanel({
 
     const tools = agentDoc.tools();
     const wasSuggesting = api.isSuggesting();
-    api.setSuggesting(true, "AI");
+    // Tracked-change capture is for edits; Ask mode makes none.
+    if (mode === "edit") api.setSuggesting(true, AI_AUTHOR);
     const edited = { current: false };
 
     try {
@@ -296,14 +341,64 @@ export function AiPanel({
       add({ role: "error", text: error instanceof Error ? error.message : String(error) });
     } finally {
       setStreamText(null);
-      api.setSuggesting(wasSuggesting);
+      if (mode === "edit") api.setSuggesting(wasSuggesting);
       if (edited.current) {
         onEdited();
-        setSuggested(api.revisionCount());
+        setSuggested(api.revisionCount(AI_AUTHOR));
       }
       setBusy(false);
     }
   };
+
+/**
+ * The two web tools, offered alongside the document tools.
+ *
+ * A document assistant that cannot look anything up has to be told every fact
+ * it writes. Search finds the sources; fetch reads one. Both execute in the
+ * main process (see main/web-tools.ts) — the renderer holds a document, not a
+ * licence to fetch the internet.
+ */
+const WEB_TOOLS: ModelToolDefinition[] = [
+  {
+    name: "web_search",
+    description:
+      "Search the web and return titles, URLs and snippets. Use it to find sources before writing a claim you cannot verify from the document. Follow up with web_fetch to read a result before quoting it.",
+    input_schema: {
+      type: "object",
+      properties: { query: { type: "string", description: "What to search for." } },
+      required: ["query"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "web_fetch",
+    description:
+      "Fetch one http(s) URL and return its readable text. Use it to read a search result, or a link the user gave you, before quoting or citing it.",
+    input_schema: {
+      type: "object",
+      properties: { url: { type: "string", description: "The http or https URL to read." } },
+      required: ["url"],
+      additionalProperties: false,
+    },
+  },
+];
+
+/** True when the model asked for a web tool rather than a document one. */
+function isWebTool(name: string): boolean {
+  return name === "web_search" || name === "web_fetch";
+}
+
+async function executeWebTool(name: string, input: unknown): Promise<{ content: string; isError: boolean }> {
+  const args = (input ?? {}) as { query?: unknown; url?: unknown };
+  const outcome =
+    name === "web_search"
+      ? await window.likeoffice.webSearch(String(args.query ?? ""))
+      : await window.likeoffice.webFetch(String(args.url ?? ""));
+  // A failed lookup is a RESULT, not an exception: the model should read why it
+  // failed and either try a different query or write without the source.
+  if ("error" in outcome) return { content: outcome.error, isError: true };
+  return { content: JSON.stringify(outcome), isError: false };
+}
 
   /** Execute one document tool call on behalf of whichever provider asked. */
   const executeTool = async (
@@ -313,6 +408,25 @@ export function AiPanel({
     edited: { current: boolean },
   ): Promise<{ content: string; isError: boolean }> => {
     add({ role: "tool", text: name });
+    // ENFORCED AT EXECUTION, not just by omitting the definition. Withholding a
+    // tool from the request stops a cooperative model; it does not stop one that
+    // names the tool anyway, and it does not stop a prompt injection inside the
+    // document or a fetched page from talking it into trying. The gate has to be
+    // where the call would actually run.
+    if (mode === "ask" && WRITING_TOOLS.has(name)) {
+      return {
+        content: `${name} is not available in Ask mode. Tell the user what you would change and where; they can switch the panel to Edit to have it made.`,
+        isError: true,
+      };
+    }
+    if (isWebTool(name)) {
+      await showActivity(activityLabel(name, input));
+      try {
+        return await executeWebTool(name, input);
+      } finally {
+        setActivity(THINKING);
+      }
+    }
     const tool = tools.find((t) => t.name === name);
     if (!tool) return { content: `Unknown tool ${name}`, isError: true };
     await showActivity(activityLabel(name, input));
@@ -339,11 +453,20 @@ export function AiPanel({
     text: string,
     edited: { current: boolean },
   ) => {
-    const definitions = tools.map((t) => ({
-      name: t.name,
-      description: t.description,
-      input_schema: t.inputSchema,
-    }));
+    const definitions = [
+      ...tools
+        // Ask mode WITHHOLDS the writing tools rather than asking the model not
+        // to use them. See WRITING_TOOLS.
+        .filter((t) => mode === "edit" || !WRITING_TOOLS.has(t.name))
+        .map((t) => ({
+          name: t.name,
+          description: t.description,
+          input_schema: t.inputSchema,
+        })),
+      // Offered only when the user has web access configured, so a model is
+      // never handed a tool that can only fail.
+      ...(settings.web.enabled ? WEB_TOOLS : []),
+    ];
     const context = agentLog.current
       .map((e) => `${e.role === "user" ? "User" : "Assistant"}: ${e.text}`)
       .join("\n");
@@ -376,7 +499,7 @@ export function AiPanel({
     try {
       const reply = await window.likeoffice.runAgent({
         sessionId,
-        system: composeSystemPrompt(SYSTEM_PROMPT, profiles.active),
+        system: composeSystemPrompt(mode === "ask" ? ASK_PROMPT : SYSTEM_PROMPT, profiles.active),
         prompt,
         tools: definitions,
       });
@@ -394,11 +517,20 @@ export function AiPanel({
     text: string,
     edited: { current: boolean },
   ) => {
-    const definitions = tools.map((t) => ({
-      name: t.name,
-      description: t.description,
-      input_schema: t.inputSchema,
-    }));
+    const definitions = [
+      ...tools
+        // Ask mode WITHHOLDS the writing tools rather than asking the model not
+        // to use them. See WRITING_TOOLS.
+        .filter((t) => mode === "edit" || !WRITING_TOOLS.has(t.name))
+        .map((t) => ({
+          name: t.name,
+          description: t.description,
+          input_schema: t.inputSchema,
+        })),
+      // Offered only when the user has web access configured, so a model is
+      // never handed a tool that can only fail.
+      ...(settings.web.enabled ? WEB_TOOLS : []),
+    ];
 
     // As in the agent path: the up-front read is a wait the user can see.
     await showActivity(activityLabel("word_document_project", null));
@@ -418,7 +550,7 @@ export function AiPanel({
         setStreamText(null);
         const reply = await window.likeoffice.sendModelMessage({
           requestId: activeRequest.current,
-          system: composeSystemPrompt(SYSTEM_PROMPT, profiles.active),
+          system: composeSystemPrompt(mode === "ask" ? ASK_PROMPT : SYSTEM_PROMPT, profiles.active),
           messages: history.current,
           tools: definitions,
         });
@@ -462,12 +594,21 @@ export function AiPanel({
     void run(text);
   };
 
+  /**
+   * Resolve only the ASSISTANT'S tracked changes.
+   *
+   * These buttons used to accept or reject every revision in the document. Open
+   * a file carrying a co-author's tracked changes, ask for one edit, click
+   * "Reject all", and their work was silently discarded — and the count beside
+   * the buttons had been describing their revisions too. The panel owns what it
+   * authored and nothing else.
+   */
   const resolveAll = (accept: boolean) => {
-    if (accept) api.acceptAllRevisions();
-    else api.rejectAllRevisions();
+    if (accept) api.acceptAllRevisions(AI_AUTHOR);
+    else api.rejectAllRevisions(AI_AUTHOR);
     // The action row clears once nothing is left to review; the marks
     // disappearing from the document are the feedback.
-    const remaining = api.revisionCount();
+    const remaining = api.revisionCount(AI_AUTHOR);
     setSuggested(remaining > 0 ? remaining : null);
     onEdited();
   };
@@ -486,7 +627,9 @@ export function AiPanel({
       >
         {!ready && (
           <div className="ai-notice">
-            Set your Anthropic API key in{" "}
+            {/* Name the provider that is actually selected: "set your Anthropic
+                key" is wrong advice the moment someone picks OpenRouter. */}
+            Add a key for {settings.providers.find((p) => p.id === settings.provider)?.label ?? "this provider"} in{" "}
             <button className="btn-link" onClick={onOpenSettings}>
               Settings
             </button>{" "}
@@ -562,7 +705,103 @@ export function AiPanel({
             </svg>
           </button>
         </div>
+        <div className="ai-mode-row">
+          <div className="ai-mode" role="radiogroup" aria-label="Assistant mode">
+            {(["edit", "ask"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="radio"
+                aria-checked={mode === m}
+                className={`ai-mode-btn${mode === m ? " ai-mode-btn-active" : ""}`}
+                onClick={() => setMode(m)}
+                title={m === "edit" ? "Make changes to the document" : "Answer without changing anything"}
+                data-testid={`ai-mode-${m}`}
+              >
+                {m === "edit" ? "Edit" : "Ask"}
+              </button>
+            ))}
+          </div>
+          <ModelPicker settings={settings} onChanged={onSettingsChanged} />
+        </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Provider and model, switchable without leaving the document.
+ *
+ * Changing model is a per-message decision — a cheap model to redraft a
+ * paragraph, an expensive one to restructure a chapter — and routing that
+ * through a modal settings dialog made it a decision people stopped making.
+ * The write goes through the same patch API the settings page uses, so the two
+ * cannot drift.
+ */
+function ModelPicker({
+  settings,
+  onChanged,
+}: {
+  settings: SettingsView;
+  onChanged: (next: SettingsView) => void;
+}) {
+  const [catalogue, setCatalogue] = useState<ModelCatalogue | null>(null);
+  const active = settings.providers.find((p) => p.id === settings.provider);
+
+  useEffect(() => {
+    let live = true;
+    setCatalogue(null);
+    void window.likeoffice.listModels(settings.provider).then((c) => {
+      if (live) setCatalogue(c);
+    });
+    return () => {
+      live = false;
+    };
+  }, [settings.provider]);
+
+  // Codex picks its own model; offering a list here would be a lie.
+  const showModel = settings.provider !== "codex-subscription";
+  // The saved model may not be in the fetched list (a typed id, or a list that
+  // has not caught up). Keep it as an option so the control never silently
+  // reports a model other than the one that will answer.
+  const options = catalogue?.models ?? [];
+  const known = options.some((m) => m.id === active?.model);
+
+  const patch = async (next: SettingsPatch) => {
+    onChanged(await window.likeoffice.setSettings(next));
+  };
+
+  // The saved model may not be in the fetched list (a typed id, or a list that
+  // has not caught up). Keep it as an option so the control never reports a
+  // model other than the one that will answer.
+  const modelOptions = [
+    ...(!known && active?.model ? [{ value: active.model, label: active.model }] : []),
+    ...options.map((m) => ({ value: m.id, label: m.id, hint: m.label !== m.id ? m.label : undefined })),
+  ];
+
+  return (
+    <div className="ai-model-bar">
+      <Dropdown
+        className="dd-bare ai-model-provider"
+        ariaLabel="AI provider"
+        testId="ai-provider"
+        value={settings.provider}
+        options={settings.providers.map((p) => ({ value: p.id, label: p.label }))}
+        onChange={(next) => void patch({ provider: next as Provider })}
+      />
+      {showModel && (
+        <Dropdown
+          className="dd-bare ai-model-model"
+          ariaLabel="Model"
+          testId="ai-model"
+          value={active?.model ?? ""}
+          placeholder="No model chosen"
+          freeText
+          searchable
+          options={modelOptions}
+          onChange={(next) => void patch({ providers: { [settings.provider]: { model: next } } })}
+        />
+      )}
     </div>
   );
 }

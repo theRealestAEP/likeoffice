@@ -1,13 +1,18 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
-import { mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
+import { watch, type FSWatcher } from "node:fs";
 import path from "node:path";
 import Papa from "papaparse";
 import { loadMenuState, rebuildMenu } from "./menu";
 import { addRecent, loadRecent } from "./recent";
+import { readSettings } from "./settings";
 import "./settings";
 import "./profiles";
 import "./spellcheck";
 import "./model";
+import "./models-list";
+import "./web-tools";
+import "./s3-sync";
 import "./providers";
 import "./agent";
 
@@ -21,6 +26,11 @@ interface DocState {
   seed: Uint8Array | null;
   /** File name to suggest when this document has no path yet. */
   suggestedName: string;
+  /** mtime of the last write THIS app made, so its own saves are not reported
+   * back to it as somebody else's change. */
+  ownMtimeMs: number;
+  /** Directory watcher for the open file; see watchDocument. */
+  watcher: FSWatcher | null;
 }
 
 const docs = new Map<number, DocState>();
@@ -33,6 +43,21 @@ const docs = new Map<number, DocState>();
  */
 let activeDocId: number | null = null;
 
+/**
+ * The app is called LikeOffice, in development too.
+ *
+ * Unpackaged, Electron takes its name from the binary, so the Dock, the About
+ * panel and the app menu's own Hide/Quit items all read "Electron" — the menu
+ * bar says LikeOffice while everything beside it disagrees. `productName` in
+ * electron-builder.yml only fixes the PACKAGED build.
+ *
+ * Set before anything reads it: app.name also decides the default userData
+ * directory, which moves from ".../@likeoffice/desktop" to ".../LikeOffice" —
+ * the same place a packaged build already uses, so this aligns development
+ * with what ships rather than inventing a third location.
+ */
+app.setName("LikeOffice");
+
 if (process.env.LIKEOFFICE_USER_DATA) {
   app.setPath("userData", process.env.LIKEOFFICE_USER_DATA);
 }
@@ -44,6 +69,58 @@ const CSV_FILTER = { name: "Data Source", extensions: ["csv", "tsv", "txt"] };
 
 function autosaveDir(): string {
   return path.join(app.getPath("userData"), "autosave");
+}
+
+/** Remember the mtime we just produced, so the watcher can tell our write from
+ * someone else's. */
+async function noteOwnWrite(st: DocState): Promise<void> {
+  if (!st.path) return;
+  try {
+    st.ownMtimeMs = (await stat(st.path)).mtimeMs;
+  } catch {
+    st.ownMtimeMs = 0;
+  }
+}
+
+/**
+ * Watch the open document for changes made outside this app.
+ *
+ * WATCHES THE DIRECTORY, not the file. Saving replaces the document by writing
+ * a temp file and renaming it over the original — an atomic swap that leaves a
+ * file watcher pointed at an inode nothing will write to again, so it would go
+ * deaf after the first save. Word and every sync client save the same way.
+ *
+ * The app's own writes are filtered by mtime rather than by a flag, because a
+ * save and an external change can land in the same moment and a flag would
+ * swallow the one that mattered.
+ */
+function watchDocument(id: number, st: DocState): void {
+  st.watcher?.close();
+  st.watcher = null;
+  if (!st.path) return;
+  const dir = path.dirname(st.path);
+  const base = path.basename(st.path);
+  try {
+    st.watcher = watch(dir, (_event, changed) => {
+      if (changed !== null && changed !== base) return;
+      void (async () => {
+        const current = docs.get(id);
+        if (!current?.path) return;
+        let mtimeMs: number;
+        try {
+          mtimeMs = (await stat(current.path)).mtimeMs;
+        } catch {
+          return; // deleted or mid-rename; the next event settles it
+        }
+        if (mtimeMs === current.ownMtimeMs) return; // our own save
+        current.ownMtimeMs = mtimeMs; // report once per external write
+        windowFor(id)?.webContents.send("document:external-change");
+      })();
+    });
+  } catch {
+    // An unwatchable location (a network mount, a removed volume) is not a
+    // reason to refuse to open the document.
+  }
 }
 
 async function removeAutosave(st: DocState): Promise<void> {
@@ -101,6 +178,8 @@ export async function createDocumentWindow(options: NewWindowOptions = {}): Prom
     recovered: recovery != null,
     seed: seed?.bytes ?? null,
     suggestedName: seed?.name ?? "Untitled",
+    ownMtimeMs: 0,
+    watcher: null,
   });
 
   // Tests set LIKEOFFICE_HIDE_WINDOWS: Playwright drives windows over CDP,
@@ -115,6 +194,7 @@ export async function createDocumentWindow(options: NewWindowOptions = {}): Prom
   });
   win.on("closed", () => {
     const st = docs.get(id);
+    st?.watcher?.close();
     if (st) void removeAutosave(st);
     docs.delete(id);
     if (activeDocId === id) activeDocId = null;
@@ -148,8 +228,42 @@ export async function createDocumentWindow(options: NewWindowOptions = {}): Prom
   }
 }
 
+/** The window already showing this file, if any. Compared by RESOLVED path so
+ * the same document reached through a symlink or a differently-cased path is
+ * still recognised as the same document. */
+async function windowShowing(filePath: string): Promise<BrowserWindow | null> {
+  let wanted: string;
+  try {
+    wanted = await realpath(filePath);
+  } catch {
+    wanted = path.resolve(filePath);
+  }
+  for (const [id, st] of docs) {
+    if (!st.path) continue;
+    let held: string;
+    try {
+      held = await realpath(st.path);
+    } catch {
+      held = path.resolve(st.path);
+    }
+    if (held === wanted) return windowFor(id);
+  }
+  return null;
+}
+
 /** Open a file in a window and record it in Open Recent. */
 export async function openDocument(filePath: string): Promise<void> {
+  // ONE WINDOW PER FILE. Two windows on one document each autosaved it on their
+  // own timer, so whichever wrote last silently discarded the other's work —
+  // and nothing on screen said a second copy was open. Opening it again focuses
+  // the window that already has it.
+  const existing = await windowShowing(filePath);
+  if (existing) {
+    existing.focus();
+    await addRecent(filePath);
+    rebuildMenu();
+    return;
+  }
   try {
     await readFile(filePath);
   } catch {
@@ -164,6 +278,9 @@ export async function openDocument(filePath: string): Promise<void> {
   rebuildMenu();
   await createDocumentWindow({ filePath });
 }
+
+// e2e seam: the duplicate-window test needs the real opener, not a re-implementation.
+(globalThis as { __likeofficeOpen?: (p: string) => Promise<void> }).__likeofficeOpen = openDocument;
 
 export async function openDocumentDialog(): Promise<void> {
   const result = await dialog.showOpenDialog({
@@ -188,6 +305,10 @@ function windowFor(webContentsId: number): BrowserWindow | null {
 
 ipcMain.handle("document:init", async (e) => {
   const st = docs.get(e.sender.id);
+  if (st?.path) {
+    await noteOwnWrite(st);
+    watchDocument(e.sender.id, st);
+  }
   if (st?.recovered) {
     const bytes = await readFile(st.autosaveFile);
     const name = st.path ? path.basename(st.path) : st.suggestedName;
@@ -259,15 +380,88 @@ ipcMain.handle("document:save-copy", async (e, bytes: Uint8Array) => {
   return { path: target, name: path.basename(target) };
 });
 
-ipcMain.on("document:autosave", async (e, bytes: Uint8Array) => {
+/**
+ * Autosave, in two layers.
+ *
+ * The RECOVERY copy in userData is written every time, settings or not: it is
+ * what reopens the document after a crash, and a user who turned autosave off
+ * meant "do not touch my file", not "lose my work".
+ *
+ * Writing the DOCUMENT'S OWN FILE is the part people mean by autosave, and it
+ * only happens when the setting is on and the document has a path. An untitled
+ * window has no file to write and is deliberately left to the recovery copy —
+ * inventing a filename for every scratch window would litter the disk.
+ *
+ * Returns the time it wrote the real file, or null, so the window can say
+ * "Saved 12:04" rather than the renderer guessing that it worked.
+ */
+/**
+ * Mail merge output: write one merged document per record.
+ *
+ * The renderer bakes each record (it owns the engine); main only chooses the
+ * folder and writes. Names come from the record where a sensible column exists,
+ * because "Letter 37.docx" is useless when you are looking for Dana's copy.
+ */
+ipcMain.handle(
+  "merge:write",
+  async (e, files: { name: string; bytes: Uint8Array }[]): Promise<{ dir: string; written: number } | null> => {
+    const win = windowFor(e.sender.id);
+    if (!win || !Array.isArray(files) || files.length === 0) return null;
+    const { storage } = await readSettings();
+    const chosen = await dialog.showOpenDialog(win, {
+      properties: ["openDirectory", "createDirectory"],
+      message: `Where should the ${files.length} merged document${files.length === 1 ? "" : "s"} go?`,
+      ...(storage.projectsDir ? { defaultPath: storage.projectsDir } : {}),
+    });
+    if (chosen.canceled || !chosen.filePaths[0]) return null;
+    const dir = chosen.filePaths[0];
+    let written = 0;
+    const used = new Set<string>();
+    for (const file of files) {
+      // Two records can share a name; a merge that silently overwrote the
+      // first would lose a document with no error at all.
+      let name = file.name;
+      for (let n = 2; used.has(name.toLowerCase()); n++) {
+        name = file.name.replace(/\.docx$/i, ` (${n}).docx`);
+      }
+      used.add(name.toLowerCase());
+      await writeFile(path.join(dir, name), Buffer.from(file.bytes));
+      written++;
+    }
+    return { dir, written };
+  },
+);
+
+ipcMain.handle("storage:choose-projects-dir", async (e): Promise<string | null> => {
+  const win = windowFor(e.sender.id);
+  const result = await dialog.showOpenDialog(win ?? undefined!, {
+    properties: ["openDirectory", "createDirectory"],
+    message: "Where should new documents be saved?",
+  });
+  return result.canceled ? null : (result.filePaths[0] ?? null);
+});
+
+ipcMain.handle("document:autosave", async (e, bytes: Uint8Array): Promise<string | null> => {
   const st = docs.get(e.sender.id);
-  if (!st) return;
+  if (!st) return null;
   await mkdir(autosaveDir(), { recursive: true });
   await writeFile(st.autosaveFile, bytes);
   await writeFile(
     `${st.autosaveFile}.json`,
     JSON.stringify({ originalPath: st.path, savedAt: new Date().toISOString() }),
   );
+
+  const { storage } = await readSettings();
+  if (!storage.autosave || !st.path) return null;
+  // Atomic: a crash mid-write must not leave a half-written .docx where the
+  // user's document used to be. Same tmp+rename the explicit save uses.
+  const tmp = `${st.path}.autosave-tmp`;
+  await writeFile(tmp, bytes);
+  await rename(tmp, st.path);
+  await noteOwnWrite(st);
+  st.dirty = false;
+  rebuildMenu();
+  return new Date().toISOString();
 });
 
 ipcMain.handle(
@@ -279,8 +473,14 @@ ipcMain.handle(
 
     let target = st.path;
     if (!target || saveAs) {
+      // A document with no path opens in the projects folder when one is set:
+      // that is the whole point of the setting — new work lands together.
+      const { storage } = await readSettings();
+      const suggested =
+        st.path ??
+        (storage.projectsDir ? path.join(storage.projectsDir, st.suggestedName) : st.suggestedName);
       const result = await dialog.showSaveDialog(win, {
-        defaultPath: st.path ?? st.suggestedName,
+        defaultPath: suggested,
         filters: [DOCX_FILTER],
       });
       if (result.canceled || !result.filePath) {
@@ -300,6 +500,9 @@ ipcMain.handle(
     st.dirty = false;
     st.recovered = false;
     st.seed = null;
+    await noteOwnWrite(st);
+    // Save As points the window at a different file; the watch follows it.
+    watchDocument(e.sender.id, st);
     win.setDocumentEdited(false);
     await addRecent(target);
     rebuildMenu();
@@ -331,7 +534,24 @@ ipcMain.handle("document:export-pdf", async (e, html: string) => {
 
   const htmlFile = path.join(app.getPath("temp"), `likeoffice-export-${e.sender.id}.html`);
   await writeFile(htmlFile, html);
-  const printWin = new BrowserWindow({ show: false });
+  // The export HTML is BUILT FROM DOCUMENT CONTENT, so it must be rendered
+  // with no privileges: a default window runs scripts in a file:// origin,
+  // where anything that smuggled markup through the serializer could read the
+  // user's disk and post it onward from a window they cannot see. Printing
+  // needs none of that.
+  const printWin = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      // Sandboxed and isolated, but scripts stay ON: the export page needs them
+      // to lay itself out before printing, and turning them off produced a
+      // blank PDF. What this removes is the privileged part — no node, no
+      // preload, no reaching the app's own APIs from a file:// page.
+      sandbox: true,
+      nodeIntegration: false,
+      contextIsolation: true,
+      webSecurity: true,
+    },
+  });
   try {
     await printWin.loadFile(htmlFile);
     await printWin.webContents.executeJavaScript("document.fonts.ready.then(() => true)");
@@ -427,6 +647,21 @@ app.whenReady().then(async () => {
   // the space, which is unusable for anyone working at the machine. Leave the
   // Dock alone entirely while LIKEOFFICE_HIDE_WINDOWS is set.
   if (process.env.LIKEOFFICE_HIDE_WINDOWS) app.dock?.hide();
+  // A packaged build gets its icon from the bundle; an unpackaged one shows
+  // Electron's until it is told otherwise.
+  if (!app.isPackaged && !process.env.LIKEOFFICE_HIDE_WINDOWS) {
+    const icon = path.join(app.getAppPath(), "build/icon.png");
+    try {
+      app.dock?.setIcon(icon);
+    } catch {
+      // A missing icon is not a reason to fail startup.
+    }
+  }
+  app.setAboutPanelOptions({
+    applicationName: "LikeOffice",
+    applicationVersion: app.getVersion(),
+    copyright: "Copyright © 2026 LikeOffice contributors",
+  });
   await Promise.all([loadRecent(), loadMenuState()]);
   rebuildMenu();
   const argPaths = process.argv.slice(1).filter((a) => a.endsWith(".docx"));

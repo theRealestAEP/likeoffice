@@ -13,7 +13,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { cliEnv } from "./providers";
-import { readSettings } from "./settings";
+import { activeConfig, readSettings } from "./settings";
 
 /** Matches the renderer loop's cap so both providers stop at the same point. */
 const MAX_TURNS = 30;
@@ -411,7 +411,7 @@ ipcMain.handle("agent:run", async (event, request: AgentRunRequest): Promise<{ e
   try {
     const settings = await readSettings();
     if (settings.provider === "claude-subscription") {
-      return await runClaude(session, request, settings.model);
+      return await runClaude(session, request, activeConfig(settings).model);
     }
     if (settings.provider === "codex-subscription") {
       return await runCodex(session, request);

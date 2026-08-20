@@ -1040,3 +1040,475 @@
   line-height: 1.4;
   max-width: 100ch;
 }
+
+/* ---- Settings page ---- */
+
+.dialog-settings {
+  width: 820px;
+}
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: 168px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-right: 1px solid var(--app-border);
+  padding-right: 12px;
+}
+
+.settings-nav-item {
+  border: none;
+  background: none;
+  color: var(--app-fg);
+  font: 13px system-ui, sans-serif;
+  text-align: left;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.settings-nav-item:hover {
+  background: var(--app-bg);
+}
+
+.settings-nav-item-active {
+  background: var(--app-tab-active);
+  color: var(--app-accent);
+  font-weight: 600;
+}
+
+/* The pane scrolls, not the dialog: the nav must stay put while a long
+   provider list moves, or the sections become unreachable mid-scroll. */
+.settings-pane {
+  max-height: 60vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+
+.provider-card {
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  padding: 14px 14px 2px;
+  margin-bottom: 12px;
+  background: var(--app-bg);
+}
+
+.provider-card-active {
+  border-color: var(--app-accent);
+  background: var(--app-surface);
+}
+
+.provider-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.provider-name {
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.provider-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--app-accent);
+  background: var(--app-tab-active);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.provider-blurb {
+  font-size: 12px;
+  color: var(--app-muted);
+  margin-top: 3px;
+  max-width: 52ch;
+  line-height: 1.45;
+}
+
+.provider-url {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+}
+
+.provider-model-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.provider-model-row .field-input {
+  flex: 1;
+}
+
+.provider-warn {
+  color: var(--app-accent);
+}
+
+/* ---- AI model picker ---- */
+
+.ai-model-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.ai-model-select {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 50%;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--app-muted);
+  font: 11.5px system-ui, sans-serif;
+  padding: 3px 4px;
+  cursor: pointer;
+}
+
+.ai-model-select:hover {
+  border-color: var(--app-border);
+  color: var(--app-fg);
+}
+
+.ai-model-select-wide {
+  flex: 1 1 auto;
+  max-width: none;
+}
+
+/* ---- Dropdown (see Dropdown.tsx for why this is not a <select>) ---- */
+
+.dd {
+  position: relative;
+  min-width: 0;
+}
+
+.dd-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font: var(--app-font);
+  color: var(--app-fg);
+  background: var(--app-surface);
+  cursor: pointer;
+  text-align: left;
+}
+
+.dd-trigger:hover {
+  border-color: var(--app-muted);
+}
+
+.dd-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dd-placeholder {
+  color: var(--app-muted);
+}
+
+.dd-caret {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--app-muted);
+}
+
+.dd-menu {
+  position: absolute;
+  /* Sized to the trigger, so a full-width settings field gets a full-width
+     menu — but never narrower than a readable model id. */
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 300;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  box-shadow: var(--app-shadow);
+  padding: 4px;
+  min-width: 220px;
+  box-sizing: border-box;
+}
+
+.dd-menu-above {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
+/* Anchored to the trigger's RIGHT edge, so the width `min-width` adds grows
+   leftward instead of off the edge of the window. The AI panel's model picker
+   is a narrow trigger at the far right: left-anchored, its menu overflowed the
+   panel, and `overflow: hidden` there hides a scrollbar without preventing the
+   scroll, so focusing the filter slid the whole panel sideways. */
+.dd-menu-right {
+  left: auto;
+  right: 0;
+  max-width: calc(100vw - 24px);
+}
+
+.dd-search {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--app-border);
+  border-radius: 5px;
+  padding: 5px 8px;
+  margin-bottom: 4px;
+  font: 12.5px system-ui, sans-serif;
+  color: var(--app-fg);
+  background: var(--app-bg);
+  outline: none;
+}
+
+.dd-list {
+  max-height: 240px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.dd-option {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--app-fg);
+  font: 12.5px system-ui, sans-serif;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.dd-option:hover {
+  background: var(--app-bg);
+}
+
+.dd-option-active {
+  background: var(--app-tab-active);
+  color: var(--app-accent);
+  font-weight: 600;
+}
+
+.dd-option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dd-option-hint {
+  flex-shrink: 0;
+  color: var(--app-muted);
+  font-size: 11.5px;
+}
+
+.dd-empty {
+  padding: 8px;
+  color: var(--app-muted);
+  font: 12.5px system-ui, sans-serif;
+}
+
+/* The drawer's pickers are chrome, not fields: no box until hovered. */
+.dd-bare .dd-trigger {
+  border-color: transparent;
+  background: none;
+  padding: 3px 6px;
+  font: 11.5px system-ui, sans-serif;
+  color: var(--app-muted);
+}
+
+.dd-bare .dd-trigger:hover {
+  border-color: var(--app-border);
+  color: var(--app-fg);
+}
+
+/* The drawer's two pickers share the row; the model id is the longer of the
+   two, so it takes the slack rather than being truncated to "…opus-5". */
+.ai-model-provider {
+  flex: 0 1 auto;
+  max-width: 45%;
+}
+
+.ai-model-model {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ---- Autosave status ---- */
+
+.save-status {
+  font: 11.5px system-ui, sans-serif;
+  color: var(--app-muted);
+  margin-right: 10px;
+  white-space: nowrap;
+  /* The cap aligns its children to flex-START so the AI button lines up with
+     the toolbar's top row. Text is shorter than that button, so it needs to
+     centre against it on its own rather than hang from the top. */
+  align-self: center;
+}
+
+/* ---- Assistant mode (Edit / Ask) ---- */
+
+.ai-mode-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.ai-mode {
+  display: inline-flex;
+  flex-shrink: 0;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ai-mode-btn {
+  border: none;
+  background: none;
+  color: var(--app-muted);
+  font: 11.5px system-ui, sans-serif;
+  padding: 3px 9px;
+  cursor: pointer;
+}
+
+.ai-mode-btn:hover {
+  color: var(--app-fg);
+}
+
+.ai-mode-btn-active {
+  background: var(--app-tab-active);
+  color: var(--app-accent);
+  font-weight: 600;
+}
+
+/* The pickers take what is left of the row beside the mode switch. */
+.ai-mode-row .ai-model-bar {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-top: 0;
+}
+
+.save-status-error {
+  color: #c5221f;
+}
+
+/* ---- Load failure ---- */
+
+.app-failure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 6px;
+  padding: 0 40px;
+  text-align: center;
+  font: var(--app-font);
+  color: var(--app-fg);
+  background: var(--app-bg);
+}
+
+.app-failure-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.app-failure-detail {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--app-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.app-failure-hint {
+  margin: 4px 0 0;
+  max-width: 52ch;
+  color: var(--app-muted);
+  font-size: 12.5px;
+}
+
+/* ---- External-change banner ---- */
+
+.app-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 14px;
+  background: #fef7e0;
+  border-bottom: 1px solid #f0d48a;
+  color: #5c4409;
+  font: 12.5px system-ui, sans-serif;
+}
+
+.app-banner-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* The AI panel stays mounted so its transcript survives a toggle; `hidden`
+   alone loses to the flex display the dock needs when shown. */
+.ai-dock {
+  display: flex;
+  min-height: 0;
+}
+
+.ai-dock[hidden] {
+  display: none;
+}
+
+/* ---- Mail merge output ---- */
+
+.mailmerge-merge {
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  background: var(--app-surface);
+  color: var(--app-fg);
+  font: 12px system-ui, sans-serif;
+  padding: 4px 10px;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.mailmerge-merge:hover:not(:disabled) {
+  border-color: var(--app-accent);
+  color: var(--app-accent);
+}
+
+.mailmerge-merge:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.mailmerge-note {
+  margin-left: 10px;
+  color: var(--app-muted);
+  font: 11.5px system-ui, sans-serif;
+}

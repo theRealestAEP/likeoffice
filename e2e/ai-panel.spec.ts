@@ -18,7 +18,7 @@ test("the AI panel asks for a key when none is configured", async () => {
   await expect(win.locator(".dxw-page").first()).toBeAttached({ timeout: 30000 });
 
   await win.getByTestId("ai-toggle").click();
-  await expect(win.getByTestId("ai-transcript")).toContainText("Set your Anthropic API key");
+  await expect(win.getByTestId("ai-transcript")).toContainText("Add a key for Anthropic");
   await expect(win.getByTestId("ai-input")).toBeDisabled();
 
   await app.close();

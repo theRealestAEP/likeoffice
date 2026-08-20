@@ -46,6 +46,49 @@ export function MailMerge({
 }) {
   const [loading, setLoading] = useState(false);
   const [fieldNames, setFieldNames] = useState<string[]>([]);
+  const [merging, setMerging] = useState(false);
+  const [mergeNote, setMergeNote] = useState("");
+
+  /**
+   * A filename for one merged record.
+   *
+   * Named from the DATA where the data offers a name, because "Letter 37.docx"
+   * is useless when you are looking for Dana's copy. Falls back to the record
+   * number, and strips anything a filesystem would object to.
+   */
+  const fileNameFor = (record: Record<string, string>, n: number): string => {
+    const columns = ["Name", "FullName", "Full Name", "LastName", "Last Name", "Company", "Email"];
+    const picked = columns.map((c) => record[c]).find((v) => v && v.trim() !== "");
+    const label = (picked ?? `Record ${n + 1}`).trim().replace(/[\\/:*?"<>|]/g, "-").slice(0, 60);
+    return `${label || `Record ${n + 1}`}.docx`;
+  };
+
+  /**
+   * Produce one document per record.
+   *
+   * Merging is the whole point of a merge and, until now, the one thing this
+   * bar could not do — it could page through records and never hand you
+   * anything. Each record is baked into a COPY of the template, so the document
+   * on screen is untouched and still shows its «Name» placeholders afterwards.
+   */
+  const mergeAll = async () => {
+    if (!source || source.records.length === 0) return;
+    setMerging(true);
+    setMergeNote("");
+    try {
+      const files = source.records.map((record, n) => ({
+        name: fileNameFor(record, n),
+        bytes: api.mergeRecordToBytes(record),
+      }));
+      const result = await window.likeoffice.writeMergedDocuments(files);
+      // A cancelled folder picker is not a failure and gets no message.
+      if (result) setMergeNote(`Wrote ${result.written} document${result.written === 1 ? "" : "s"}.`);
+    } catch (error) {
+      setMergeNote(error instanceof Error ? error.message : String(error));
+    } finally {
+      setMerging(false);
+    }
+  };
 
   // The document's merge fields, refreshed whenever the bar opens: a field
   // inserted while the bar was closed must appear in the unmatched note.
@@ -166,6 +209,20 @@ export function MailMerge({
                 ▶|
               </button>
             </span>
+            <button
+              className="mailmerge-merge"
+              data-testid="mailmerge-finish"
+              onClick={() => void mergeAll()}
+              disabled={merging || total === 0}
+              title="Write one document per record"
+            >
+              {merging ? "Merging…" : `Merge to ${total} document${total === 1 ? "" : "s"}`}
+            </button>
+            {mergeNote && (
+              <span className="mailmerge-note" data-testid="mailmerge-note">
+                {mergeNote}
+              </span>
+            )}
           </>
         )}
       </div>

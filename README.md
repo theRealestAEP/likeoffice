@@ -125,8 +125,9 @@ Nothing downloads or installs until you agree.
 | Tables, lists, styles, headers, footers, and footnotes | Works |
 | Images, shapes, charts, SmartArt, and equations | Works |
 | Find, replace, and go to | Works |
-| Mail merge | Preview works; **Finish & Merge** is not built |
+| Mail merge | Works, preview and Finish & Merge — one document per record |
 | Compare documents | Works |
+| Sync your documents to S3-compatible storage | Works — any provider, and a conflict is never overwritten |
 | Real-time collaboration | In the engine, but the desktop app has no surface for it yet |
 
 The full feature-by-feature audit is in
@@ -139,12 +140,17 @@ The assistant reads your document as numbered lines of plain text. It then
 sends back a patch against those lines. This keeps a simple edit simple: a
 text-only request needs no round trip to inspect formatting.
 
-Three points matter:
+These points matter:
 
 - **Every text edit is a tracked change.** Accept or reject each one from the
   Review controls.
-- **You choose the model provider.** The app supports the Anthropic API, a
-  Claude subscription, and a Codex subscription.
+- **You choose the model provider.** The app supports the Anthropic API,
+  OpenAI, OpenRouter, a local Ollama, any other OpenAI-compatible endpoint,
+  and a Claude or Codex subscription.
+- **Web search is yours to point.** The assistant can search and read the
+  web. It searches directly out of the box; point it at your own SearXNG,
+  or at Brave, Tavily, or Exa with your key, or switch it off entirely in
+  Settings.
 - **Your document stays on your computer**, except for the text the assistant
   needs to read to answer you.
 

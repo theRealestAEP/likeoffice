@@ -21,13 +21,100 @@ interface MergeDataSource {
   records: Record<string, string>[];
 }
 
-type Provider = "anthropic-api" | "claude-subscription" | "codex-subscription";
+type Provider =
+  | "anthropic"
+  | "openai"
+  | "openrouter"
+  | "ollama"
+  | "custom"
+  | "claude-subscription"
+  | "codex-subscription";
+
+interface ProviderView {
+  id: Provider;
+  label: string;
+  hasKey: boolean;
+  baseUrl: string;
+  model: string;
+  /** False for the CLI-driven providers, which take no key of their own. */
+  keyed: boolean;
+}
+
+type WebSearchBackend = "direct" | "searxng" | "brave" | "tavily" | "exa";
+
+interface WebSettingsView {
+  backend: WebSearchBackend;
+  searxngUrl: string;
+  hasKey: boolean;
+  enabled: boolean;
+}
+
+interface StorageSettings {
+  autosave: boolean;
+  autosaveSeconds: number;
+  projectsDir: string;
+}
+
+interface WebSearchResult {
+  title: string;
+  url: string;
+  snippet: string;
+}
+
+interface SyncResult {
+  uploaded: string[];
+  downloaded: string[];
+  /** Files kept beside a newer copy rather than overwritten. */
+  conflicts: string[];
+  errors: string[];
+  /** Set when sync is off or not configured; not an error. */
+  skipped?: string;
+}
+
+interface S3SettingsView {
+  enabled: boolean;
+  endpoint: string;
+  region: string;
+  bucket: string;
+  prefix: string;
+  accessKeyId: string;
+  secretAccessKey: "";
+  hasSecret: boolean;
+}
 
 interface SettingsView {
   provider: Provider;
+  providers: ProviderView[];
+  spellLanguage: string;
+  web: WebSettingsView;
+  storage: StorageSettings;
+  s3: S3SettingsView;
+  /** The ACTIVE provider's key state and model, flat for callers that only ask
+   * "can this app talk to a model right now?". */
   hasKey: boolean;
   model: string;
-  spellLanguage: string;
+}
+
+/** A partial settings write. A null apiKey means "leave the stored one alone". */
+interface SettingsPatch {
+  provider?: Provider;
+  spellLanguage?: string;
+  providers?: Partial<Record<Provider, { apiKey?: string | null; baseUrl?: string; model?: string }>>;
+  web?: { backend?: WebSearchBackend; searxngUrl?: string; apiKey?: string | null; enabled?: boolean };
+  storage?: Partial<StorageSettings>;
+  s3?: Partial<Omit<S3SettingsView, "secretAccessKey" | "hasSecret">> & { secretAccessKey?: string | null };
+}
+
+interface ModelOption {
+  id: string;
+  label: string;
+}
+
+interface ModelCatalogue {
+  models: ModelOption[];
+  /** Why the live list could not be fetched; the fallback is showing. */
+  error?: string;
+  live: boolean;
 }
 
 type SpellMenuAction = { type: "replace"; text: string } | { type: "add-word" };
@@ -155,17 +242,31 @@ interface LikeOfficeBridge {
   revertDocument(): Promise<InitialDocument | null>;
   saveCopy(bytes: Uint8Array): Promise<SaveResult | null>;
   setDirty(dirty: boolean): void;
-  autosave(bytes: Uint8Array): void;
+  /** Write the recovery copy, and the document's own file when autosave is on.
+   * Resolves with the time the real file was written, or null. */
+  autosave(bytes: Uint8Array): Promise<string | null>;
+  chooseProjectsDir(): Promise<string | null>;
+  /** Write one merged document per record; asks for a folder. Null if cancelled. */
+  writeMergedDocuments(
+    files: { name: string; bytes: Uint8Array }[],
+  ): Promise<{ dir: string; written: number } | null>;
+  /** Mirror the projects folder to the configured bucket, once. */
+  syncBucket(): Promise<SyncResult>;
+  /** Fires when the open file is modified outside this app. */
+  onExternalChange(cb: () => void): () => void;
   exportPdf(html: string): Promise<{ path: string } | null>;
   getMenuShortcuts(): Promise<MenuShortcutSection[]>;
   onMenu(cb: (action: string) => void): () => void;
   getSettings(): Promise<SettingsView>;
-  setSettings(
-    apiKey: string | null,
-    model: string,
-    provider: Provider,
-    spellLanguage: string,
-  ): Promise<SettingsView>;
+  setSettings(patch: SettingsPatch): Promise<SettingsView>;
+  /** The models a provider actually offers, asked of the provider itself.
+   * Defaults to the active one. */
+  listModels(provider?: Provider): Promise<ModelCatalogue>;
+  /** Agent web tools. Both run in the main process — see main/web-tools.ts. */
+  webSearch(query: string): Promise<{ results: WebSearchResult[] } | { error: string }>;
+  webFetch(
+    url: string,
+  ): Promise<{ url: string; title: string; text: string; truncated: boolean } | { error: string }>;
   getProfiles(): Promise<ProfilesState>;
   createProfile(name: string, emoji: string, instructions: string): Promise<ProfilesState>;
   updateProfile(

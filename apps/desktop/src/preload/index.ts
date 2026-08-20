@@ -24,11 +24,98 @@ export interface MergeDataSource {
   records: Record<string, string>[];
 }
 
+export type ProviderId =
+  | "anthropic"
+  | "openai"
+  | "openrouter"
+  | "ollama"
+  | "custom"
+  | "claude-subscription"
+  | "codex-subscription";
+
+export interface ProviderView {
+  id: ProviderId;
+  label: string;
+  hasKey: boolean;
+  baseUrl: string;
+  model: string;
+  keyed: boolean;
+}
+
+export type WebSearchBackend = "direct" | "searxng" | "brave" | "tavily" | "exa";
+
+export interface WebSettingsView {
+  backend: WebSearchBackend;
+  searxngUrl: string;
+  hasKey: boolean;
+  enabled: boolean;
+}
+
+export interface StorageSettings {
+  autosave: boolean;
+  autosaveSeconds: number;
+  projectsDir: string;
+}
+
+export interface SyncResult {
+  uploaded: string[];
+  downloaded: string[];
+  /** Files kept beside a newer copy rather than overwritten. */
+  conflicts: string[];
+  errors: string[];
+  /** Set when sync is off or not configured; not an error. */
+  skipped?: string;
+}
+
+export interface S3SettingsView {
+  enabled: boolean;
+  endpoint: string;
+  region: string;
+  bucket: string;
+  prefix: string;
+  accessKeyId: string;
+  secretAccessKey: "";
+  hasSecret: boolean;
+}
+
 export interface SettingsView {
-  provider: string;
+  provider: ProviderId;
+  providers: ProviderView[];
+  spellLanguage: string;
+  web: WebSettingsView;
+  storage: StorageSettings;
+  s3: S3SettingsView;
   hasKey: boolean;
   model: string;
-  spellLanguage: string;
+}
+
+export interface WebSearchResult {
+  title: string;
+  url: string;
+  snippet: string;
+}
+
+/** A partial settings write. A null apiKey means "leave the stored one alone",
+ * which is what an untouched password field sends — the renderer never
+ * received the current key, so it has none to send back. */
+export interface SettingsPatch {
+  provider?: ProviderId;
+  spellLanguage?: string;
+  providers?: Partial<Record<ProviderId, { apiKey?: string | null; baseUrl?: string; model?: string }>>;
+  web?: { backend?: WebSearchBackend; searxngUrl?: string; apiKey?: string | null; enabled?: boolean };
+  storage?: Partial<StorageSettings>;
+  s3?: Partial<Omit<S3SettingsView, "secretAccessKey" | "hasSecret">> & { secretAccessKey?: string | null };
+}
+
+export interface ModelOption {
+  id: string;
+  label: string;
+}
+
+export interface ModelCatalogue {
+  models: ModelOption[];
+  error?: string;
+  live: boolean;
 }
 
 export type SpellMenuAction = { type: "replace"; text: string } | { type: "add-word" };
@@ -66,13 +153,16 @@ export interface ProfilesState {
 
 const api = {
   getSettings: (): Promise<SettingsView> => ipcRenderer.invoke("settings:get"),
-  setSettings: (
-    apiKey: string | null,
-    model: string,
-    provider: string,
-    spellLanguage: string,
-  ): Promise<SettingsView> =>
-    ipcRenderer.invoke("settings:set", apiKey, model, provider, spellLanguage),
+  setSettings: (patch: SettingsPatch): Promise<SettingsView> =>
+    ipcRenderer.invoke("settings:set", patch),
+  listModels: (provider?: ProviderId): Promise<ModelCatalogue> =>
+    ipcRenderer.invoke("models:list", provider),
+  webSearch: (query: string): Promise<{ results: WebSearchResult[] } | { error: string }> =>
+    ipcRenderer.invoke("web:search", query),
+  webFetch: (
+    url: string,
+  ): Promise<{ url: string; title: string; text: string; truncated: boolean } | { error: string }> =>
+    ipcRenderer.invoke("web:fetch", url),
   getProfiles: (): Promise<ProfilesState> => ipcRenderer.invoke("profiles:list"),
   createProfile: (name: string, emoji: string, instructions: string): Promise<ProfilesState> =>
     ipcRenderer.invoke("profiles:create", name, emoji, instructions),
@@ -175,8 +265,20 @@ const api = {
   setDirty: (dirty: boolean): void => {
     ipcRenderer.send("document:set-dirty", dirty);
   },
-  autosave: (bytes: Uint8Array): void => {
-    ipcRenderer.send("document:autosave", bytes);
+  autosave: (bytes: Uint8Array): Promise<string | null> =>
+    ipcRenderer.invoke("document:autosave", bytes),
+  chooseProjectsDir: (): Promise<string | null> =>
+    ipcRenderer.invoke("storage:choose-projects-dir"),
+  syncBucket: (): Promise<SyncResult> => ipcRenderer.invoke("s3:sync"),
+  writeMergedDocuments: (
+    files: { name: string; bytes: Uint8Array }[],
+  ): Promise<{ dir: string; written: number } | null> => ipcRenderer.invoke("merge:write", files),
+  onExternalChange: (cb: () => void): (() => void) => {
+    const listener = (): void => cb();
+    ipcRenderer.on("document:external-change", listener);
+    return () => {
+      ipcRenderer.removeListener("document:external-change", listener);
+    };
   },
   exportPdf: (html: string): Promise<{ path: string } | null> =>
     ipcRenderer.invoke("document:export-pdf", html),
