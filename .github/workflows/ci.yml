@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: theRealestAEP/wordinweb
-          ref: likeoffice
+          ref: main
           path: wordinweb-likeoffice
 
       - uses: actions/setup-node@v4

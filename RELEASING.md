@@ -229,11 +229,11 @@ the next person cannot tell a fix from a fixture that never showed it.
 
 `release.yml` reads `.engine-ref` at the repo root: one line, a full 40-character engine commit sha. The tagged build then checks the engine out at exactly that commit, so the release can be rebuilt byte-for-byte later.
 
-With no such file the build falls back to the tip of `wordinweb@likeoffice`, prints a `::warning::` saying the release is **not reproducible**, and records the resolved sha in the job summary. Nothing breaks, but the tag no longer identifies what was built.
+With no such file the build falls back to the tip of `wordinweb@main`, prints a `::warning::` saying the release is **not reproducible**, and records the resolved sha in the job summary. Nothing breaks, but the tag no longer identifies what was built.
 
 The order for a release is therefore:
 
-1. Push the engine commits to `theRealestAEP/wordinweb` branch `likeoffice`.
+1. Push the engine commits to `theRealestAEP/wordinweb` branch `main`.
 2. Write that engine sha into `.engine-ref` here and commit it.
 3. Bump the version, tag, push the tag.
 

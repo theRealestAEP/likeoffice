@@ -130,7 +130,7 @@ Nothing downloads or installs until you agree.
 | Real-time collaboration | In the engine, but the desktop app has no surface for it yet |
 
 The full feature-by-feature audit is in
-[`docs/tool-depth-matrix.md`](https://github.com/theRealestAEP/wordinweb/blob/likeoffice/docs/tool-depth-matrix.md).
+[`docs/tool-depth-matrix.md`](https://github.com/theRealestAEP/wordinweb/blob/main/docs/tool-depth-matrix.md).
 It lists 138 Word features and grades each one.
 
 ## The AI assistant

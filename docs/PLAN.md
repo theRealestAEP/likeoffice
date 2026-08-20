@@ -20,7 +20,7 @@ LikeOffice is an MIT-licensed desktop word processor with three pillars:
 | Repo | Role | Branch strategy |
 | --- | --- | --- |
 | `likeoffice` (this repo) | Electron shell, app UX, AI panel | `main` + feature branches |
-| `wordinweb` | Engine: core, react, collab, server, agent | All engine work on branch `likeoffice`, checked out at `../wordinweb-likeoffice`. Merge to `main` in small reviewed increments — the repo convention (one clone per feature branch) already exists. |
+| `wordinweb` | Engine: core, react, collab, server, agent | Engine work lands on `main`, checked out at `../wordinweb-likeoffice`. The long-lived `likeoffice` integration branch was merged into `main` and deleted on 2026-08-20: it had become identical to it, and a second branch that never diverges is only another thing to keep in sync. Feature work branches off `main`. |
 | `wordinweb-parity` | Fidelity corpus + gates | `main`; new fixtures and the edit round-trip harness land here |
 
 During development, LikeOffice links the engine packages from the

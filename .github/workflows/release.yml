@@ -65,7 +65,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: theRealestAEP/wordinweb
-          ref: likeoffice
+          ref: main
           path: wordinweb-likeoffice
           # Full history, so .engine-ref can name any commit, not just the tip.
           fetch-depth: 0
@@ -91,7 +91,7 @@ jobs:
             git -C wordinweb-likeoffice checkout --quiet "$PIN"
             PINNED="yes, from .engine-ref"
           else
-            echo "::warning::No .engine-ref — building against the tip of wordinweb@likeoffice, so this release is NOT reproducible."
+            echo "::warning::No .engine-ref — building against the tip of wordinweb@main, so this release is NOT reproducible."
             PINNED="NO — built against the branch tip"
           fi
           SHA=$(git -C wordinweb-likeoffice rev-parse HEAD)
