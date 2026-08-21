@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import { mkdir, readdir, readFile, realpath, rename, rm, stat, writeFile } from "node:fs/promises";
 import { watch, type FSWatcher } from "node:fs";
 import path from "node:path";
@@ -159,6 +159,38 @@ async function listRecoveries(): Promise<RecoveryEntry[]> {
   return entries;
 }
 
+/**
+ * A document may ask to open a link. The OS browser answers, never this app.
+ *
+ * Without a window-open handler Electron answers `window.open` itself, by
+ * building a second BrowserWindow that LOADS THE REMOTE PAGE INSIDE THE APP —
+ * verified, not assumed: a probe that called window.open left the app holding a
+ * renderer at https://example.com. The engine only follows a link on
+ * Cmd/Ctrl-click and only for a scheme isSafeUrl accepts, but the href itself
+ * comes out of the .docx, so the destination is chosen by whoever wrote the
+ * document.
+ *
+ * That is a page an attacker controls, running in a renderer this app made, and
+ * the only thing between it and the preload bridge is context isolation — which
+ * is exactly what CVE-2026-70601 (GHSA-h7rp-cf8h-j98x) defeats on the Electron
+ * version pinned here. Handing the URL to the OS browser removes the renderer
+ * rather than trusting the barrier around it.
+ *
+ * `will-navigate` closes the same door from the other side: the document window
+ * loads its own page once and never navigates anywhere else.
+ */
+function hardenNavigation(win: BrowserWindow): void {
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) void shell.openExternal(url);
+    return { action: "deny" };
+  });
+  win.webContents.on("will-navigate", (event, url) => {
+    if (url === win.webContents.getURL()) return;
+    event.preventDefault();
+    if (/^https?:\/\//i.test(url)) void shell.openExternal(url);
+  });
+}
+
 interface NewWindowOptions {
   filePath?: string;
   recovery?: RecoveryEntry;
@@ -174,8 +206,18 @@ export async function createDocumentWindow(options: NewWindowOptions = {}): Prom
     show: false,
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.js"),
+      // Stated rather than inherited. These are Electron's defaults today, and
+      // this window is the one that renders OPENED DOCUMENTS — content the user
+      // did not write. A default that changes under us, or a webPreferences
+      // block someone adds a field to later, must not be able to quietly hand
+      // that content a less isolated renderer.
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      webSecurity: true,
     },
   });
+  hardenNavigation(win);
   const id = win.webContents.id;
   docs.set(id, {
     path: recovery?.originalPath ?? filePath ?? null,

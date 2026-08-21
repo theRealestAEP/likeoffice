@@ -51,7 +51,19 @@ async function exportPdf(app: ElectronApplication, pdfPath: string): Promise<str
   // paints — an empty page still weighs ~1 kB.
   const pdf = await getDocumentProxy(new Uint8Array(bytes));
   const { text } = await extractText(pdf, { mergePages: false });
-  return text;
+  // SPACES ARE STRIPPED FROM BOTH SIDES of every comparison below, because this
+  // extractor does not reconstruct them. Chromium now emits each word as its
+  // own positioned run and lets the gap carry the space, so unpdf reads
+  // "PDFexportsmoketest" from a PDF that is correct — mutool reads
+  // "PDF export smoke test" from the same bytes. Asserting on the squeezed
+  // text still proves the page paints the document's words in order, which is
+  // what this test is for; it just stops asserting a property of the reader.
+  return text.map(squeeze);
+}
+
+/** Text with all whitespace removed. See exportPdf. */
+function squeeze(value: string): string {
+  return value.replace(/\s+/g, "");
 }
 
 async function closeApp(app: ElectronApplication): Promise<void> {
@@ -74,7 +86,7 @@ test("export the document as a PDF", async () => {
 
   const pages = await exportPdf(app, pdfPath);
   expect(pages).toHaveLength(1);
-  expect(pages[0]).toContain("PDF export smoke test");
+  expect(pages[0]).toContain(squeeze("PDF export smoke test"));
 
   await closeApp(app);
 });
@@ -89,8 +101,8 @@ test("export a multi-page document as a PDF", async () => {
 
   const pages = await exportPdf(app, pdfPath);
   expect(pages).toHaveLength(2);
-  expect(pages[0]).toContain("First page marker");
-  expect(pages[1]).toContain("Last page marker");
+  expect(pages[0]).toContain(squeeze("First page marker"));
+  expect(pages[1]).toContain(squeeze("Last page marker"));
 
   await closeApp(app);
 });

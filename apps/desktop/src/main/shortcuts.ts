@@ -23,7 +23,10 @@ export interface MenuShortcutSection {
 /** As much of an Electron MenuItem as this file reads. */
 export interface MenuItemLike {
   label: string;
-  accelerator?: string;
+  /** Electron 39 types this `Accelerator | null` — present but empty — where
+   * older versions left it optional. Both shapes read the same to `if
+   * (item.accelerator)` below; only the type had to widen. */
+  accelerator?: string | null;
   submenu?: { items: MenuItemLike[] } | null;
 }
 
